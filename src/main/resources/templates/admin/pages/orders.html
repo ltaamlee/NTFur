@@ -1,0 +1,426 @@
+<th:block th:fragment="page-content">
+    <!-- Page Header -->
+    <th:block th:with="title='Quản lý đơn hàng', pageTitle='Quản lý đơn hàng', activePage='orders'">
+    
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-display font-bold text-primary-800">Danh sách đơn hàng</h2>
+            <p class="text-primary-500 mt-1">Quản lý và theo dõi đơn hàng</p>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div class="bg-white rounded-xl p-4 card-shadow border border-primary-100 cursor-pointer hover:border-primary-300 transition-all" onclick="filterByStatus('')">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
+                    <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-primary-500">Tất cả</p>
+                    <p class="text-xl font-bold text-primary-800" id="countAll">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 card-shadow border border-yellow-200 cursor-pointer hover:border-yellow-400 transition-all" onclick="filterByStatus('PENDING')">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
+                    <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-primary-500">Chờ xác nhận</p>
+                    <p class="text-xl font-bold text-yellow-600" id="countPending">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 card-shadow border border-blue-200 cursor-pointer hover:border-blue-400 transition-all" onclick="filterByStatus('PROCESSING')">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-primary-500">Đang xử lý</p>
+                    <p class="text-xl font-bold text-blue-600" id="countProcessing">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 card-shadow border border-green-200 cursor-pointer hover:border-green-400 transition-all" onclick="filterByStatus('DELIVERED')">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-primary-500">Đã giao</p>
+                    <p class="text-xl font-bold text-green-600" id="countDelivered">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 card-shadow border border-red-200 cursor-pointer hover:border-red-400 transition-all" onclick="filterByStatus('CANCELLED')">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-primary-500">Đã hủy</p>
+                    <p class="text-xl font-bold text-red-600" id="countCancelled">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl p-4 mb-6 card-shadow border border-primary-100">
+        <div class="flex flex-col md:flex-row md:items-center gap-4">
+            <div class="flex-1 relative">
+                <input type="text" id="searchInput" placeholder="Tìm kiếm đơn hàng..." 
+                    class="w-full pl-10 pr-4 py-2 border border-primary-200 rounded-lg text-sm focus:border-primary-500">
+                <svg class="w-5 h-5 text-primary-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+            <select id="filterPaymentStatus" class="px-4 py-2 border border-primary-200 rounded-lg text-sm focus:border-primary-500">
+                <option value="">Tất cả thanh toán</option>
+                <option value="PENDING">Chưa thanh toán</option>
+                <option value="PAID">Đã thanh toán</option>
+                <option value="REFUNDED">Đã hoàn tiền</option>
+            </select>
+            <input type="date" id="filterDateFrom" class="px-4 py-2 border border-primary-200 rounded-lg text-sm focus:border-primary-500">
+            <input type="date" id="filterDateTo" class="px-4 py-2 border border-primary-200 rounded-lg text-sm focus:border-primary-500">
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="bg-white rounded-2xl card-shadow border border-primary-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="table-header">
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider">Mã đơn</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider">Khách hàng</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider">Sản phẩm</th>
+                        <th class="px-6 py-4 text-right text-xs font-semibold text-primary-700 uppercase tracking-wider">Tổng tiền</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider">Thanh toán</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider">Trạng thái</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider">Ngày đặt</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTable">
+                    <tr>
+                        <td colspan="8" class="px-6 py-12 text-center text-primary-500">Đang tải dữ liệu...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- View Modal -->
+    <div id="viewModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop absolute inset-0 bg-black/50" onclick="closeViewModal()"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="modal-content relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto my-auto">
+                <div class="sticky top-0 bg-white border-b border-primary-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+                    <h3 class="text-xl font-display font-semibold text-primary-800">Chi tiết đơn hàng</h3>
+                    <button onclick="closeViewModal()" class="p-2 text-primary-400 hover:text-primary-600 rounded-lg hover:bg-primary-50">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6" id="viewModalContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let orders = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let currentStatusFilter = '';
+
+        async function loadOrders() {
+            try {
+                const response = await apiCall('/api/admin/orders');
+                if (response.success) {
+                    orders = response.data;
+                    updateStats();
+                    renderOrders();
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('countAll').textContent = orders.length;
+            document.getElementById('countPending').textContent = orders.filter(o => o.status === 'PENDING').length;
+            document.getElementById('countProcessing').textContent = orders.filter(o => ['CONFIRMED', 'PROCESSING', 'SHIPPED'].includes(o.status)).length;
+            document.getElementById('countDelivered').textContent = orders.filter(o => o.status === 'DELIVERED').length;
+            document.getElementById('countCancelled').textContent = orders.filter(o => o.status === 'CANCELLED').length;
+        }
+
+        function filterByStatus(status) {
+            currentStatusFilter = status;
+            document.getElementById('filterPaymentStatus').value = '';
+            renderOrders();
+        }
+
+        function renderOrders() {
+            const tbody = document.getElementById('ordersTable');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const paymentFilter = document.getElementById('filterPaymentStatus').value;
+            const dateFrom = document.getElementById('filterDateFrom').value;
+            const dateTo = document.getElementById('filterDateTo').value;
+
+            let filtered = orders.filter(o => {
+                const matchStatus = !currentStatusFilter || o.status === currentStatusFilter;
+                const matchSearch = !search || 
+                    (o.orderNumber && o.orderNumber.toLowerCase().includes(search)) ||
+                    (o.customerName && o.customerName.toLowerCase().includes(search)) ||
+                    (o.shippingPhone && o.shippingPhone.includes(search));
+                const matchPayment = !paymentFilter || o.paymentStatus === paymentFilter;
+                let matchDate = true;
+                if (dateFrom && o.createdAt) {
+                    matchDate = new Date(o.createdAt) >= new Date(dateFrom);
+                }
+                if (dateTo && o.createdAt && matchDate) {
+                    matchDate = new Date(o.createdAt) <= new Date(dateTo + 'T23:59:59');
+                }
+                return matchStatus && matchSearch && matchPayment && matchDate;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-12 text-center text-primary-500">Không tìm thấy đơn hàng</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(order => `
+                <tr class="table-row border-b border-primary-100">
+                    <td class="px-6 py-4">
+                        <span class="text-sm font-semibold text-primary-800">${order.orderNumber}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-primary-800">${order.customerName || 'Khách hàng'}</div>
+                        <div class="text-xs text-primary-500">${order.customerPhone || order.shippingPhone || ''}</div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="text-sm font-semibold text-primary-700">${order.items ? order.items.length : 0} sản phẩm</span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <span class="text-sm font-semibold text-primary-800">${formatCurrency(order.totalAmount)}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        ${getPaymentBadge(order.paymentStatus)}
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        ${getOrderStatusBadge(order.status)}
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="text-sm text-primary-600">${formatDate(order.createdAt)}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center space-x-2">
+                            <button onclick="viewOrder(${order.id})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Xem chi tiết">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                            <button onclick="updateOrderStatus(${order.id})" class="p-2 text-primary-600 hover:bg-primary-50 rounded-lg" title="Cập nhật trạng thái">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                            </button>
+                            <button onclick="deleteOrder(${order.id})" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Xóa">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getOrderStatusBadge(status) {
+            const statusMap = {
+                'PENDING': '<span class="status-badge status-pending">Chờ xác nhận</span>',
+                'CONFIRMED': '<span class="status-badge status-confirmed">Đã xác nhận</span>',
+                'PROCESSING': '<span class="status-badge status-processing">Đang xử lý</span>',
+                'SHIPPED': '<span class="status-badge status-shipped">Đang giao</span>',
+                'DELIVERED': '<span class="status-badge status-delivered">Đã giao</span>',
+                'CANCELLED': '<span class="status-badge status-cancelled">Đã hủy</span>',
+                'RETURNED': '<span class="status-badge bg-purple-100 text-purple-700">Trả hàng</span>'
+            };
+            return statusMap[status] || `<span class="status-badge bg-gray-100 text-gray-600">${status}</span>`;
+        }
+
+        function getPaymentBadge(status) {
+            const statusMap = {
+                'PENDING': '<span class="status-badge bg-yellow-100 text-yellow-700">Chưa thanh toán</span>',
+                'PAID': '<span class="status-badge status-paid">Đã thanh toán</span>',
+                'PARTIALLY_PAID': '<span class="status-badge bg-blue-100 text-blue-700">Thanh toán một phần</span>',
+                'REFUNDED': '<span class="status-badge bg-purple-100 text-purple-700">Đã hoàn tiền</span>',
+                'FAILED': '<span class="status-badge status-failed">Thanh toán thất bại</span>'
+            };
+            return statusMap[status] || `<span class="status-badge bg-gray-100 text-gray-600">${status}</span>`;
+        }
+
+        async function viewOrder(id) {
+            const order = orders.find(o => o.id === id);
+            if (!order) return;
+
+            const itemsHtml = order.items && order.items.length > 0 
+                ? order.items.map(item => `
+                    <tr class="border-b border-primary-100">
+                        <td class="px-4 py-3">
+                            <div class="flex items-center">
+                                ${item.productImage ? `<img src="${item.productImage}" class="w-12 h-12 rounded object-cover mr-3">` : ''}
+                                <div>
+                                    <p class="text-sm font-medium text-primary-800">${item.productName}</p>
+                                    <p class="text-xs text-primary-500">${item.productSku || ''}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-center">${formatCurrency(item.price)}</td>
+                        <td class="px-4 py-3 text-center">${item.quantity}</td>
+                        <td class="px-4 py-3 text-right font-semibold">${formatCurrency(item.total)}</td>
+                    </tr>
+                `).join('')
+                : '<tr><td colspan="4" class="px-4 py-8 text-center text-primary-500">Không có sản phẩm</td></tr>';
+
+            const content = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h4 class="font-semibold text-primary-800 mb-2">Thông tin đơn hàng</h4>
+                        <div class="space-y-2 text-sm">
+                            <p><span class="text-primary-500">Mã đơn:</span> <span class="font-semibold">${order.orderNumber}</span></p>
+                            <p><span class="text-primary-500">Ngày đặt:</span> ${formatDate(order.createdAt)}</p>
+                            <p><span class="text-primary-500">Thanh toán:</span> ${getPaymentBadge(order.paymentStatus)}</p>
+                            <p><span class="text-primary-500">Phương thức:</span> ${order.paymentMethod || '-'}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-primary-800 mb-2">Khách hàng</h4>
+                        <div class="space-y-2 text-sm">
+                            <p><span class="text-primary-500">Tên:</span> ${order.customerName || order.shippingFullName || '-'}</p>
+                            <p><span class="text-primary-500">SĐT:</span> ${order.customerPhone || order.shippingPhone || '-'}</p>
+                            <p><span class="text-primary-500">Địa chỉ:</span> ${order.shippingFullAddress || '-'}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <h4 class="font-semibold text-primary-800 mb-3">Sản phẩm</h4>
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-primary-50">
+                                <th class="px-4 py-2 text-left text-xs font-semibold text-primary-700">Sản phẩm</th>
+                                <th class="px-4 py-2 text-center text-xs font-semibold text-primary-700">Giá</th>
+                                <th class="px-4 py-2 text-center text-xs font-semibold text-primary-700">SL</th>
+                                <th class="px-4 py-2 text-right text-xs font-semibold text-primary-700">Tổng</th>
+                            </tr>
+                        </thead>
+                        <tbody>${itemsHtml}</tbody>
+                    </table>
+                </div>
+                <div class="border-t border-primary-200 pt-4">
+                    <div class="flex justify-between mb-2"><span class="text-primary-500">Tạm tính:</span><span>${formatCurrency(order.subtotal)}</span></div>
+                    <div class="flex justify-between mb-2"><span class="text-primary-500">Phí vận chuyển:</span><span>${formatCurrency(order.shippingFee)}</span></div>
+                    ${order.discountAmount ? `<div class="flex justify-between mb-2"><span class="text-primary-500">Giảm giá:</span><span class="text-green-600">-${formatCurrency(order.discountAmount)}</span></div>` : ''}
+                    <div class="flex justify-between text-lg font-bold"><span>Tổng cộng:</span><span class="text-primary-800">${formatCurrency(order.totalAmount)}</span></div>
+                </div>
+                ${order.shippingNotes ? `<div class="mt-4 p-3 bg-primary-50 rounded-lg"><p class="text-sm"><span class="font-semibold">Ghi chú:</span> ${order.shippingNotes}</p></div>` : ''}
+            `;
+
+            document.getElementById('viewModalContent').innerHTML = content;
+            document.getElementById('viewModal').classList.remove('hidden');
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').classList.add('hidden');
+        }
+
+        async function updateOrderStatus(id) {
+            const order = orders.find(o => o.id === id);
+            if (!order) return;
+
+            const statuses = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+            const statusLabels = {
+                'PENDING': 'Chờ xác nhận',
+                'CONFIRMED': 'Đã xác nhận',
+                'PROCESSING': 'Đang xử lý',
+                'SHIPPED': 'Đang giao hàng',
+                'DELIVERED': 'Đã giao hàng',
+                'CANCELLED': 'Đã hủy'
+            };
+
+            let options = statuses.map(s => 
+                `<option value="${s}" ${s === order.status ? 'selected' : ''}>${statusLabels[s]}</option>`
+            ).join('');
+
+            const modalContent = `
+                <p class="mb-4">Cập nhật trạng thái đơn hàng <strong>${order.orderNumber}</strong>:</p>
+                <select id="newOrderStatus" class="w-full px-4 py-2 border border-primary-200 rounded-lg mb-4">
+                    ${options}
+                </select>
+                <div class="flex justify-end space-x-3">
+                    <button onclick="closeViewModal()" class="px-4 py-2 border border-primary-300 rounded-lg hover:bg-primary-50">Hủy</button>
+                    <button onclick="confirmStatusUpdate(${id})" class="px-4 py-2 btn-primary text-white rounded-lg">Cập nhật</button>
+                </div>
+            `;
+
+            document.getElementById('viewModalContent').innerHTML = modalContent;
+            document.getElementById('viewModal').classList.remove('hidden');
+        }
+
+        async function confirmStatusUpdate(id) {
+            const newStatus = document.getElementById('newOrderStatus').value;
+            try {
+                const response = await apiCall(`/api/admin/orders/${id}/status?status=${newStatus}`, 'PUT');
+                if (response.success) {
+                    showToast('Cập nhật trạng thái thành công');
+                    closeViewModal();
+                    loadOrders();
+                }
+            } catch (error) {
+                console.error('Error updating order status:', error);
+            }
+        }
+
+        async function deleteOrder(id) {
+            const order = orders.find(o => o.id === id);
+            showDeleteModal(`Bạn có chắc chắn muốn xóa đơn hàng "${order.orderNumber}"?`, async () => {
+                try {
+                    const response = await apiCall(`/api/admin/orders/${id}`, 'DELETE');
+                    if (response.success) {
+                        showToast('Xóa đơn hàng thành công');
+                        loadOrders();
+                    }
+                } catch (error) {
+                    console.error('Error deleting order:', error);
+                }
+            });
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', renderOrders);
+        document.getElementById('filterPaymentStatus').addEventListener('change', renderOrders);
+        document.getElementById('filterDateFrom').addEventListener('change', renderOrders);
+        document.getElementById('filterDateTo').addEventListener('change', renderOrders);
+
+        // Load data
+        document.addEventListener('DOMContentLoaded', loadOrders);
+    </script>
+    </th:block>
+</th:block>

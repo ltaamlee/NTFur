@@ -1,0 +1,377 @@
+<th:block th:fragment="page-content">
+    <th:block th:with="title='Quản lý nhà cung cấp', pageTitle='Quản lý nhà cung cấp', activePage='suppliers'">
+    
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-display font-bold text-primary-800">Danh sách nhà cung cấp</h2>
+            <p class="text-primary-500 mt-1">Quản lý thông tin và đánh giá nhà cung cấp</p>
+        </div>
+        <button onclick="openCreateModal()" class="mt-4 md:mt-0 px-6 py-2.5 btn-primary text-white rounded-lg font-medium flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Thêm nhà cung cấp
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-xl p-4 card-shadow border border-primary-100">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
+                    <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-primary-500">Tổng nhà cung cấp</p>
+                    <p class="text-xl font-bold text-primary-800" id="totalSuppliers">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 card-shadow border border-green-100">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-primary-500">Đang hoạt động</p>
+                    <p class="text-xl font-bold text-green-600" id="activeSuppliers">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 card-shadow border border-yellow-100">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
+                    <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-primary-500">Chờ xác nhận</p>
+                    <p class="text-xl font-bold text-yellow-600" id="pendingSuppliers">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 card-shadow border border-red-100">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-primary-500">Bị chặn</p>
+                    <p class="text-xl font-bold text-red-600" id="blockedSuppliers">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl p-4 mb-6 card-shadow border border-primary-100">
+        <div class="flex flex-col md:flex-row md:items-center gap-4">
+            <div class="flex-1 relative">
+                <input type="text" id="searchInput" placeholder="Tìm kiếm nhà cung cấp..." 
+                    class="w-full pl-10 pr-4 py-2 border border-primary-200 rounded-lg text-sm focus:border-primary-500">
+                <svg class="w-5 h-5 text-primary-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+            <select id="filterStatus" class="px-4 py-2 border border-primary-200 rounded-lg text-sm focus:border-primary-500">
+                <option value="">Tất cả trạng thái</option>
+                <option value="ACTIVE">Đang hoạt động</option>
+                <option value="INACTIVE">Không hoạt động</option>
+                <option value="PENDING">Chờ xác nhận</option>
+                <option value="BLOCKED">Bị chặn</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Suppliers Table -->
+    <div class="bg-white rounded-2xl card-shadow border border-primary-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="table-header">
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider">Nhà cung cấp</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider">Liên hệ</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider">Đơn hàng</th>
+                        <th class="px-6 py-4 text-right text-xs font-semibold text-primary-700 uppercase tracking-wider">Tổng mua</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider">Trạng thái</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="suppliersTable">
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-primary-500">Đang tải dữ liệu...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div id="formModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="modal-backdrop absolute inset-0 bg-black/50" onclick="closeFormModal()"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="modal-content relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto my-auto">
+                <div class="sticky top-0 bg-white border-b border-primary-100 px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
+                    <h3 class="text-xl font-display font-semibold text-primary-800" id="modalTitle">Thêm nhà cung cấp mới</h3>
+                    <button onclick="closeFormModal()" class="p-2 text-primary-400 hover:text-primary-600 rounded-lg hover:bg-primary-50">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <form id="supplierForm" class="p-6">
+                    <input type="hidden" id="supplierId">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Tên nhà cung cấp <span class="text-red-500">*</span></label>
+                            <input type="text" id="supplierName" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="Nhập tên nhà cung cấp" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Email</label>
+                            <input type="email" id="supplierEmail" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="email@supplier.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Số điện thoại</label>
+                            <input type="tel" id="supplierPhone" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="0123 456 789">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Địa chỉ</label>
+                            <input type="text" id="supplierAddress" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="Địa chỉ đầy đủ">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Thành phố</label>
+                            <input type="text" id="supplierCity" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="VD: TP.HCM">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Mã số thuế</label>
+                            <input type="text" id="supplierTaxCode" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="Mã số thuế">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Người liên hệ</label>
+                            <input type="text" id="supplierContactPerson" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="Tên người liên hệ">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Số ĐT liên hệ</label>
+                            <input type="tel" id="supplierContactPhone" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="SĐT người liên hệ">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Mô tả</label>
+                            <textarea id="supplierDescription" rows="3" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="Mô tả về nhà cung cấp..."></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Ghi chú</label>
+                            <textarea id="supplierNotes" rows="2" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="Ghi chú khác..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Trạng thái</label>
+                            <select id="supplierStatus" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500">
+                                <option value="ACTIVE">Đang hoạt động</option>
+                                <option value="INACTIVE">Không hoạt động</option>
+                                <option value="PENDING">Chờ xác nhận</option>
+                                <option value="BLOCKED">Bị chặn</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" onclick="closeFormModal()" class="px-6 py-2 border border-primary-300 text-primary-700 rounded-lg hover:bg-primary-50 font-medium transition-colors">Hủy bỏ</button>
+                        <button type="submit" class="px-6 py-2 btn-primary text-white rounded-lg font-medium">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let suppliers = [];
+
+        async function loadSuppliers() {
+            try {
+                const response = await apiCall('/api/admin/suppliers');
+                if (response.success) {
+                    suppliers = response.data;
+                    updateStats();
+                    renderSuppliers();
+                }
+            } catch (error) {
+                console.error('Error loading suppliers:', error);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalSuppliers').textContent = suppliers.length;
+            document.getElementById('activeSuppliers').textContent = suppliers.filter(s => s.status === 'ACTIVE').length;
+            document.getElementById('pendingSuppliers').textContent = suppliers.filter(s => s.status === 'PENDING').length;
+            document.getElementById('blockedSuppliers').textContent = suppliers.filter(s => s.status === 'BLOCKED').length;
+        }
+
+        function renderSuppliers() {
+            const tbody = document.getElementById('suppliersTable');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+
+            let filtered = suppliers.filter(s => {
+                const matchSearch = !search || 
+                    s.name.toLowerCase().includes(search) || 
+                    (s.email && s.email.toLowerCase().includes(search)) ||
+                    (s.phone && s.phone.includes(search)) ||
+                    (s.code && s.code.toLowerCase().includes(search));
+                const matchStatus = !statusFilter || s.status === statusFilter;
+                return matchSearch && matchStatus;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-primary-500">Không tìm thấy nhà cung cấp</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(supplier => `
+                <tr class="table-row border-b border-primary-100">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-400 to-secondary-400 flex items-center justify-center text-white font-semibold mr-3">
+                                ${supplier.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-primary-800">${supplier.name}</p>
+                                <p class="text-xs text-primary-500">${supplier.code || '-'}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-primary-700">${supplier.email || '-'}</div>
+                        <div class="text-xs text-primary-500">${supplier.phone || '-'}</div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="text-sm font-semibold text-primary-700">${supplier.totalOrders || 0}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <span class="text-sm font-semibold text-primary-800">${formatCurrency(supplier.totalAmount || 0)}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        ${getSupplierStatusBadge(supplier.status)}
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center space-x-2">
+                            <button onclick="editSupplier(${supplier.id})" class="p-2 text-primary-600 hover:bg-primary-50 rounded-lg" title="Chỉnh sửa">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                            </button>
+                            <button onclick="deleteSupplier(${supplier.id})" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Xóa">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getSupplierStatusBadge(status) {
+            const statusMap = {
+                'ACTIVE': '<span class="status-badge bg-green-100 text-green-700">Đang hoạt động</span>',
+                'INACTIVE': '<span class="status-badge bg-gray-100 text-gray-600">Không hoạt động</span>',
+                'PENDING': '<span class="status-badge bg-yellow-100 text-yellow-700">Chờ xác nhận</span>',
+                'BLOCKED': '<span class="status-badge bg-red-100 text-red-700">Bị chặn</span>'
+            };
+            return statusMap[status] || `<span class="status-badge bg-gray-100 text-gray-600">${status}</span>`;
+        }
+
+        function openCreateModal() {
+            document.getElementById('modalTitle').textContent = 'Thêm nhà cung cấp mới';
+            document.getElementById('supplierForm').reset();
+            document.getElementById('supplierId').value = '';
+            document.getElementById('formModal').classList.remove('hidden');
+        }
+
+        function editSupplier(id) {
+            const supplier = suppliers.find(s => s.id === id);
+            if (!supplier) return;
+
+            document.getElementById('modalTitle').textContent = 'Chỉnh sửa nhà cung cấp';
+            document.getElementById('supplierId').value = supplier.id;
+            document.getElementById('supplierName').value = supplier.name || '';
+            document.getElementById('supplierEmail').value = supplier.email || '';
+            document.getElementById('supplierPhone').value = supplier.phone || '';
+            document.getElementById('supplierAddress').value = supplier.address || '';
+            document.getElementById('supplierCity').value = supplier.city || '';
+            document.getElementById('supplierTaxCode').value = supplier.taxCode || '';
+            document.getElementById('supplierContactPerson').value = supplier.contactPerson || '';
+            document.getElementById('supplierContactPhone').value = supplier.contactPhone || '';
+            document.getElementById('supplierDescription').value = supplier.description || '';
+            document.getElementById('supplierNotes').value = supplier.notes || '';
+            document.getElementById('supplierStatus').value = supplier.status || 'ACTIVE';
+
+            document.getElementById('formModal').classList.remove('hidden');
+        }
+
+        function closeFormModal() {
+            document.getElementById('formModal').classList.add('hidden');
+        }
+
+        document.getElementById('supplierForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('supplierId').value;
+            
+            const data = {
+                name: document.getElementById('supplierName').value,
+                email: document.getElementById('supplierEmail').value,
+                phone: document.getElementById('supplierPhone').value,
+                address: document.getElementById('supplierAddress').value,
+                city: document.getElementById('supplierCity').value,
+                taxCode: document.getElementById('supplierTaxCode').value,
+                contactPerson: document.getElementById('supplierContactPerson').value,
+                contactPhone: document.getElementById('supplierContactPhone').value,
+                description: document.getElementById('supplierDescription').value,
+                notes: document.getElementById('supplierNotes').value,
+                status: document.getElementById('supplierStatus').value
+            };
+
+            try {
+                const url = id ? `/api/admin/suppliers/${id}` : '/api/admin/suppliers';
+                const method = id ? 'PUT' : 'POST';
+                const response = await apiCall(url, method, data);
+                
+                if (response.success) {
+                    showToast(id ? 'Cập nhật nhà cung cấp thành công' : 'Thêm nhà cung cấp thành công');
+                    closeFormModal();
+                    loadSuppliers();
+                }
+            } catch (error) {
+                console.error('Error saving supplier:', error);
+            }
+        });
+
+        async function deleteSupplier(id) {
+            const supplier = suppliers.find(s => s.id === id);
+            showDeleteModal(`Bạn có chắc chắn muốn xóa nhà cung cấp "${supplier.name}"?`, async () => {
+                try {
+                    const response = await apiCall(`/api/admin/suppliers/${id}`, 'DELETE');
+                    if (response.success) {
+                        showToast('Xóa nhà cung cấp thành công');
+                        loadSuppliers();
+                    }
+                } catch (error) {
+                    console.error('Error deleting supplier:', error);
+                }
+            });
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', renderSuppliers);
+        document.getElementById('filterStatus').addEventListener('change', renderSuppliers);
+
+        // Load data
+        document.addEventListener('DOMContentLoaded', loadSuppliers);
+    </script>
+    </th:block>
+</th:block>
