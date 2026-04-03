@@ -84,6 +84,19 @@ public class OrderItem {
         calculateTotal();
     }
 
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        OrderItem other = (OrderItem) obj;
+        return id != null && id.equals(other.id);
+    }
+
     public void calculateTotal() {
         BigDecimal itemTotal = price.multiply(BigDecimal.valueOf(quantity));
         itemTotal = itemTotal.subtract(discountAmount != null ? discountAmount : BigDecimal.ZERO);

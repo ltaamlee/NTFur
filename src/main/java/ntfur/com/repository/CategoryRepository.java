@@ -36,26 +36,15 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     @Query("SELECT c FROM Category c WHERE c.status = :status ORDER BY c.displayOrder ASC")
     List<Category> findByStatusOrderByDisplayOrder(@Param("status") CategoryStatus status);
     
-    // Nested categories methods
-    List<Category> findByParentIsNullOrderByDisplayOrder();
+    @Query("SELECT c FROM Category c WHERE c.status = :status ORDER BY c.displayOrder ASC, c.createdAt DESC")
+    List<Category> findByStatusOrderByDisplayOrderAndCreatedAt(@Param("status") CategoryStatus status);
     
-    List<Category> findByParentIdOrderByDisplayOrder(Long parentId);
+    @Query("SELECT c FROM Category c ORDER BY c.displayOrder ASC, c.createdAt DESC")
+    List<Category> findAllOrderByDisplayOrderAndCreatedAt();
     
-    @Query("SELECT c FROM Category c WHERE c.parent IS NULL AND c.status = :status ORDER BY c.displayOrder ASC")
-    List<Category> findByParentIsNullAndStatusOrderByDisplayOrder(@Param("status") CategoryStatus status);
+    @Query("SELECT c FROM Category c ORDER BY c.name ASC")
+    List<Category> findAllOrderByName();
     
-    @Query("SELECT c FROM Category c LEFT JOIN FETCH c.children WHERE c.id = :id")
-    Optional<Category> findByIdWithChildren(@Param("id") Long id);
-    
-    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM Category c WHERE c.parent.id = :parentId")
-    boolean hasChildren(@Param("parentId") Long parentId);
-    
-    // Recursive query to get all child IDs
-    @Query(value = "WITH RECURSIVE category_tree AS (" +
-            "SELECT id FROM categories WHERE parent_id = :parentId " +
-            "UNION ALL " +
-            "SELECT c.id FROM categories c " +
-            "INNER JOIN category_tree ct ON c.parent_id = ct.id " +
-            ") SELECT id FROM category_tree", nativeQuery = true)
-    List<Long> findAllChildIds(@Param("parentId") Long parentId);
+    @Query("SELECT c FROM Category c ORDER BY c.createdAt DESC")
+    List<Category> findAllOrderByCreatedAt();
 }

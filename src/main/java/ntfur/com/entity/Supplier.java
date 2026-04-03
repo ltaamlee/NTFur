@@ -99,6 +99,9 @@ public class Supplier {
     @OneToMany(mappedBy = "supplier", fetch = FetchType.LAZY)
     private List<Product> products = new ArrayList<>();
 
+    @OneToMany(mappedBy = "supplier", fetch = FetchType.LAZY)
+    private List<SupplierProduct> supplierProducts = new ArrayList<>();
+
     @Column(name = "notes", columnDefinition = "nvarchar(MAX)")
     private String notes;
 

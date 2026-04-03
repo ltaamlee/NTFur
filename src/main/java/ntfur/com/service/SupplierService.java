@@ -12,9 +12,11 @@ import lombok.RequiredArgsConstructor;
 import ntfur.com.entity.Product;
 import ntfur.com.entity.Supplier;
 import ntfur.com.entity.Supplier.SupplierStatus;
+import ntfur.com.entity.SupplierProduct;
 import ntfur.com.entity.dto.SupplierDTO;
 import ntfur.com.entity.dto.product.ProductDTO;
 import ntfur.com.repository.ProductRepository;
+import ntfur.com.repository.SupplierProductRepository;
 import ntfur.com.repository.SupplierRepository;
 
 @Service
@@ -23,6 +25,7 @@ public class SupplierService {
 
     private final SupplierRepository supplierRepository;
     private final ProductRepository productRepository;
+    private final SupplierProductRepository supplierProductRepository;
 
     public List<SupplierDTO> getAllSuppliers() {
         return supplierRepository.findAll().stream()
@@ -117,37 +120,80 @@ public class SupplierService {
     }
 
     private void addProductsToSupplier(Supplier supplier, List<String> productNames, List<Long> productIds) {
-        List<Product> productsToAdd = new ArrayList<>();
+        List<SupplierProduct> supplierProductsToAdd = new ArrayList<>();
         
-        // Gán sản phẩm có sẵn
+        // Gán sản phẩm có sẵn - sử dụng bảng trung gian
         if (productIds != null && !productIds.isEmpty()) {
             for (Long productId : productIds) {
                 if (productId != null && !isTempId(productId)) {
-                    productRepository.findById(productId).ifPresent(product -> {
-                        product.setSupplier(supplier);
-                        productsToAdd.add(product);
-                    });
+                    Product product = productRepository.findById(productId).orElse(null);
+                    if (product != null) {
+                        // Kiểm tra đã tồn tại chưa
+                        if (supplierProductRepository.existsBySupplierIdAndProductId(supplier.getId(), productId)) {
+                            continue; // Đã tồn tại, bỏ qua
+                        }
+                        
+                        SupplierProduct sp = new SupplierProduct();
+                        sp.setSupplier(supplier);
+                        sp.setProduct(product);
+                        sp.setSku(product.getSku()); // Lấy SKU từ sản phẩm
+                        sp.setActive(true);
+                        supplierProductsToAdd.add(sp);
+                    }
                 }
             }
         }
         
-        // Tạo sản phẩm mới từ tên
+        // Tạo sản phẩm mới từ tên - kiểm tra trùng SKU
         if (productNames != null && !productNames.isEmpty()) {
             for (String productName : productNames) {
                 if (productName != null && !productName.trim().isEmpty()) {
-                    Product newProduct = new Product();
-                    newProduct.setName(productName.trim());
-                    newProduct.setSupplier(supplier);
-                    newProduct.setStatus(Product.ProductStatus.ACTIVE);
-                    newProduct.setStock(0);
-                    newProduct.setPrice(BigDecimal.valueOf(0.0));
-                    productsToAdd.add(newProduct);
+                    // Kiểm tra sản phẩm đã tồn tại chưa
+                    Product existingProduct = null;
+                    for (Product p : productRepository.findAll()) {
+                        if (p.getName().equalsIgnoreCase(productName.trim())) {
+                            existingProduct = p;
+                            break;
+                        }
+                    }
+                    
+                    if (existingProduct != null) {
+                        // Sản phẩm đã tồn tại - thêm vào bảng trung gian
+                        if (supplierProductRepository.existsBySupplierIdAndProductId(supplier.getId(), existingProduct.getId())) {
+                            continue; // Đã tồn tại trong NCC này
+                        }
+                        
+                        SupplierProduct sp = new SupplierProduct();
+                        sp.setSupplier(supplier);
+                        sp.setProduct(existingProduct);
+                        sp.setSku(existingProduct.getSku());
+                        sp.setActive(true);
+                        supplierProductsToAdd.add(sp);
+                    } else {
+                        // Tạo sản phẩm mới với SKU
+                        Product newProduct = new Product();
+                        newProduct.setName(productName.trim());
+                        newProduct.setSupplier(supplier);
+                        newProduct.setStatus(Product.ProductStatus.ACTIVE);
+                        newProduct.setStock(0);
+                        newProduct.setPrice(BigDecimal.valueOf(0.0));
+                        // SKU sẽ được tạo tự động trong @PrePersist
+                        
+                        Product savedProduct = productRepository.save(newProduct);
+                        
+                        SupplierProduct sp = new SupplierProduct();
+                        sp.setSupplier(supplier);
+                        sp.setProduct(savedProduct);
+                        sp.setSku(savedProduct.getSku());
+                        sp.setActive(true);
+                        supplierProductsToAdd.add(sp);
+                    }
                 }
             }
         }
         
-        if (!productsToAdd.isEmpty()) {
-            productRepository.saveAll(productsToAdd);
+        if (!supplierProductsToAdd.isEmpty()) {
+            supplierProductRepository.saveAll(supplierProductsToAdd);
         }
     }
 
@@ -172,18 +218,23 @@ public class SupplierService {
     }
 
     private SupplierDTO toDTO(Supplier supplier) {
-        List<ProductDTO> productDTOs = supplier.getProducts().stream()
-                .map(p -> ProductDTO.builder()
-                        .id(p.getId())
-                        .name(p.getName())
-                        .price(p.getPrice())
-                        .stock(p.getStock())
-                        .sku(p.getSku())
-                        .status(p.getStatus() != null ? p.getStatus().name() : null)
-                        .mainImage(p.getMainImage())
-                        .featured(p.isFeatured())
-                        .createdAt(p.getCreatedAt())
-                        .build())
+        // Lấy products từ bảng trung gian SupplierProduct
+        List<ProductDTO> productDTOs = supplier.getSupplierProducts().stream()
+                .filter(sp -> sp.isActive())
+                .map(sp -> {
+                    Product p = sp.getProduct();
+                    return ProductDTO.builder()
+                            .id(p.getId())
+                            .name(p.getName())
+                            .price(p.getPrice())
+                            .stock(p.getStock())
+                            .sku(sp.getSku()) // SKU từ supplier_product
+                            .status(p.getStatus() != null ? p.getStatus().name() : null)
+                            .mainImage(p.getMainImage())
+                            .featured(p.isFeatured())
+                            .createdAt(p.getCreatedAt())
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         return SupplierDTO.builder()
@@ -211,7 +262,7 @@ public class SupplierService {
                 .status(supplier.getStatus() != null ? supplier.getStatus().name() : null)
                 .notes(supplier.getNotes())
                 .products(productDTOs)
-                .productCount(supplier.getProducts().size())
+                .productCount(productDTOs.size())
                 .createdAt(supplier.getCreatedAt() != null ? supplier.getCreatedAt().toString() : null)
                 .updatedAt(supplier.getUpdatedAt() != null ? supplier.getUpdatedAt().toString() : null)
                 .build();

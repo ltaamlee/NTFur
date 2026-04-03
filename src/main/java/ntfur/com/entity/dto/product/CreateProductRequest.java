@@ -27,7 +27,6 @@ public class CreateProductRequest {
 
     private Double costPrice;
 
-    @NotNull(message = "Số lượng tồn kho không được để trống")
     private Integer stock;
 
     @Size(max = 50, message = "SKU không được vượt quá 50 ký tự")

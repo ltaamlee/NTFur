@@ -17,10 +17,12 @@ import ntfur.com.entity.ImportReceipt.ImportStatus;
 import ntfur.com.entity.ImportReceiptItem;
 import ntfur.com.entity.Product;
 import ntfur.com.entity.Supplier;
+import ntfur.com.entity.SupplierProduct;
 import ntfur.com.entity.dto.ImportReceiptDTO;
 import ntfur.com.repository.ImportReceiptItemRepository;
 import ntfur.com.repository.ImportReceiptRepository;
 import ntfur.com.repository.ProductRepository;
+import ntfur.com.repository.SupplierProductRepository;
 import ntfur.com.repository.SupplierRepository;
 
 @Service
@@ -31,6 +33,7 @@ public class ImportReceiptService {
     private final ImportReceiptItemRepository importReceiptItemRepository;
     private final SupplierRepository supplierRepository;
     private final ProductRepository productRepository;
+    private final SupplierProductRepository supplierProductRepository;
     
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -103,11 +106,39 @@ public class ImportReceiptService {
                     continue; // Skip items without product
                 }
 
-                ImportReceiptItem item = new ImportReceiptItem();
-                item.setImportReceipt(savedReceipt);
-
                 Product product = productRepository.findById(itemDTO.getProductId())
                         .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với id: " + itemDTO.getProductId()));
+                
+                // Kiểm tra sản phẩm có thuộc nhà cung cấp này không (theo SKU hoặc bảng trung gian)
+                boolean belongsToSupplier = false;
+                
+                // Cách 1: Kiểm tra qua bảng trung gian SupplierProduct
+                if (supplierProductRepository.existsBySupplierIdAndProductId(dto.getSupplierId(), itemDTO.getProductId())) {
+                    belongsToSupplier = true;
+                }
+                
+                // Cách 2: Kiểm tra qua SKU
+                if (!belongsToSupplier && product.getSku() != null) {
+                    List<SupplierProduct> spList = supplierProductRepository.findBySupplierId(dto.getSupplierId());
+                    for (SupplierProduct sp : spList) {
+                        if (product.getSku().equals(sp.getSku())) {
+                            belongsToSupplier = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // Cách 3: Kiểm tra qua supplier_id cũ trong Product (để tương thích)
+                if (!belongsToSupplier && product.getSupplier() != null && product.getSupplier().getId().equals(dto.getSupplierId())) {
+                    belongsToSupplier = true;
+                }
+                
+                if (!belongsToSupplier) {
+                    throw new RuntimeException("Sản phẩm '" + product.getName() + "' (SKU: " + product.getSku() + ") không thuộc nhà cung cấp này!");
+                }
+
+                ImportReceiptItem item = new ImportReceiptItem();
+                item.setImportReceipt(savedReceipt);
                 item.setProduct(product);
                 item.setProductName(product.getName());
                 item.setSku(product.getSku());

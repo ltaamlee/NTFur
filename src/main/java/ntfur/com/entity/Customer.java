@@ -1,5 +1,6 @@
 package ntfur.com.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.CascadeType;
@@ -58,7 +59,7 @@ public class Customer {
     private String ward;
 
     @Column(name = "date_of_birth")
-    private LocalDateTime dateOfBirth;
+    private LocalDate dateOfBirth;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "gender")
@@ -89,6 +90,19 @@ public class Customer {
 
     @PreUpdate
     protected void onUpdate() {
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Customer other = (Customer) obj;
+        return id != null && id.equals(other.id);
     }
 
     public String getFormattedAddress() {
@@ -173,12 +187,12 @@ public class Customer {
 		this.ward = ward;
 	}
 
-	public LocalDateTime getDateOfBirth() {
+	public LocalDate getDateOfBirth() {
 		return dateOfBirth;
 	}
 
-	public void setDateOfBirth(LocalDateTime dateOfBirth) {
-		this.dateOfBirth = dateOfBirth;
+	public void setDateOfBirth(LocalDate localDate) {
+		this.dateOfBirth = localDate;
 	}
 
 	public Gender getGender() {

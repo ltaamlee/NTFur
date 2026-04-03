@@ -171,17 +171,18 @@
                                 <div id="memberBlock" class="hidden py-1">
                                     <div class="px-4 py-2 text-xs text-primary-500 border-b border-primary-50" id="memberGreeting">Xin chào</div>
                                     <a href="/profile" class="block px-4 py-2.5 text-sm text-primary-800 hover:bg-primary-50">Hồ sơ của tôi</a>
-                                    <a href="/checkout" class="block px-4 py-2.5 text-sm text-primary-800 hover:bg-primary-50">Đơn hàng / Thanh toán</a>
+                                    <a href="/profile" class="block px-4 py-2.5 text-sm text-primary-800 hover:bg-primary-50">Đơn hàng của tôi</a>
                                     <button type="button" id="headerLogoutBtn" class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">Đăng xuất</button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <!-- Cart: không hiển thị số; bấm vào kiểm tra đăng nhập -->
-                    <button type="button" id="headerCartBtn" class="p-2.5 text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded-full transition-colors active:scale-95" title="Giỏ hàng">
+                    <!-- Cart with badge -->
+                    <button type="button" id="headerCartBtn" class="relative p-2.5 text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded-full transition-colors active:scale-95" title="Giỏ hàng">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                         </svg>
+                        <span id="cartBadge" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">0</span>
                     </button>
                 </div>
             </div>
@@ -209,36 +210,15 @@
                                     </a>
                                     <div class="border-t border-primary-100 my-2"></div>
                                     <th:block th:if="${categories != null}" th:each="category : ${categories}">
-                                        <div class="relative category-dropdown group/cat">
-                                            <a th:href="@{/products(category=${category.id})}" class="flex items-center justify-between px-4 py-2.5 text-sm text-primary-800 hover:bg-primary-50 transition-colors">
-                                                <span class="flex items-center">
-                                                    <span th:if="${category.imageUrl}" class="w-6 h-6 rounded mr-2 overflow-hidden flex-shrink-0">
-                                                        <img th:src="${category.imageUrl}" class="w-full h-full object-cover" alt="">
-                                                    </span>
-                                                    <span th:unless="${category.imageUrl}" class="w-6 h-6 rounded mr-2 bg-primary-200 flex items-center justify-center flex-shrink-0">
-                                                        <svg class="w-3 h-3 text-primary-500" fill="currentColor" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4"/></svg>
-                                                    </span>
-                                                    <span th:text="${category.name}">Danh mục</span>
-                                                </span>
-                                                <svg th:if="${category.children != null and not #lists.isEmpty(category.children)}" class="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                                            </a>
-                                            <!-- Sub-categories dropdown -->
-                                            <div th:if="${category.children != null and not #lists.isEmpty(category.children)}" class="absolute left-full top-0 w-56 bg-white rounded-xl shadow-2xl border border-primary-100 opacity-0 invisible group-hover/cat:opacity-100 group-hover/cat:visible transition-all duration-200">
-                                                <div class="py-2">
-                                                    <th:block th:each="child : ${category.children}">
-                                                        <a th:href="@{/products(category=${child.id})}" class="flex items-center px-4 py-2.5 text-sm text-primary-800 hover:bg-primary-50 transition-colors">
-                                                            <span th:if="${child.imageUrl}" class="w-5 h-5 rounded mr-2 overflow-hidden flex-shrink-0">
-                                                                <img th:src="${child.imageUrl}" class="w-full h-full object-cover" alt="">
-                                                            </span>
-                                                            <span th:unless="${child.imageUrl}" class="w-5 h-5 rounded mr-2 bg-secondary-100 flex items-center justify-center flex-shrink-0">
-                                                                <svg class="w-3 h-3 text-secondary-500" fill="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                                                            </span>
-                                                            <span th:text="${child.name}">Danh mục con</span>
-                                                        </a>
-                                                    </th:block>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <a th:href="@{/products(category=${category.id})}" class="flex items-center px-4 py-2.5 text-sm text-primary-800 hover:bg-primary-50 transition-colors">
+                                            <span th:if="${category.imageUrl}" class="w-6 h-6 rounded mr-3 overflow-hidden flex-shrink-0">
+                                                <img th:src="${category.imageUrl}" class="w-full h-full object-cover" alt="">
+                                            </span>
+                                            <span th:unless="${category.imageUrl}" class="w-6 h-6 rounded mr-3 bg-primary-200 flex items-center justify-center flex-shrink-0">
+                                                <svg class="w-3 h-3 text-primary-500" fill="currentColor" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                            </span>
+                                            <span th:text="${category.name}">Danh mục</span>
+                                        </a>
                                     </th:block>
                                 </div>
                             </div>
@@ -318,14 +298,9 @@
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
                 <th:block th:each="category : ${categories}">
-                    <!-- Main category card -->
+                    <!-- Category card -->
                     <a th:href="@{/products(category=${category.id})}" 
                        class="category-badge group bg-primary-50 border border-primary-200 rounded-2xl p-5 text-center cursor-pointer hover:shadow-lg relative">
-                        <!-- Show subcategory count badge if has children -->
-                        <span th:if="${category.children != null and not #lists.isEmpty(category.children)}" 
-                              class="absolute top-2 right-2 px-2 py-0.5 bg-secondary-500 text-white text-xs rounded-full">
-                            <span th:text="${#lists.size(category.children)}">0</span> con
-                        </span>
                         <div class="w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform overflow-hidden">
                             <img th:if="${category.imageUrl != null}" th:src="${category.imageUrl}" alt="${category.name}" class="w-full h-full object-cover">
                             <svg th:unless="${category.imageUrl != null}" class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -335,22 +310,6 @@
                         <h3 class="text-base font-semibold text-primary-800 mb-1" th:text="${category.name}">Danh mục</h3>
                         <p class="text-sm text-primary-500"><span th:text="${category.productCount ?: 0}">0</span> sản phẩm</p>
                     </a>
-                    
-                    <!-- Sub-categories cards (displayed below parent) -->
-                    <th:block th:if="${category.children != null and not #lists.isEmpty(category.children)}" th:each="child, childStat : ${category.children}">
-                        <th:block th:if="${childStat.index < 2}">
-                            <a th:href="@{/products(category=${child.id})}" 
-                               class="category-badge group bg-secondary-50 border border-secondary-200 rounded-2xl p-4 text-center cursor-pointer hover:shadow-lg flex flex-col items-center">
-                                <div class="w-10 h-10 mx-auto mb-2 bg-gradient-to-br from-secondary-400 to-primary-400 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform overflow-hidden flex-shrink-0">
-                                    <img th:if="${child.imageUrl != null}" th:src="${child.imageUrl}" alt="${child.name}" class="w-full h-full object-cover">
-                                    <svg th:unless="${child.imageUrl != null}" class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                    </svg>
-                                </div>
-                                <h4 class="text-sm font-medium text-primary-800" th:text="${child.name}">Danh mục con</h4>
-                            </a>
-                        </th:block>
-                    </th:block>
                 </th:block>
             </div>
             
@@ -814,6 +773,24 @@
                 el.addEventListener('click', closeCartModal);
             });
 
+            // Cart badge functionality
+            function updateCartBadge() {
+                var badge = document.getElementById('cartBadge');
+                if (!badge) return;
+                try {
+                    var cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                    var totalItems = cart.reduce(function(sum, item) { return sum + (item.quantity || 1); }, 0);
+                    if (totalItems > 0) {
+                        badge.textContent = totalItems > 99 ? '99+' : totalItems;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                } catch (e) {
+                    badge.classList.add('hidden');
+                }
+            }
+
             document.getElementById('headerLogoutBtn') && document.getElementById('headerLogoutBtn').addEventListener('click', function () {
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('refreshToken');
@@ -841,6 +818,7 @@
 
             refreshHeaderUser();
             loadFooterCategories();
+            updateCartBadge();
         })();
 
         // Contact form handler

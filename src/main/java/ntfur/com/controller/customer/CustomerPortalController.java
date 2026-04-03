@@ -5,6 +5,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +13,9 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,11 +30,13 @@ import ntfur.com.entity.OrderItem;
 import ntfur.com.entity.Product;
 import ntfur.com.entity.User;
 import ntfur.com.entity.dto.ApiResponse;
+import ntfur.com.entity.dto.CustomerAddressDTO;
 import ntfur.com.entity.dto.OrderDTO;
 import ntfur.com.repository.CustomerRepository;
 import ntfur.com.repository.OrderRepository;
 import ntfur.com.repository.ProductRepository;
 import ntfur.com.repository.UserRepository;
+import ntfur.com.service.CustomerAddressService;
 import ntfur.com.service.OrderService;
 
 @RestController
@@ -48,6 +53,7 @@ public class CustomerPortalController {
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
     private final OrderService orderService;
+    private final CustomerAddressService customerAddressService;
 
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getProfile(Principal principal) {
@@ -65,6 +71,9 @@ public class CustomerPortalController {
         profile.put("district", customer.getDistrict());
         profile.put("ward", customer.getWard());
         profile.put("avatarUrl", user.getAvatarUrl());
+        profile.put("dateOfBirth", customer.getDateOfBirth());
+        profile.put("gender", customer.getGender() != null ? customer.getGender().name() : null);
+        profile.put("notes", customer.getNotes());
         profile.put("totalOrders", customer.getTotalOrders());
         profile.put("totalSpent", customer.getTotalSpent());
         return ResponseEntity.ok(ApiResponse.success(profile));
@@ -93,6 +102,17 @@ public class CustomerPortalController {
         customer.setCity(nullSafe(request.getCity()));
         customer.setDistrict(nullSafe(request.getDistrict()));
         customer.setWard(nullSafe(request.getWard()));
+        customer.setNotes(nullSafe(request.getNotes()));
+        if (request.getDateOfBirth() != null) {
+            customer.setDateOfBirth(request.getDateOfBirth());
+        }
+        if (!isBlank(request.getGender())) {
+            try {
+                customer.setGender(Customer.Gender.valueOf(request.getGender().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                // ignore invalid gender
+            }
+        }
         customerRepository.save(customer);
 
         return ResponseEntity.ok(ApiResponse.success("Cập nhật hồ sơ thành công", Map.of("updated", true)));
@@ -103,6 +123,75 @@ public class CustomerPortalController {
         User user = getCurrentUser(principal);
         List<OrderDTO> orders = orderService.getOrdersByUserId(user.getId());
         return ResponseEntity.ok(ApiResponse.success(orders));
+    }
+
+    // Address Management
+    @GetMapping("/addresses")
+    public ResponseEntity<ApiResponse<List<CustomerAddressDTO>>> getAddresses(Principal principal) {
+        User user = getCurrentUser(principal);
+        Customer customer = ensureCustomer(user);
+        List<CustomerAddressDTO> addresses = customerAddressService.getAddressesByCustomerId(customer.getId());
+        return ResponseEntity.ok(ApiResponse.success(addresses));
+    }
+
+    @GetMapping("/addresses/{id}")
+    public ResponseEntity<ApiResponse<CustomerAddressDTO>> getAddressById(Principal principal, @PathVariable Long id) {
+        User user = getCurrentUser(principal);
+        Customer customer = ensureCustomer(user);
+        try {
+            CustomerAddressDTO address = customerAddressService.getAddressById(id, customer.getId());
+            return ResponseEntity.ok(ApiResponse.success(address));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/addresses")
+    public ResponseEntity<ApiResponse<CustomerAddressDTO>> createAddress(Principal principal, @RequestBody CustomerAddressDTO dto) {
+        User user = getCurrentUser(principal);
+        Customer customer = ensureCustomer(user);
+        try {
+            CustomerAddressDTO address = customerAddressService.createAddress(customer.getId(), dto);
+            return ResponseEntity.ok(ApiResponse.success("Thêm địa chỉ thành công", address));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PutMapping("/addresses/{id}")
+    public ResponseEntity<ApiResponse<CustomerAddressDTO>> updateAddress(Principal principal, @PathVariable Long id, @RequestBody CustomerAddressDTO dto) {
+        User user = getCurrentUser(principal);
+        Customer customer = ensureCustomer(user);
+        try {
+            CustomerAddressDTO address = customerAddressService.updateAddress(id, customer.getId(), dto);
+            return ResponseEntity.ok(ApiResponse.success("Cập nhật địa chỉ thành công", address));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/addresses/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteAddress(Principal principal, @PathVariable Long id) {
+        User user = getCurrentUser(principal);
+        Customer customer = ensureCustomer(user);
+        try {
+            customerAddressService.deleteAddress(id, customer.getId());
+            return ResponseEntity.ok(ApiResponse.success("Xóa địa chỉ thành công", null));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PutMapping("/addresses/{id}/default")
+    public ResponseEntity<ApiResponse<CustomerAddressDTO>> setDefaultAddress(Principal principal, @PathVariable Long id) {
+        User user = getCurrentUser(principal);
+        Customer customer = ensureCustomer(user);
+        try {
+            CustomerAddressDTO address = customerAddressService.setDefaultAddress(id, customer.getId());
+            return ResponseEntity.ok(ApiResponse.success("Đặt địa chỉ mặc định thành công", address));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @PostMapping("/orders/preview")
@@ -225,7 +314,8 @@ public class CustomerPortalController {
 
     private boolean isSupportedArea(String city) {
         String c = city.toLowerCase();
-        return c.contains("hồ chí minh") || c.contains("ho chi minh") || c.contains("tp.hcm");
+        return c.contains("hồ chí minh") || c.contains("ho chi minh") || 
+               c.contains("tp.hcm") || c.contains("tphcm") || c.contains("tp hcm");
     }
 
     private BigDecimal calculateShippingFee(String city, List<CartLine> items) {
@@ -305,6 +395,9 @@ public class CustomerPortalController {
         private String district;
         private String ward;
         private String avatarUrl;
+        private LocalDate dateOfBirth;
+        private String gender;
+        private String notes;
     }
 
     @Data

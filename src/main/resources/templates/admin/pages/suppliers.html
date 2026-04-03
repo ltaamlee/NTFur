@@ -485,9 +485,10 @@
                         <span class="w-6 h-6 bg-primary-100 text-primary-700 rounded flex items-center justify-center text-xs font-bold mr-2">${index + 1}</span>
                         <span class="text-sm text-primary-800">${p.name}</span>
                         ${p.isNew ? '<span class="text-xs text-green-600 ml-2 px-2 py-0.5 bg-green-50 rounded">Mới</span>' : 
-                          (p.sku ? `<span class="text-xs text-primary-400 ml-2">${p.sku}</span>` : '')}
+                          (p.sku ? `<span class="text-xs text-primary-400 ml-2 px-2 py-0.5 bg-primary-50 rounded">SKU: ${p.sku}</span>` : 
+                            '<span class="text-xs text-yellow-600 ml-2 px-2 py-0.5 bg-yellow-50 rounded">Chưa có SKU</span>')}
                     </div>
-                    <button type="button" onclick="removeSupplierProduct(${p.id})" class="text-red-500 hover:text-red-700 p-1">
+                    <button type="button" onclick="removeSupplierProduct('${String(p.id)}')" class="text-red-500 hover:text-red-700 p-1">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
@@ -562,11 +563,8 @@
         }
 
         function removeSupplierProduct(productId) {
-            // Handle both numeric IDs and temporary IDs (new_*)
-            selectedSupplierProducts = selectedSupplierProducts.filter(p => {
-                const idStr = String(p.id);
-                return idStr !== String(productId) && idStr !== productId && !idStr.endsWith(productId);
-            });
+            // productId is now always a string
+            selectedSupplierProducts = selectedSupplierProducts.filter(p => String(p.id) !== productId);
             renderSupplierProductsList();
         }
 

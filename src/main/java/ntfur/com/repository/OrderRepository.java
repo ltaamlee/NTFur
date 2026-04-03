@@ -58,7 +58,7 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     @Query("SELECT o.status, COUNT(o) FROM Order o GROUP BY o.status")
     List<Object[]> countOrdersByStatus();
 
-    @Query("SELECT DATE(o.createdAt), SUM(o.totalAmount) FROM Order o WHERE o.createdAt >= :startDate GROUP BY DATE(o.createdAt) ORDER BY DATE(o.createdAt)")
+    @Query("SELECT CAST(o.createdAt AS DATE), SUM(o.totalAmount) FROM Order o WHERE o.createdAt >= :startDate GROUP BY CAST(o.createdAt AS DATE) ORDER BY CAST(o.createdAt AS DATE)")
     List<Object[]> getDailyRevenue(@Param("startDate") LocalDateTime startDate);
 
     @Query("SELECT MONTH(o.createdAt), YEAR(o.createdAt), SUM(o.totalAmount) FROM Order o WHERE YEAR(o.createdAt) = :year GROUP BY MONTH(o.createdAt), YEAR(o.createdAt) ORDER BY MONTH(o.createdAt)")

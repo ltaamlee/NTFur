@@ -1,7 +1,6 @@
 package ntfur.com.entity.dto.category;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -33,13 +32,6 @@ public class CategoryDTO {
     private String status;
 
     private int displayOrder;
-    
-    // Parent category info
-    private Long parentId;
-    private String parentName;
-    
-    // Child categories
-    private List<CategoryDTO> children;
     
     // Product count
     private int productCount;

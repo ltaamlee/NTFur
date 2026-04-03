@@ -1,6 +1,7 @@
 package ntfur.com.entity.dto.customer;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.validation.constraints.Email;
@@ -39,7 +40,7 @@ public class CustomerDTO {
 
     private String ward;
 
-    private LocalDateTime dateOfBirth;
+    private LocalDate dateOfBirth;
 
     private String gender;
 

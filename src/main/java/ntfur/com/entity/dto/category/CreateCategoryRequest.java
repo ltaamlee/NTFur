@@ -24,6 +24,4 @@ public class CreateCategoryRequest {
     private String status;
 
     private Integer displayOrder;
-    
-    private Long parentId;
 }

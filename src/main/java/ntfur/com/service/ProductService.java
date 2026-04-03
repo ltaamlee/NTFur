@@ -56,14 +56,6 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
     
-    public List<ProductDTO> getProductsByCategoryIncludingSubcategories(Long categoryId) {
-        // Get all category IDs including subcategories
-        List<Long> categoryIds = categoryRepository.findAllChildIds(categoryId);
-        categoryIds.add(categoryId);
-        return productRepository.findByCategoryIdIn(categoryIds).stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-    }
 
     public List<ProductDTO> searchProducts(String keyword) {
         return productRepository.searchByKeyword(keyword).stream()
@@ -93,8 +85,10 @@ public class ProductService {
         if (request.getCostPrice() != null) {
             product.setCostPrice(BigDecimal.valueOf(request.getCostPrice()));
         }
-        
-        product.setStock(request.getStock() != null ? request.getStock() : 0);
+
+        if (request.getStock() != null) {
+            product.setStock(request.getStock());
+        }
         product.setSku(request.getSku());
         product.setWeight(request.getWeight());
         product.setDimensions(request.getDimensions());

@@ -71,14 +71,15 @@
                                 <div id="memberBlock" class="hidden py-1">
                                     <div class="px-4 py-2 text-xs text-primary-500 border-b border-primary-50" id="memberGreeting">Xin chào</div>
                                     <a href="/profile" class="block px-4 py-2.5 text-sm text-primary-800 hover:bg-primary-50">Hồ sơ của tôi</a>
-                                    <a href="/checkout" class="block px-4 py-2.5 text-sm text-primary-800 hover:bg-primary-50">Đơn hàng / Thanh toán</a>
+                                    <a href="/profile" class="block px-4 py-2.5 text-sm text-primary-800 hover:bg-primary-50">Đơn hàng của tôi</a>
                                     <button type="button" id="headerLogoutBtn" class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">Đăng xuất</button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <button type="button" id="headerCartBtn" class="p-2.5 text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded-full">
+                    <button type="button" id="headerCartBtn" class="relative p-2.5 text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded-full">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        <span id="cartBadge" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">0</span>
                     </button>
                 </div>
             </div>
@@ -131,7 +132,7 @@
                         <button type="button" id="qtyPlus" class="px-3 py-2 text-gray-700 hover:bg-gray-100">+</button>
                     </div>
                     <button id="addBtn" class="px-6 py-2.5 rounded-lg bg-primary-700 text-white hover:bg-primary-800">Thêm vào giỏ</button>
-                    <a href="/checkout" class="px-6 py-2.5 rounded-lg bg-secondary-700 text-white hover:opacity-90">Mua ngay</a>
+                    <button id="buyNowBtn" class="px-6 py-2.5 rounded-lg bg-secondary-700 text-white hover:opacity-90">Mua ngay</button>
                 </div>
                 <div class="mt-6">
                     <h2 class="font-semibold text-lg">Mô tả sản phẩm</h2>
@@ -187,12 +188,34 @@
             if (!isLoggedIn()) { window.location.href = '/login'; return; }
             const qty = normalizeQty();
             if (qty > product.stock) { alert('Số lượng vượt quá tồn kho'); return; }
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            const found = cart.find(i => i.id === product.id);
-            if (found) found.quantity = Math.min(found.quantity + qty, product.stock);
-            else cart.push({ id: product.id, name: product.name, price: product.price, mainImage: product.mainImage, quantity: qty, stock: product.stock });
-            localStorage.setItem('cart', JSON.stringify(cart));
-            alert('Đã thêm sản phẩm vào giỏ hàng');
+            try {
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                const found = cart.find(i => i.id === product.id);
+                if (found) found.quantity = Math.min(found.quantity + qty, 999);
+                else cart.push({ id: product.id, name: product.name, price: product.price, quantity: qty });
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartBadge();
+                alert('Đã thêm sản phẩm vào giỏ hàng');
+            } catch (e) {
+                alert('Không thể thêm vào giỏ hàng. Vui lòng xóa bớt sản phẩm.');
+            }
+        }
+
+        function updateCartBadge() {
+            const badge = document.getElementById('cartBadge');
+            if (!badge) return;
+            try {
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+                if (totalItems > 0) {
+                    badge.textContent = totalItems > 99 ? '99+' : totalItems;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            } catch (e) {
+                badge.classList.add('hidden');
+            }
         }
 
         async function refreshHeaderUser() {
@@ -238,10 +261,29 @@
             document.getElementById('description').textContent = product.description || 'Chưa có mô tả';
             document.getElementById('qty').max = String(Math.max(1, product.stock || 1));
             document.getElementById('addBtn').disabled = product.stock <= 0;
+            document.getElementById('buyNowBtn').disabled = product.stock <= 0;
+            if (product.stock <= 0) {
+                document.getElementById('buyNowBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            }
             renderSlider();
         }
 
+        function buyNow() {
+            if (!isLoggedIn()) { window.location.href = '/login'; return; }
+            const qty = normalizeQty();
+            if (qty > product.stock) { alert('Số lượng vượt quá tồn kho'); return; }
+            try {
+                const cart = [];
+                cart.push({ id: product.id, name: product.name, price: product.price, quantity: qty });
+                localStorage.setItem('cart', JSON.stringify(cart));
+                window.location.href = '/checkout';
+            } catch (e) {
+                alert('Không thể xử lý. Vui lòng thử lại.');
+            }
+        }
+
         document.getElementById('addBtn').addEventListener('click', addToCart);
+        document.getElementById('buyNowBtn').addEventListener('click', buyNow);
         document.getElementById('userMenuBtn').addEventListener('click', (e) => {
             e.stopPropagation();
             document.getElementById('userDropdown').classList.toggle('hidden');
@@ -261,6 +303,7 @@
 
         refreshHeaderUser();
         loadProduct();
+        updateCartBadge();
     </script>
 </body>
 </html>

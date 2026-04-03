@@ -78,6 +78,10 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImage> images = new ArrayList<>();
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<SupplierProduct> supplierProducts = new ArrayList<>();
+
     @Column(name = "weight")
     private Double weight;
 
@@ -94,7 +98,7 @@ public class Product {
     private Integer warrantyMonths;
 
     @Column(name = "view_count")
-    private int viewCount = 0;
+    private Integer viewCount = 0;
 
     @Column(name = "is_featured")
     private boolean featured = false;

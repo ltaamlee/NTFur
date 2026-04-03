@@ -136,6 +136,19 @@ public class Shipping {
         updatedAt = LocalDateTime.now();
     }
 
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Shipping other = (Shipping) obj;
+        return id != null && id.equals(other.id);
+    }
+
     public BigDecimal getTotalFee() {
         return shippingFee.add(installationRequired && installationFee != null ? installationFee : BigDecimal.ZERO);
     }

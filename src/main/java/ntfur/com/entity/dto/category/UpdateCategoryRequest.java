@@ -26,6 +26,4 @@ public class UpdateCategoryRequest {
     private String status;
 
     private Integer displayOrder;
-    
-    private Long parentId;
 }
