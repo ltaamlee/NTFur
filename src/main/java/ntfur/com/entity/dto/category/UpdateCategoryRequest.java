@@ -21,10 +21,11 @@ public class UpdateCategoryRequest {
     @Size(max = 2000, message = "Mô tả không được vượt quá 2000 ký tự")
     private String description;
 
-    @Size(max = 50, message = "Icon không được vượt quá 50 ký tự")
-    private String icon;
+    private String imageUrl;
 
     private String status;
 
     private Integer displayOrder;
+    
+    private Long parentId;
 }

@@ -38,6 +38,10 @@ public class UpdateProductRequest {
 
     private Long supplierId;
 
+    private Long productSetId;
+
+    private String newProductSetName;
+
     @Min(value = 0, message = "Trọng lượng không được nhỏ hơn 0")
     private Double weight;
 

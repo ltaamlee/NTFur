@@ -1,6 +1,5 @@
 package ntfur.com.service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -81,7 +80,6 @@ public class EmployeeService {
         }
         employee.setAvatarUrl(dto.getAvatarUrl());
         employee.setStatus(dto.getStatus() != null ? EmployeeStatus.valueOf(dto.getStatus()) : EmployeeStatus.ACTIVE);
-        employee.setAdmin(dto.isAdmin());
 
         Employee saved = employeeRepository.save(employee);
         return toDTO(saved);
@@ -114,7 +112,6 @@ public class EmployeeService {
         if (dto.getGender() != null) employee.setGender(Employee.Gender.valueOf(dto.getGender()));
         if (dto.getAvatarUrl() != null) employee.setAvatarUrl(dto.getAvatarUrl());
         if (dto.getStatus() != null) employee.setStatus(EmployeeStatus.valueOf(dto.getStatus()));
-        employee.setAdmin(dto.isAdmin());
 
         Employee updated = employeeRepository.save(employee);
         return toDTO(updated);
@@ -152,7 +149,6 @@ public class EmployeeService {
                 .gender(employee.getGender() != null ? employee.getGender().name() : null)
                 .avatarUrl(employee.getAvatarUrl())
                 .status(employee.getStatus() != null ? employee.getStatus().name() : null)
-                .isAdmin(employee.isAdmin())
                 .createdAt(employee.getCreatedAt() != null ? employee.getCreatedAt().toString() : null)
                 .updatedAt(employee.getUpdatedAt() != null ? employee.getUpdatedAt().toString() : null)
                 .build();

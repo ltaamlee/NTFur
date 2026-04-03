@@ -1,0 +1,104 @@
+<th:block th:fragment="page-content">
+    <th:block th:with="title='Khách hàng', pageTitle='Khách hàng', activePage='customers'">
+
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-display font-bold text-primary-800">Quản lý khách hàng</h2>
+            <p class="text-primary-500 mt-1">Xem thông tin khách hàng</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl card-shadow border border-primary-100 p-4 mb-6">
+        <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1">
+                <input type="text" id="searchInput" placeholder="Tìm theo tên, email, SĐT..." class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500">
+            </div>
+        </div>
+    </div>
+
+    <!-- Customers Table -->
+    <div class="bg-white rounded-2xl card-shadow border border-primary-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full" id="customersTableSortable">
+                <thead>
+                    <tr class="table-header">
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="name">Khách hàng</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="contact">Liên hệ</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="orders">Đơn hàng</th>
+                        <th class="px-6 py-4 text-right text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="spent">Tổng chi tiêu</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="date">Ngày tham gia</th>
+                    </tr>
+                </thead>
+                <tbody id="customersTable">
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-primary-500">Đang tải dữ liệu...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let allCustomers = [];
+        
+        async function loadCustomers() {
+            try {
+                const response = await apiCall('/api/admin/customers');
+                if (response.success) {
+                    allCustomers = response.data || [];
+                    renderCustomers();
+                }
+            } catch (error) {
+                console.error('Error loading customers:', error);
+            }
+        }
+        
+        function renderCustomers() {
+            const tbody = document.getElementById('customersTable');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            let filtered = allCustomers.filter(c => {
+                if (!searchTerm) return true;
+                return (c.fullName && c.fullName.toLowerCase().includes(searchTerm)) ||
+                    (c.email && c.email.toLowerCase().includes(searchTerm)) ||
+                    (c.phone && c.phone.includes(searchTerm));
+            });
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-primary-500">Không tìm thấy khách hàng nào</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filtered.map(customer => `
+                <tr class="border-b border-primary-50 hover:bg-primary-50/50">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-secondary-400 flex items-center justify-center text-white font-semibold">
+                                ${(customer.fullName || 'K')[0].toUpperCase()}
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-primary-800">${customer.fullName || 'Khách hàng'}</p>
+                                <p class="text-xs text-primary-400">${customer.email || '-'}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-primary-600">${customer.phone || '-'}</td>
+                    <td class="px-6 py-4 text-center text-sm text-primary-800 font-medium">${customer.totalOrders || 0}</td>
+                    <td class="px-6 py-4 text-right text-sm font-semibold text-primary-800">${formatCurrency(customer.totalSpent || 0)}</td>
+                    <td class="px-6 py-4 text-center text-sm text-primary-500">${customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('vi-VN') : '-'}</td>
+                </tr>
+            `).join('');
+        }
+        
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', renderCustomers);
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCustomers();
+            initTableSort('customersTableSortable');
+        });
+    </script>
+    </th:block>
+</th:block>

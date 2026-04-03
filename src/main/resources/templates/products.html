@@ -23,6 +23,11 @@
                             50: '#fefcf9', 100: '#fdf8f3', 200: '#f5efe6', 300: '#ebe2d3',
                             400: '#ddd0b8', 500: '#cdb99a', 600: '#c4a47d', 700: '#a67c52',
                             800: '#866744', 900: '#6e553a',
+                        },
+                        warm: {
+                            white: '#FFFBF7',
+                            cream: '#FDF6F0',
+                            beige: '#F5EDE4',
                         }
                     },
                     fontFamily: {
@@ -62,9 +67,26 @@
         .image-slider .thumb:hover { opacity: 1; }
         .image-slider .thumb.active { opacity: 1; border-color: #a67c52; }
         .image-slider .thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .header-popover { filter: drop-shadow(0 8px 24px rgba(67,48,43,0.12)); }
+        .header-dd-enter { animation: ddIn 0.18s ease-out; }
+        @keyframes ddIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-link { position: relative; }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; left: 0; width: 0; height: 2px;
+            background: linear-gradient(90deg, #a67c52, #977669);
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after { width: 100%; }
+        .scroll-smooth { scroll-behavior: smooth; }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #f2e8e5; }
+        ::-webkit-scrollbar-thumb { background: #d2bab0; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a67c52; }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-warm-white scroll-smooth">
 
     <!-- Header -->
     <header class="bg-white shadow-md sticky top-0 z-50">
@@ -86,44 +108,66 @@
                 <div class="hidden md:flex flex-1 max-w-lg mx-8">
                     <div class="relative w-full">
                         <input type="text" id="searchInput" placeholder="Tìm kiếm sản phẩm..." 
-                               class="w-full pl-12 pr-4 py-3 bg-gray-100 border border-transparent rounded-full text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all">
-                        <svg class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="w-full pl-12 pr-4 py-3 bg-primary-50 border border-primary-200 rounded-full text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 focus:bg-white transition-all">
+                        <svg class="w-5 h-5 text-primary-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
                     </div>
                 </div>
 
-                <!-- Right Actions -->
-                <div class="flex items-center space-x-2 sm:space-x-4">
-                    <!-- User Icon -->
-                    <button onclick="toggleUserMenu()" class="p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-full transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                        </svg>
-                    </button>
-
-                    <!-- Cart Icon -->
-                    <button onclick="toggleCart()" class="relative p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-full transition-colors">
+                <!-- Right Actions — giống landing -->
+                <div class="flex items-center gap-1 sm:gap-2">
+                    <div class="relative" id="userMenuWrap">
+                        <button type="button" id="userMenuBtn" class="flex items-center gap-2 pl-2 pr-3 py-2 rounded-full hover:bg-primary-50 text-primary-800 transition-colors border border-transparent hover:border-primary-200">
+                            <span class="p-1.5 rounded-full bg-primary-100 text-primary-700">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                            </span>
+                            <span id="headerUserLabel" class="hidden sm:inline text-sm font-medium max-w-[140px] truncate">Tài khoản</span>
+                            <svg class="w-4 h-4 text-primary-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-56 header-popover z-[60]">
+                            <div class="bg-white rounded-xl border border-primary-100 overflow-hidden header-dd-enter">
+                                <div id="guestBlock" class="py-1">
+                                    <a href="/login" class="flex items-center px-4 py-3 text-sm text-primary-800 hover:bg-primary-50 transition-colors">
+                                        <span class="w-8 h-8 rounded-lg bg-secondary-100 text-secondary-800 flex items-center justify-center mr-3 text-xs font-bold">in</span>
+                                        Đăng nhập
+                                    </a>
+                                    <a href="/register" class="flex items-center px-4 py-3 text-sm text-primary-800 hover:bg-primary-50 transition-colors border-t border-primary-50">
+                                        <span class="w-8 h-8 rounded-lg bg-primary-100 text-primary-800 flex items-center justify-center mr-3 text-xs font-bold">+</span>
+                                        Đăng ký
+                                    </a>
+                                </div>
+                                <div id="memberBlock" class="hidden py-1">
+                                    <div class="px-4 py-2 text-xs text-primary-500 border-b border-primary-50" id="memberGreeting">Xin chào</div>
+                                    <a href="/profile" class="block px-4 py-2.5 text-sm text-primary-800 hover:bg-primary-50">Hồ sơ của tôi</a>
+                                    <a href="/checkout" class="block px-4 py-2.5 text-sm text-primary-800 hover:bg-primary-50">Đơn hàng / Thanh toán</a>
+                                    <button type="button" id="headerLogoutBtn" class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">Đăng xuất</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="headerCartBtn" class="p-2.5 text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded-full transition-colors active:scale-95" title="Giỏ hàng">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                         </svg>
-                        <span id="cartBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center hidden">0</span>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Navigation Bar -->
-        <nav class="bg-primary-800">
+        <!-- Navigation Bar — giống landing -->
+        <nav class="bg-gradient-to-r from-primary-800 to-primary-900">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-14">
                     <div class="flex items-center space-x-8">
-                        <a href="/" class="text-white font-medium hover:text-secondary-300 transition-colors py-1">Trang chủ</a>
-                        <a href="/products" class="text-white font-medium hover:text-secondary-300 transition-colors py-1 border-b-2 border-secondary-500">Các sản phẩm nội thất</a>
+                        <a href="/" class="nav-link text-white font-medium hover:text-secondary-300 transition-colors py-1">Trang chủ</a>
+                        <a href="/products" class="nav-link text-white font-medium hover:text-secondary-300 transition-colors py-1 border-b-2 border-secondary-500">Các sản phẩm nội thất</a>
                     </div>
                     <div class="flex items-center space-x-8">
-                        <a href="/about" class="text-white font-medium hover:text-secondary-300 transition-colors py-1">Về chúng tôi</a>
-                        <a href="/contact" class="text-white font-medium hover:text-secondary-300 transition-colors py-1">Liên hệ</a>
+                        <a href="/about" class="nav-link text-white font-medium hover:text-secondary-300 transition-colors py-1">Về chúng tôi</a>
+                        <a href="/contact" class="nav-link text-white font-medium hover:text-secondary-300 transition-colors py-1">Liên hệ</a>
                     </div>
                 </div>
             </div>
@@ -303,8 +347,7 @@
         });
 
         function checkLoginStatus() {
-            const user = localStorage.getItem('user');
-            isLoggedIn = !!user;
+            isLoggedIn = !!localStorage.getItem('accessToken');
         }
 
         async function loadProducts() {
@@ -842,18 +885,6 @@
             }
         }
 
-        function toggleUserMenu() {
-            if (isLoggedIn) {
-                window.location.href = '/profile';
-            } else {
-                window.location.href = '/login';
-            }
-        }
-
-        function toggleCart() {
-            window.location.href = '/cart';
-        }
-
         function formatCurrency(amount) {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         }
@@ -944,12 +975,109 @@
     </footer>
 
     <script>
-        // Load footer categories
-        if (typeof categories !== 'undefined' && categories.length > 0) {
-            document.getElementById('footerCategories').innerHTML = categories.slice(0, 4).map(c => 
-                `<li><a href="/products?category=${c.id}" class="text-primary-300 hover:text-white transition-colors">${c.name}</a></li>`
-            ).join('');
-        }
+        (function () {
+            var fc = document.getElementById('footerCategories');
+            if (!fc) return;
+            if (typeof categories !== 'undefined' && categories.length > 0) {
+                fc.innerHTML = categories.slice(0, 6).map(function (c) {
+                    return '<li><a href="/products?category=' + c.id + '" class="text-primary-300 hover:text-white transition-colors">' + (c.name || '') + '</a></li>';
+                }).join('');
+                return;
+            }
+            fetch('/api/categories').then(function (r) { return r.json(); }).then(function (data) {
+                var list = data.success && data.data ? data.data : [];
+                fc.innerHTML = list.length ? list.slice(0, 6).map(function (c) {
+                    return '<li><a href="/products?category=' + c.id + '" class="text-primary-300 hover:text-white transition-colors">' + (c.name || '') + '</a></li>';
+                }).join('') : '<li class="text-primary-400 text-sm">Chưa có danh mục</li>';
+            }).catch(function () { fc.innerHTML = '<li class="text-primary-400 text-sm">—</li>'; });
+        })();
+    </script>
+
+    <div id="cartLoginModal" class="fixed inset-0 z-[100] hidden">
+        <div class="absolute inset-0 bg-black/45" data-close-cart-modal></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div class="pointer-events-auto bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative border border-primary-100">
+                <button type="button" class="absolute top-3 right-3 p-2 rounded-full hover:bg-primary-50 text-primary-500" data-close-cart-modal>&times;</button>
+                <h3 class="text-center text-lg font-display font-bold text-primary-900 mb-2">Đăng nhập để xem giỏ hàng</h3>
+                <p class="text-center text-sm text-primary-600 mb-6">Vui lòng đăng nhập để tiếp tục.</p>
+                <div class="flex gap-3">
+                    <button type="button" class="flex-1 py-3 rounded-xl border border-primary-300 text-primary-800 font-medium hover:bg-primary-50" data-close-cart-modal>Hủy</button>
+                    <a href="/login" class="flex-1 py-3 rounded-xl text-center font-semibold text-white bg-gradient-to-r from-secondary-700 to-primary-800">Đăng nhập</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function () {
+            var TOKEN_KEY = 'accessToken';
+            function getToken() { return localStorage.getItem(TOKEN_KEY); }
+            function authFetch(url, opts) {
+                opts = opts || {};
+                var h = new Headers(opts.headers || {});
+                var t = getToken();
+                if (t) h.set('Authorization', 'Bearer ' + t);
+                return fetch(url, Object.assign({}, opts, { headers: h }));
+            }
+            async function refreshHeaderUser() {
+                var label = document.getElementById('headerUserLabel');
+                var guestBlock = document.getElementById('guestBlock');
+                var memberBlock = document.getElementById('memberBlock');
+                var greeting = document.getElementById('memberGreeting');
+                if (!label || !getToken()) {
+                    if (label) label.textContent = 'Tài khoản';
+                    if (guestBlock) guestBlock.classList.remove('hidden');
+                    if (memberBlock) memberBlock.classList.add('hidden');
+                    return;
+                }
+                try {
+                    var res = await authFetch('/api/auth/me');
+                    var data = await res.json();
+                    if (data.success && data.data) {
+                        var display = data.data.fullName || data.data.username || 'Khách';
+                        label.textContent = display.length > 18 ? display.slice(0, 16) + '…' : display;
+                        if (greeting) greeting.textContent = 'Xin chào, ' + display;
+                        if (guestBlock) guestBlock.classList.add('hidden');
+                        if (memberBlock) memberBlock.classList.remove('hidden');
+                    } else {
+                        if (label) label.textContent = 'Tài khoản';
+                        if (guestBlock) guestBlock.classList.remove('hidden');
+                        if (memberBlock) memberBlock.classList.add('hidden');
+                    }
+                } catch (e) { if (label) label.textContent = 'Tài khoản'; }
+            }
+            var userBtn = document.getElementById('userMenuBtn');
+            var userDd = document.getElementById('userDropdown');
+            var userWrap = document.getElementById('userMenuWrap');
+            function closeUserDd() { if (userDd) userDd.classList.add('hidden'); }
+            if (userBtn && userDd) {
+                userBtn.addEventListener('click', function (e) { e.stopPropagation(); userDd.classList.toggle('hidden'); });
+                document.addEventListener('click', function () { closeUserDd(); });
+                userWrap.addEventListener('click', function (e) { e.stopPropagation(); });
+            }
+            var cartBtn = document.getElementById('headerCartBtn');
+            var cartModal = document.getElementById('cartLoginModal');
+            function openCartModal() { if (cartModal) cartModal.classList.remove('hidden'); }
+            function closeCartModal() { if (cartModal) cartModal.classList.add('hidden'); }
+            if (cartBtn) {
+                cartBtn.addEventListener('click', function () {
+                    if (getToken()) window.location.href = '/cart';
+                    else openCartModal();
+                });
+            }
+            document.querySelectorAll('[data-close-cart-modal]').forEach(function (el) {
+                el.addEventListener('click', closeCartModal);
+            });
+            var lo = document.getElementById('headerLogoutBtn');
+            if (lo) lo.addEventListener('click', function () {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('user');
+                closeUserDd();
+                refreshHeaderUser();
+                location.reload();
+            });
+            refreshHeaderUser();
+        })();
     </script>
 </body>
 </html>

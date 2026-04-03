@@ -1,0 +1,140 @@
+<th:block th:fragment="page-content">
+    <th:block th:with="title='Đơn hàng', pageTitle='Đơn hàng', activePage='orders'">
+
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-display font-bold text-primary-800">Quản lý đơn hàng</h2>
+            <p class="text-primary-500 mt-1">Xem và cập nhật trạng thái đơn hàng</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl card-shadow border border-primary-100 p-4 mb-6">
+        <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1">
+                <input type="text" id="searchInput" placeholder="Tìm theo mã đơn, tên khách hàng..." class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500">
+            </div>
+            <select id="filterStatus" class="px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500">
+                <option value="">Tất cả trạng thái</option>
+                <option value="PENDING">Chờ xác nhận</option>
+                <option value="CONFIRMED">Đã xác nhận</option>
+                <option value="PROCESSING">Đang xử lý</option>
+                <option value="SHIPPING">Đang giao</option>
+                <option value="DELIVERED">Hoàn thành</option>
+                <option value="CANCELLED">Đã hủy</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="bg-white rounded-2xl card-shadow border border-primary-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full" id="ordersTableSortable">
+                <thead>
+                    <tr class="table-header">
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="code">Mã đơn</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="customer">Khách hàng</th>
+                        <th class="px-6 py-4 text-right text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="total">Tổng tiền</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="status">Trạng thái</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="date">Ngày đặt</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTable">
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-primary-500">Đang tải dữ liệu...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let allOrders = [];
+        
+        async function loadOrders() {
+            try {
+                const response = await apiCall('/api/admin/orders');
+                if (response.success) {
+                    allOrders = response.data || [];
+                    renderOrders();
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+            }
+        }
+        
+        function renderOrders() {
+            const tbody = document.getElementById('ordersTable');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+            
+            let filtered = allOrders.filter(o => {
+                const matchSearch = !searchTerm || 
+                    (o.orderNumber && o.orderNumber.toLowerCase().includes(searchTerm)) ||
+                    (o.customerName && o.customerName.toLowerCase().includes(searchTerm)) ||
+                    (o.shippingPhone && o.shippingPhone.includes(searchTerm));
+                const matchStatus = !statusFilter || o.status === statusFilter;
+                return matchSearch && matchStatus;
+            });
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-primary-500">Không tìm thấy đơn hàng nào</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filtered.map(order => `
+                <tr class="border-b border-primary-50 hover:bg-primary-50/50">
+                    <td class="px-6 py-4 text-sm font-medium text-primary-800">${order.orderNumber || order.id}</td>
+                    <td class="px-6 py-4 text-sm text-primary-600">${order.customerName || order.shippingFullName || 'Khách hàng'}</td>
+                    <td class="px-6 py-4 text-right text-sm font-semibold text-primary-800">${formatCurrency(order.totalAmount || 0)}</td>
+                    <td class="px-6 py-4 text-center">${getStatusBadge(order.status)}</td>
+                    <td class="px-6 py-4 text-center text-sm text-primary-500">${order.createdAt ? new Date(order.createdAt).toLocaleDateString('vi-VN') : '-'}</td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="viewOrder(${order.id})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Xem chi tiết">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function getStatusBadge(status) {
+            const statusMap = {
+                'PENDING': '<span class="status-badge status-pending">Chờ xác nhận</span>',
+                'CONFIRMED': '<span class="status-badge status-confirmed">Đã xác nhận</span>',
+                'PROCESSING': '<span class="status-badge status-processing">Đang xử lý</span>',
+                'SHIPPING': '<span class="status-badge status-shipped">Đang giao</span>',
+                'DELIVERED': '<span class="status-badge status-delivered">Hoàn thành</span>',
+                'CANCELLED': '<span class="status-badge status-cancelled">Đã hủy</span>'
+            };
+            return statusMap[status] || `<span class="status-badge bg-gray-100 text-gray-600">${status}</span>`;
+        }
+        
+        function viewOrder(id) {
+            const order = allOrders.find(o => o.id === id);
+            if (!order) return;
+            
+            let details = `Mã đơn: ${order.orderNumber || order.id}\n`;
+            details += `Khách hàng: ${order.customerName || order.shippingFullName || '-'}\n`;
+            details += `SĐT: ${order.shippingPhone || '-'}\n`;
+            details += `Địa chỉ: ${order.shippingAddress || '-'}\n`;
+            details += `Tổng tiền: ${formatCurrency(order.totalAmount || 0)}\n`;
+            details += `Trạng thái: ${order.status}\n`;
+            details += `Ngày đặt: ${order.createdAt ? new Date(order.createdAt).toLocaleDateString('vi-VN') : '-'}`;
+            
+            alert(details);
+        }
+        
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', renderOrders);
+        document.getElementById('filterStatus').addEventListener('change', renderOrders);
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOrders();
+            initTableSort('ordersTableSortable');
+        });
+    </script>
+    </th:block>
+</th:block>

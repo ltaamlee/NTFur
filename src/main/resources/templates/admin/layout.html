@@ -141,6 +141,10 @@
                     <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-semibold">A</div>
                     <div class="ml-3"><p class="text-sm font-medium text-primary-800">Admin</p><p class="text-xs text-primary-500">admin@ntfurniture.com</p></div>
                 </div>
+                <a href="/logout" class="mt-3 flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    Đăng xuất
+                </a>
             </div>
         </aside>
         <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
@@ -245,6 +249,84 @@
             return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
         }
         document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeDeleteModal(); } });
+        
+        // Table Sorting Functions
+        let currentSortColumn = null;
+        let currentSortDirection = 'asc';
+        
+        function initTableSort(tableId) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            
+            const headers = table.querySelectorAll('thead th[data-sortable]');
+            headers.forEach((header, index) => {
+                header.style.cursor = 'pointer';
+                header.classList.add('select-none');
+                header.innerHTML += `<svg class="w-4 h-4 inline-block ml-1 text-primary-300 opacity-0 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/></svg>`;
+                
+                header.addEventListener('click', () => {
+                    const column = header.dataset.sort;
+                    sortTable(tableId, column, index);
+                });
+            });
+        }
+        
+        function sortTable(tableId, column, colIndex) {
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const headers = table.querySelectorAll('thead th');
+            
+            // Update sort direction
+            if (currentSortColumn === column) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortColumn = column;
+                currentSortDirection = 'asc';
+            }
+            
+            // Update header icons
+            headers.forEach(h => {
+                const icon = h.querySelector('.sort-icon');
+                if (icon) {
+                    icon.classList.remove('opacity-100');
+                    icon.classList.add('opacity-0');
+                    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>';
+                }
+            });
+            
+            const currentHeader = headers[colIndex];
+            const currentIcon = currentHeader.querySelector('.sort-icon');
+            if (currentIcon) {
+                currentIcon.classList.remove('opacity-0');
+                currentIcon.classList.add('opacity-100');
+                currentIcon.innerHTML = currentSortDirection === 'asc' 
+                    ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>'
+                    : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l-5-5m0 0l-5 5m5-5v12"/>';
+            }
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                let aVal = a.cells[colIndex]?.textContent?.trim() || '';
+                let bVal = b.cells[colIndex]?.textContent?.trim() || '';
+                
+                // Try to parse as number
+                const aNum = parseFloat(aVal.replace(/[^\d.-]/g, ''));
+                const bNum = parseFloat(bVal.replace(/[^\d.-]/g, ''));
+                
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return currentSortDirection === 'asc' ? aNum - bNum : bNum - aNum;
+                }
+                
+                // Sort as string
+                return currentSortDirection === 'asc' 
+                    ? aVal.localeCompare(bVal, 'vi') 
+                    : bVal.localeCompare(aVal, 'vi');
+            });
+            
+            // Re-append sorted rows
+            rows.forEach(row => tbody.appendChild(row));
+        }
     </script>
 </body>
 </html>

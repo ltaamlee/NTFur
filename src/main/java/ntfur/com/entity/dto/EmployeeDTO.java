@@ -23,7 +23,6 @@ public class EmployeeDTO {
     private String gender;
     private String avatarUrl;
     private String status;
-    private boolean isAdmin;
     private String createdAt;
     private String updatedAt;
 }

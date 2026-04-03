@@ -1,0 +1,83 @@
+<th:block th:fragment="page-content">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl card-shadow border border-primary-100 p-6 md:p-8">
+        <h2 class="text-xl font-display font-bold text-primary-900 mb-2">Giỏ hàng</h2>
+        <p class="text-sm text-primary-600 mb-6">Số lượng và giá đồng bộ từ API sản phẩm.</p>
+        <div id="cartList" class="space-y-4"></div>
+        <div id="cartEmpty" class="hidden text-center py-12 text-primary-500 border border-dashed border-primary-200 rounded-xl">Giỏ hàng trống.</div>
+        <div class="border-t border-primary-100 mt-8 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <p class="text-lg">Tổng: <strong id="total" class="text-secondary-800">0đ</strong></p>
+            <a href="/checkout" id="btnCheckout" class="inline-flex justify-center px-8 py-3 rounded-xl bg-gradient-to-r from-secondary-700 to-primary-800 text-white font-semibold text-sm hover:opacity-95 active:scale-[0.98] transition shadow-md">Tiến hành thanh toán</a>
+        </div>
+    </div>
+    <script>
+        (function () {
+            function token() { return localStorage.getItem('accessToken'); }
+            if (!token()) { window.location.href = '/login'; return; }
+
+            function loadLocalCart() {
+                try { return JSON.parse(localStorage.getItem('cart') || '[]'); } catch (e) { return []; }
+            }
+            function saveLocalCart(c) { localStorage.setItem('cart', JSON.stringify(c)); }
+            function formatVnd(v) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v || 0); }
+
+            async function loadProducts() {
+                var res = await fetch('/api/products');
+                var data = await res.json();
+                return data.success && data.data ? data.data : [];
+            }
+
+            async function render() {
+                var products = await loadProducts();
+                var byId = {};
+                products.forEach(function (p) { byId[p.id] = p; });
+                var cart = loadLocalCart();
+                var box = document.getElementById('cartList');
+                var empty = document.getElementById('cartEmpty');
+                if (!cart.length) {
+                    box.innerHTML = '';
+                    empty.classList.remove('hidden');
+                    document.getElementById('total').textContent = formatVnd(0);
+                    return;
+                }
+                empty.classList.add('hidden');
+                var total = 0;
+                box.innerHTML = cart.map(function (item, idx) {
+                    var p = byId[item.id];
+                    var name = p ? p.name : (item.name || 'Sản phẩm');
+                    var price = p ? Number(p.price) : Number(item.price);
+                    var stock = p ? p.stock : (item.stock != null ? item.stock : 999);
+                    var img = p && p.mainImage ? p.mainImage : (item.mainImage || '');
+                    var qty = Math.min(Math.max(1, item.quantity), Math.max(1, stock));
+                    if (p && qty !== item.quantity) { item.quantity = qty; saveLocalCart(cart); }
+                    total += price * qty;
+                    var stockLabel = stock <= 0 ? '<span class="text-red-600 text-xs">Hết hàng</span>' : '<span class="text-green-700 text-xs">Còn ' + stock + '</span>';
+                    return '<div class="flex gap-4 items-center border border-primary-100 rounded-xl p-3">' +
+                        (img ? '<img src="' + img + '" alt="" class="w-20 h-20 rounded-lg object-cover shrink-0">' : '<div class="w-20 h-20 rounded-lg bg-primary-100 shrink-0"></div>') +
+                        '<div class="flex-1 min-w-0"><p class="font-medium text-primary-900 truncate">' + name + '</p><p class="text-sm text-primary-600">' + formatVnd(price) + '</p>' + stockLabel + '</div>' +
+                        '<input type="number" min="1" max="' + stock + '" value="' + qty + '" data-idx="' + idx + '" class="cart-qty w-20 border border-primary-200 rounded-lg px-2 py-1 text-sm">' +
+                        '<button type="button" data-idx="' + idx + '" class="cart-remove text-red-600 text-sm px-2">Xóa</button></div>';
+                }).join('');
+                document.getElementById('total').textContent = formatVnd(total);
+
+                box.querySelectorAll('.cart-qty').forEach(function (inp) {
+                    inp.addEventListener('change', function () {
+                        var i = parseInt(inp.getAttribute('data-idx'), 10);
+                        var c = loadLocalCart();
+                        var max = parseInt(inp.max, 10);
+                        c[i].quantity = Math.max(1, Math.min(max, parseInt(inp.value, 10) || 1));
+                        saveLocalCart(c); render();
+                    });
+                });
+                box.querySelectorAll('.cart-remove').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var i = parseInt(btn.getAttribute('data-idx'), 10);
+                        var c = loadLocalCart();
+                        c.splice(i, 1);
+                        saveLocalCart(c); render();
+                    });
+                });
+            }
+            render();
+        })();
+    </script>
+</th:block>

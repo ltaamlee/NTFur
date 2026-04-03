@@ -1,0 +1,135 @@
+<th:block th:fragment="page-content">
+    <th:block th:with="title='Nhà cung cấp', pageTitle='Nhà cung cấp', activePage='suppliers'">
+
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-display font-bold text-primary-800">Danh sách nhà cung cấp</h2>
+            <p class="text-primary-500 mt-1">Xem thông tin nhà cung cấp và sản phẩm</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl p-4 mb-6 card-shadow border border-primary-100">
+        <div class="flex flex-col md:flex-row md:items-center gap-4">
+            <div class="flex-1 relative">
+                <input type="text" id="searchInput" placeholder="Tìm kiếm nhà cung cấp..."
+                    class="w-full pl-10 pr-4 py-2 border border-primary-200 rounded-lg text-sm focus:border-primary-500">
+                <svg class="w-5 h-5 text-primary-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+            <select id="filterStatus" class="px-4 py-2 border border-primary-200 rounded-lg text-sm focus:border-primary-500">
+                <option value="">Tất cả trạng thái</option>
+                <option value="ACTIVE">Đang hoạt động</option>
+                <option value="INACTIVE">Không hoạt động</option>
+                <option value="PENDING">Chờ xác nhận</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Suppliers Table -->
+    <div class="bg-white rounded-2xl card-shadow border border-primary-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full" id="suppliersTableSortable">
+                <thead>
+                    <tr class="table-header">
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="name">Nhà cung cấp</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="contact">Liên hệ</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="products">Sản phẩm</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="status">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody id="suppliersTable">
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-primary-500">Đang tải dữ liệu...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let suppliers = [];
+
+        async function loadSuppliers() {
+            try {
+                const response = await apiCall('/api/admin/suppliers');
+                if (response.success) {
+                    suppliers = response.data;
+                    renderSuppliers();
+                }
+            } catch (error) {
+                console.error('Error loading suppliers:', error);
+            }
+        }
+
+        function renderSuppliers() {
+            const tbody = document.getElementById('suppliersTable');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+
+            let filtered = suppliers.filter(s => {
+                const matchSearch = !search ||
+                    s.name.toLowerCase().includes(search) ||
+                    (s.email && s.email.toLowerCase().includes(search)) ||
+                    (s.phone && s.phone.includes(search));
+                const matchStatus = !statusFilter || s.status === statusFilter;
+                return matchSearch && matchStatus;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-12 text-center text-primary-500">Không tìm thấy nhà cung cấp</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(supplier => `
+                <tr class="table-row border-b border-primary-100">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-400 to-secondary-400 flex items-center justify-center text-white font-semibold mr-3">
+                                ${supplier.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-primary-800">${supplier.name}</p>
+                                <p class="text-xs text-primary-500">${supplier.code || '-'}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-primary-700">${supplier.email || '-'}</div>
+                        <div class="text-xs text-primary-500">${supplier.phone || '-'}</div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="text-sm font-semibold text-primary-700">${supplier.productCount || supplier.products?.length || 0}</span>
+                        <span class="text-xs text-primary-400 block">sản phẩm</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        ${getSupplierStatusBadge(supplier.status)}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getSupplierStatusBadge(status) {
+            const statusMap = {
+                'ACTIVE': '<span class="status-badge bg-green-100 text-green-700">Đang hoạt động</span>',
+                'INACTIVE': '<span class="status-badge bg-gray-100 text-gray-600">Không hoạt động</span>',
+                'PENDING': '<span class="status-badge bg-yellow-100 text-yellow-700">Chờ xác nhận</span>',
+                'BLOCKED': '<span class="status-badge bg-red-100 text-red-700">Bị chặn</span>'
+            };
+            return statusMap[status] || `<span class="status-badge bg-gray-100 text-gray-600">${status}</span>`;
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', renderSuppliers);
+        document.getElementById('filterStatus').addEventListener('change', renderSuppliers);
+
+        // Load data
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSuppliers();
+            initTableSort('suppliersTableSortable');
+        });
+    </script>
+    </th:block>
+</th:block>

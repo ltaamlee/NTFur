@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết sản phẩm - NTFurniture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50:'#fdf8f6',100:'#f2e8e5',200:'#eaddd7',300:'#e0cec7',400:'#d2bab0',500:'#bfa094',600:'#a18072',700:'#977669',800:'#846358',900:'#43302b' },
+                        secondary: { 50:'#fefcf9',100:'#fdf8f3',200:'#f5efe6',300:'#ebe2d3',400:'#ddd0b8',500:'#cdb99a',600:'#c4a47d',700:'#a67c52',800:'#866744',900:'#6e553a' },
+                        warm: { white:'#FFFBF7', cream:'#FDF6F0', beige:'#F5EDE4' }
+                    },
+                    fontFamily: { display: ['Playfair Display', 'serif'], body: ['Poppins', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+        .header-popover { filter: drop-shadow(0 8px 24px rgba(67,48,43,0.12)); }
+        .header-dd-enter { animation: ddIn 0.18s ease-out; }
+        @keyframes ddIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-link { position: relative; }
+        .nav-link::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 2px; background: linear-gradient(90deg, #a67c52, #977669); transition: width 0.3s ease; }
+        .nav-link:hover::after { width: 100%; }
+    </style>
+</head>
+<body class="bg-warm-white">
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="/" class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-gradient-to-br from-primary-700 to-secondary-700 rounded-xl flex items-center justify-center shadow-lg">
+                        <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    </div>
+                    <div><h1 class="text-xl font-display font-bold text-primary-900">NTFurniture</h1><p class="text-xs text-primary-500 -mt-1">Nội Thất Cao Cấp</p></div>
+                </a>
+
+                <!-- Search Bar -->
+                <div class="hidden md:flex flex-1 max-w-lg mx-8">
+                    <div class="relative w-full">
+                        <input type="text" placeholder="Tìm kiếm sản phẩm..." 
+                               class="w-full pl-12 pr-4 py-3 bg-primary-50 border border-primary-200 rounded-full text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all">
+                        <svg class="w-5 h-5 text-primary-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Right Actions: Shopee-style account + cart -->
+                <div class="flex items-center gap-1 sm:gap-2">
+                    <div class="relative" id="userMenuWrap">
+                        <button type="button" id="userMenuBtn" class="flex items-center gap-2 pl-2 pr-3 py-2 rounded-full hover:bg-primary-50 text-primary-800 border border-transparent hover:border-primary-200">
+                            <span class="p-1.5 rounded-full bg-primary-100 text-primary-700"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></span>
+                            <span id="headerUserLabel" class="hidden sm:inline text-sm font-medium max-w-[140px] truncate">Tài khoản</span>
+                        </button>
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-56 header-popover z-[60]">
+                            <div class="bg-white rounded-xl border border-primary-100 overflow-hidden header-dd-enter">
+                                <div id="guestBlock" class="py-1">
+                                    <a href="/login" class="flex items-center px-4 py-3 text-sm text-primary-800 hover:bg-primary-50">Đăng nhập</a>
+                                    <a href="/register" class="flex items-center px-4 py-3 text-sm text-primary-800 hover:bg-primary-50 border-t border-primary-50">Đăng ký</a>
+                                </div>
+                                <div id="memberBlock" class="hidden py-1">
+                                    <div class="px-4 py-2 text-xs text-primary-500 border-b border-primary-50" id="memberGreeting">Xin chào</div>
+                                    <a href="/profile" class="block px-4 py-2.5 text-sm text-primary-800 hover:bg-primary-50">Hồ sơ của tôi</a>
+                                    <a href="/checkout" class="block px-4 py-2.5 text-sm text-primary-800 hover:bg-primary-50">Đơn hàng / Thanh toán</a>
+                                    <button type="button" id="headerLogoutBtn" class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">Đăng xuất</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="headerCartBtn" class="p-2.5 text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded-full">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Bar -->
+        <nav class="bg-gradient-to-r from-primary-800 to-primary-900">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-14">
+                    <div class="flex items-center space-x-8">
+                        <a href="/" class="nav-link text-white font-medium hover:text-secondary-300 transition-colors py-1">Trang chủ</a>
+                        <a href="/products" class="nav-link text-white font-medium hover:text-secondary-300 transition-colors py-1 border-b-2 border-secondary-500">Các sản phẩm nội thất</a>
+                    </div>
+                    <div class="flex items-center space-x-8">
+                        <a href="/#about" class="nav-link text-white font-medium hover:text-secondary-300 transition-colors py-1">Về chúng tôi</a>
+                        <a href="/#contact" class="nav-link text-white font-medium hover:text-secondary-300 transition-colors py-1">Liên hệ</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-8">
+        <a href="/products" class="text-primary-700 hover:underline">← Quay lại danh sách sản phẩm</a>
+        <section class="mt-4 bg-white rounded-2xl shadow-sm p-4 md:p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+                <div class="relative overflow-hidden rounded-xl bg-gray-100">
+                    <div id="slides" class="flex transition-transform duration-300"></div>
+                    <button id="prevBtn" class="hidden absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white w-9 h-9 rounded-full">‹</button>
+                    <button id="nextBtn" class="hidden absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white w-9 h-9 rounded-full">›</button>
+                </div>
+                <div id="thumbs" class="mt-3 flex gap-2 overflow-x-auto"></div>
+            </div>
+            <div>
+                <p id="category" class="text-sm text-primary-700"></p>
+                <h1 id="name" class="text-2xl md:text-3xl font-bold text-gray-900 mt-1"></h1>
+                <div class="mt-4 bg-gray-50 rounded-xl p-4">
+                    <div class="flex items-end gap-3">
+                        <span id="price" class="text-3xl font-bold text-red-600"></span>
+                        <span id="costPrice" class="text-gray-400 line-through hidden"></span>
+                    </div>
+                </div>
+                <div class="mt-4 space-y-2 text-sm text-gray-700">
+                    <p id="stock"></p><p id="material"></p><p id="color"></p><p id="warranty"></p>
+                </div>
+                <div class="mt-6 flex flex-wrap gap-3 items-center">
+                    <div class="inline-flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                        <button type="button" id="qtyMinus" class="px-3 py-2 text-gray-700 hover:bg-gray-100">-</button>
+                        <input id="qty" type="number" min="1" value="1" class="w-16 text-center border-l border-r border-gray-300 py-2 focus:outline-none">
+                        <button type="button" id="qtyPlus" class="px-3 py-2 text-gray-700 hover:bg-gray-100">+</button>
+                    </div>
+                    <button id="addBtn" class="px-6 py-2.5 rounded-lg bg-primary-700 text-white hover:bg-primary-800">Thêm vào giỏ</button>
+                    <a href="/checkout" class="px-6 py-2.5 rounded-lg bg-secondary-700 text-white hover:opacity-90">Mua ngay</a>
+                </div>
+                <div class="mt-6">
+                    <h2 class="font-semibold text-lg">Mô tả sản phẩm</h2>
+                    <p id="description" class="text-gray-600 mt-2 whitespace-pre-line"></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const productId = window.location.pathname.split('/').pop();
+        let product = null, images = [], index = 0;
+        function formatVnd(v) { return new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(v || 0); }
+        function getToken() { return localStorage.getItem('accessToken'); }
+        function isLoggedIn() { return !!getToken(); }
+
+        function renderSlider() {
+            const slides = document.getElementById('slides');
+            const thumbs = document.getElementById('thumbs');
+            slides.innerHTML = images.map(url => `<img src="${url}" class="w-full shrink-0 h-[420px] object-cover" alt="image">`).join('');
+            thumbs.innerHTML = images.map((url, i) => `<button onclick="go(${i})" class="border-2 ${i===index?'border-secondary-700':'border-transparent'} rounded"><img src="${url}" class="w-16 h-16 object-cover rounded"></button>`).join('');
+            slides.style.transform = `translateX(-${index * 100}%)`;
+            document.getElementById('prevBtn').classList.toggle('hidden', images.length <= 1);
+            document.getElementById('nextBtn').classList.toggle('hidden', images.length <= 1);
+        }
+        function go(i) { index = i; renderSlider(); }
+        document.getElementById('prevBtn').onclick = () => { index = (index - 1 + images.length) % images.length; renderSlider(); };
+        document.getElementById('nextBtn').onclick = () => { index = (index + 1) % images.length; renderSlider(); };
+
+        function normalizeQty() {
+            const input = document.getElementById('qty');
+            const max = Math.max(1, Number(input.max || 1));
+            let v = Number(input.value || 1);
+            if (!Number.isFinite(v)) v = 1;
+            v = Math.min(max, Math.max(1, Math.floor(v)));
+            input.value = String(v);
+            return v;
+        }
+        document.getElementById('qtyMinus').addEventListener('click', () => {
+            const input = document.getElementById('qty');
+            input.value = String(Math.max(1, Number(input.value || 1) - 1));
+            normalizeQty();
+        });
+        document.getElementById('qtyPlus').addEventListener('click', () => {
+            const input = document.getElementById('qty');
+            const max = Math.max(1, Number(input.max || 1));
+            input.value = String(Math.min(max, Number(input.value || 1) + 1));
+            normalizeQty();
+        });
+        document.getElementById('qty').addEventListener('change', normalizeQty);
+
+        function addToCart() {
+            if (!isLoggedIn()) { window.location.href = '/login'; return; }
+            const qty = normalizeQty();
+            if (qty > product.stock) { alert('Số lượng vượt quá tồn kho'); return; }
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const found = cart.find(i => i.id === product.id);
+            if (found) found.quantity = Math.min(found.quantity + qty, product.stock);
+            else cart.push({ id: product.id, name: product.name, price: product.price, mainImage: product.mainImage, quantity: qty, stock: product.stock });
+            localStorage.setItem('cart', JSON.stringify(cart));
+            alert('Đã thêm sản phẩm vào giỏ hàng');
+        }
+
+        async function refreshHeaderUser() {
+            const label = document.getElementById('headerUserLabel');
+            const guest = document.getElementById('guestBlock');
+            const member = document.getElementById('memberBlock');
+            const greet = document.getElementById('memberGreeting');
+            if (!getToken()) { label.textContent = 'Tài khoản'; guest.classList.remove('hidden'); member.classList.add('hidden'); return; }
+            try {
+                const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${getToken()}` }});
+                const data = await res.json();
+                if (data.success && data.data) {
+                    const name = data.data.fullName || data.data.username || 'Khách';
+                    label.textContent = name;
+                    greet.textContent = `Xin chào, ${name}`;
+                    guest.classList.add('hidden'); member.classList.remove('hidden');
+                }
+            } catch (e) {}
+        }
+
+        async function loadProduct() {
+            const res = await fetch('/api/products');
+            const data = await res.json();
+            if (!data.success) return;
+            product = (data.data || []).find(p => String(p.id) === String(productId));
+            if (!product) { window.location.href = '/products'; return; }
+            images = (product.images || []).map(i => i.imageUrl);
+            if (!images.length && product.mainImage) images = [product.mainImage];
+            if (!images.length) images = ['https://via.placeholder.com/800x800?text=NTFurniture'];
+
+            document.getElementById('category').textContent = product.categoryName || 'Nội thất';
+            document.getElementById('name').textContent = product.name || '';
+            document.getElementById('price').textContent = formatVnd(product.price);
+            if (product.costPrice && product.costPrice > product.price) {
+                const cp = document.getElementById('costPrice');
+                cp.textContent = formatVnd(product.costPrice);
+                cp.classList.remove('hidden');
+            }
+            document.getElementById('stock').textContent = product.stock > 0 ? `Còn ${product.stock} sản phẩm` : 'Hết hàng';
+            document.getElementById('material').textContent = product.material ? `Chất liệu: ${product.material}` : '';
+            document.getElementById('color').textContent = product.color ? `Màu sắc: ${product.color}` : '';
+            document.getElementById('warranty').textContent = product.warrantyMonths ? `Bảo hành: ${product.warrantyMonths} tháng` : '';
+            document.getElementById('description').textContent = product.description || 'Chưa có mô tả';
+            document.getElementById('qty').max = String(Math.max(1, product.stock || 1));
+            document.getElementById('addBtn').disabled = product.stock <= 0;
+            renderSlider();
+        }
+
+        document.getElementById('addBtn').addEventListener('click', addToCart);
+        document.getElementById('userMenuBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('userDropdown').classList.toggle('hidden');
+        });
+        document.addEventListener('click', () => document.getElementById('userDropdown').classList.add('hidden'));
+        document.getElementById('userMenuWrap').addEventListener('click', (e) => e.stopPropagation());
+        document.getElementById('headerCartBtn').addEventListener('click', () => {
+            if (isLoggedIn()) window.location.href = '/cart';
+            else window.location.href = '/login';
+        });
+        document.getElementById('headerLogoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            location.reload();
+        });
+
+        refreshHeaderUser();
+        loadProduct();
+    </script>
+</body>
+</html>

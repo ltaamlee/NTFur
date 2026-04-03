@@ -28,7 +28,7 @@ public class HomeController {
     @GetMapping
     public String home(Model model) {
         List<ProductDTO> featuredProducts = productService.getFeaturedProducts();
-        List<CategoryDTO> categories = categoryService.getActiveCategories();
+        List<CategoryDTO> categories = categoryService.getActiveCategoriesWithHierarchy();
         
         model.addAttribute("featuredProducts", featuredProducts);
         model.addAttribute("categories", categories);
@@ -38,7 +38,7 @@ public class HomeController {
     @GetMapping("products")
     public String products(Model model) {
         List<ProductDTO> products = productService.getAllProducts();
-        List<CategoryDTO> categories = categoryService.getActiveCategories();
+        List<CategoryDTO> categories = categoryService.getActiveCategoriesWithHierarchy();
         
         model.addAttribute("products", products);
         model.addAttribute("categories", categories);
@@ -80,7 +80,7 @@ public class HomeController {
     @GetMapping("api/categories")
     @ResponseBody
     public ResponseEntity<ApiResponse<List<CategoryDTO>>> getCategories() {
-        List<CategoryDTO> categories = categoryService.getActiveCategories();
+        List<CategoryDTO> categories = categoryService.getActiveCategoriesWithHierarchy();
         return ResponseEntity.ok(ApiResponse.success("Lấy danh mục thành công", categories));
     }
 }

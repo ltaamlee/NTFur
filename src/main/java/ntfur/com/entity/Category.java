@@ -13,6 +13,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -42,8 +44,8 @@ public class Category {
     @Column(name = "description", columnDefinition = "nvarchar(MAX)")
     private String description;
 
-    @Column(name = "icon", columnDefinition = "nvarchar(50)")
-    private String icon;
+    @Column(name = "image_url", columnDefinition = "nvarchar(MAX)")
+    private String imageUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
@@ -52,7 +54,16 @@ public class Category {
     @Column(name = "display_order")
     private int displayOrder = 0;
     
-
+    // Parent category for nested structure
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Category parent;
+    
+    // Child categories
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Category> children = new ArrayList<>();
+    
+    // Products in this category
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Product> products = new ArrayList<>();
 

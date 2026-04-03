@@ -20,6 +20,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     Optional<Product> findBySku(String sku);
 
     List<Product> findByCategoryId(Long categoryId);
+    
+    List<Product> findByCategoryIdIn(List<Long> categoryIds);
 
     List<Product> findByStatus(ProductStatus status);
 

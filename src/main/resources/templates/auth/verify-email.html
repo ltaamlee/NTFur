@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác thực email - NTFurniture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #43302b 0%, #a67c52 100%);
+            padding: 20px;
+        }
+
+        .verify-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 450px;
+            padding: 40px;
+            text-align: center;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .icon-container {
+            margin-bottom: 30px;
+        }
+
+        .icon-container svg {
+            width: 100px;
+            height: 100px;
+        }
+
+        .icon-container.success svg {
+            color: #28a745;
+        }
+
+        .icon-container.error svg {
+            color: #dc3545;
+        }
+
+        .icon-container.pending svg {
+            color: #ffc107;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #846358 0%, #a67c52 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(132, 99, 88, 0.35);
+            color: white;
+        }
+
+        .btn-secondary {
+            display: inline-block;
+            padding: 12px 25px;
+            background: white;
+            border: 2px solid #846358;
+            border-radius: 10px;
+            color: #846358;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+        }
+
+        .btn-secondary:hover {
+            background: #fdf8f6;
+            color: #846358;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+
+        .alert-success {
+            background: #efe;
+            color: #3c3;
+            border: 1px solid #cfc;
+        }
+
+        .alert-show {
+            display: block;
+        }
+
+        .resend-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e1e1;
+        }
+
+        .resend-section p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="verify-container">
+        <!-- Trạng thái đang xác thực -->
+        <div id="pendingState">
+            <div class="icon-container pending">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <h1>Xác thực email</h1>
+            <p class="description">Vui lòng chờ trong khi chúng tôi xác thực email của bạn...</p>
+        </div>
+
+        <!-- Trạng thái thành công -->
+        <div id="successState" style="display: none;">
+            <div class="icon-container success">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h1>Xác thực thành công!</h1>
+            <p class="description">Email của bạn đã được xác thực thành công. Bây giờ bạn có thể đăng nhập vào tài khoản của mình.</p>
+            <a href="/auth/login" class="btn-primary">Đăng nhập ngay</a>
+        </div>
+
+        <!-- Trạng thái thất bại -->
+        <div id="errorState" style="display: none;">
+            <div class="icon-container error">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h1>Xác thực thất bại</h1>
+            <p class="description" id="errorMessage">Liên kết xác thực không hợp lệ hoặc đã hết hạn.</p>
+            
+            <div id="alertError" class="alert alert-error"></div>
+
+            <a href="/auth/login" class="btn-primary">Quay lại đăng nhập</a>
+
+            <div class="resend-section">
+                <p>Không nhận được email xác thực?</p>
+                <form id="resendForm">
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <input type="email" id="resendEmail" placeholder="Nhập email của bạn" required style="padding: 12px; border: 2px solid #e1e1e1; border-radius: 10px; font-size: 0.9rem; width: 200px;">
+                        <button type="submit" class="btn-secondary" id="btnResend">Gửi lại</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showState(stateId) {
+            document.querySelectorAll('.verify-container > div').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            if (stateId === 'pending') {
+                document.getElementById('pendingState').style.display = 'block';
+            } else if (stateId === 'success') {
+                document.getElementById('successState').style.display = 'block';
+            } else if (stateId === 'error') {
+                document.getElementById('errorState').style.display = 'block';
+            }
+        }
+
+        function showAlert(message) {
+            const alertEl = document.getElementById('alertError');
+            alertEl.textContent = message;
+            alertEl.classList.add('alert-show');
+            setTimeout(() => alertEl.classList.remove('alert-show'), 5000);
+        }
+
+        // Lấy token từ URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        // Xác thực token
+        async function verifyEmail() {
+            if (!token) {
+                document.getElementById('errorMessage').textContent = 'Không tìm thấy liên kết xác thực. Vui lòng kiểm tra email và nhấp vào liên kết trong email.';
+                showState('error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/verify?token=' + encodeURIComponent(token));
+                const data = await response.json();
+
+                if (data.success) {
+                    showState('success');
+                } else {
+                    document.getElementById('errorMessage').textContent = data.message || 'Liên kết xác thực không hợp lệ hoặc đã hết hạn.';
+                    showState('error');
+                }
+            } catch (error) {
+                document.getElementById('errorMessage').textContent = 'Có lỗi xảy ra khi xác thực. Vui lòng thử lại sau.';
+                showState('error');
+            }
+        }
+
+        // Xử lý gửi lại email xác thực
+        document.getElementById('resendForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('btnResend');
+            const email = document.getElementById('resendEmail').value;
+
+            btn.classList.add('loading');
+            btn.innerHTML = 'Đang gửi...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/auth/resend-verification?email=' + encodeURIComponent(email), {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('Đã gửi email xác thực mới! Vui lòng kiểm tra hộp thư của bạn.');
+                } else {
+                    showAlert(data.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+                }
+
+                btn.classList.remove('loading');
+                btn.innerHTML = 'Gửi lại';
+                btn.disabled = false;
+            } catch (error) {
+                showAlert('Có lỗi xảy ra. Vui lòng thử lại!');
+                btn.classList.remove('loading');
+                btn.innerHTML = 'Gửi lại';
+                btn.disabled = false;
+            }
+        });
+
+        // Khởi tạo
+        verifyEmail();
+    </script>
+</body>
+</html>

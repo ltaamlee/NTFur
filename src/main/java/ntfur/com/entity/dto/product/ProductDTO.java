@@ -53,6 +53,10 @@ public class ProductDTO {
 
     private String supplierName;
 
+    private Long productSetId;
+
+    private String productSetName;
+
     @Min(value = 0, message = "Trọng lượng không được nhỏ hơn 0")
     private Double weight;
 

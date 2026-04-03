@@ -70,6 +70,11 @@ public class Product {
     @JsonIgnore
     private Supplier supplier;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_set_id")
+    @JsonIgnore
+    private ProductSet productSet;
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImage> images = new ArrayList<>();
 

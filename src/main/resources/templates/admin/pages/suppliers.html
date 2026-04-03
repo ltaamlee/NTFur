@@ -1,18 +1,26 @@
 <th:block th:fragment="page-content">
     <th:block th:with="title='Quản lý nhà cung cấp', pageTitle='Quản lý nhà cung cấp', activePage='suppliers'">
-    
+
     <!-- Page Header -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div>
             <h2 class="text-2xl font-display font-bold text-primary-800">Danh sách nhà cung cấp</h2>
             <p class="text-primary-500 mt-1">Quản lý thông tin và đánh giá nhà cung cấp</p>
         </div>
-        <button onclick="openCreateModal()" class="mt-4 md:mt-0 px-6 py-2.5 btn-primary text-white rounded-lg font-medium flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Thêm nhà cung cấp
-        </button>
+        <div class="flex items-center gap-3 mt-4 md:mt-0">
+            <button onclick="openImportModal()" class="px-4 py-2.5 border border-primary-300 text-primary-700 rounded-lg font-medium flex items-center hover:bg-primary-50 transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Phiếu nhập hàng
+            </button>
+            <button onclick="openCreateModal()" class="px-6 py-2.5 btn-primary text-white rounded-lg font-medium flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Thêm nhà cung cấp
+            </button>
+        </div>
     </div>
 
     <!-- Stats Cards -->
@@ -94,14 +102,14 @@
     <!-- Suppliers Table -->
     <div class="bg-white rounded-2xl card-shadow border border-primary-100 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full">
+            <table class="w-full" id="suppliersTableSortable">
                 <thead>
                     <tr class="table-header">
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider">Nhà cung cấp</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider">Liên hệ</th>
-                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider">Đơn hàng</th>
-                        <th class="px-6 py-4 text-right text-xs font-semibold text-primary-700 uppercase tracking-wider">Tổng mua</th>
-                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider">Trạng thái</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="name">Nhà cung cấp</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="contact">Liên hệ</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="orders">Đơn hàng</th>
+                        <th class="px-6 py-4 text-right text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="total">Tổng mua</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="status">Trạng thái</th>
                         <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider">Hành động</th>
                     </tr>
                 </thead>
@@ -167,6 +175,29 @@
                             <textarea id="supplierDescription" rows="3" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="Mô tả về nhà cung cấp..."></textarea>
                         </div>
                         <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Sản phẩm cung cấp <span class="text-xs text-primary-400">(Danh sách sản phẩm mà nhà cung cấp này cung cấp)</span></label>
+                            <div class="border border-primary-200 rounded-lg p-3 bg-primary-50">
+                                <div id="supplierProductsList" class="space-y-2">
+                                    <!-- Products will be loaded here -->
+                                </div>
+                                <div class="mt-3 pt-3 border-t border-primary-200">
+                                    <div class="flex gap-2" id="newProductInputSection">
+                                        <input type="text" id="newSupplierProductText" class="flex-1 px-3 py-2 border border-primary-200 rounded-lg text-sm" placeholder="Nhập tên sản phẩm mới...">
+                                        <button type="button" onclick="addSupplierProductByText()" class="px-4 py-2 bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 text-sm font-medium">Thêm</button>
+                                    </div>
+                                    <div class="flex gap-2 mt-2" id="existingProductSelectSection" style="display:none;">
+                                        <select id="newSupplierProductSelect" class="flex-1 px-3 py-2 border border-primary-200 rounded-lg text-sm">
+                                            <option value="">-- Chọn sản phẩm có sẵn --</option>
+                                        </select>
+                                        <button type="button" onclick="addSupplierProductBySelect()" class="px-4 py-2 bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 text-sm font-medium">Thêm</button>
+                                    </div>
+                                    <button type="button" onclick="toggleProductInputMode()" id="toggleProductInputModeBtn" class="mt-2 text-xs text-primary-500 hover:text-primary-700 underline">
+                                        Chuyển sang chế độ chọn sản phẩm có sẵn
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-primary-700 mb-2">Ghi chú</label>
                             <textarea id="supplierNotes" rows="2" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="Ghi chú khác..."></textarea>
                         </div>
@@ -189,8 +220,100 @@
         </div>
     </div>
 
+    <!-- Import Receipt Modal -->
+    <div id="importModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="modal-backdrop absolute inset-0 bg-black/50" onclick="closeImportModal()"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="modal-content relative bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto my-auto">
+                <div class="sticky top-0 bg-white border-b border-primary-100 px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
+                    <h3 class="text-xl font-display font-semibold text-primary-800">Phiếu nhập hàng</h3>
+                    <button onclick="closeImportModal()" class="p-2 text-primary-400 hover:text-primary-600 rounded-lg hover:bg-primary-50">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Import Form - New Flow: Select Product First -->
+                <div class="p-6 border-b border-primary-100">
+                    <h4 class="font-semibold text-primary-800 mb-4">Tạo phiếu nhập hàng mới</h4>
+
+                    <!-- Step 1: Select Product -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-primary-700 mb-2">Bước 1: Chọn sản phẩm cần nhập <span class="text-red-500">*</span></label>
+                        <select id="importProductSelect" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" onchange="onProductChangeForImport()">
+                            <option value="">-- Chọn sản phẩm --</option>
+                        </select>
+                    </div>
+
+                    <!-- Step 2: Select Supplier (filtered by product) -->
+                    <div id="supplierSelectionSection" class="mb-4 hidden">
+                        <label class="block text-sm font-medium text-primary-700 mb-2">Bước 2: Chọn nhà cung cấp có sản phẩm này <span class="text-red-500">*</span></label>
+                        <select id="importSupplier" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" onchange="onSupplierChangeForImport()">
+                            <option value="">-- Chọn nhà cung cấp --</option>
+                        </select>
+                        <p id="noSupplierHint" class="text-sm text-yellow-600 mt-2 hidden">Không có nhà cung cấp nào cung cấp sản phẩm này. Vui lòng chọn sản phẩm khác.</p>
+                    </div>
+
+                    <!-- Import Details (shown after selecting product and supplier) -->
+                    <div id="importDetailsSection" class="hidden">
+                        <form id="importForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label class="block text-sm font-medium text-primary-700 mb-2">Ngày nhập</label>
+                                <input type="date" id="importDate" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-primary-700 mb-2">Ghi chú</label>
+                                <textarea id="importNote" rows="2" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="Ghi chú phiếu nhập..."></textarea>
+                            </div>
+                        </form>
+
+                        <!-- Products Selection -->
+                        <h4 class="font-semibold text-primary-800 mb-4 mt-6">Chi tiết sản phẩm nhập</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="bg-primary-50">
+                                        <th class="px-3 py-2 text-left text-primary-700 font-semibold">Sản phẩm</th>
+                                        <th class="px-3 py-2 text-center text-primary-700 font-semibold w-24">Số lượng</th>
+                                        <th class="px-3 py-2 text-right text-primary-700 font-semibold w-32">Đơn giá</th>
+                                        <th class="px-3 py-2 text-right text-primary-700 font-semibold w-32">Thành tiền</th>
+                                        <th class="px-3 py-2 w-12"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="importItemsTable">
+                                </tbody>
+                                <tfoot>
+                                    <tr class="bg-primary-50">
+                                        <td colspan="3" class="px-3 py-3 text-right font-bold text-primary-800">Tổng cộng:</td>
+                                        <td class="px-3 py-3 text-right font-bold text-xl text-primary-900" id="importTotal">0 ₫</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div class="mt-4 flex justify-end space-x-3">
+                            <button type="button" onclick="resetImportForm()" class="px-4 py-2 border border-primary-300 text-primary-700 rounded-lg hover:bg-primary-50 font-medium transition-colors">Làm mới</button>
+                            <button type="button" onclick="saveImportReceipt()" class="px-6 py-2 btn-primary text-white rounded-lg font-medium">Lưu phiếu nhập</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Import History -->
+                <div class="p-6">
+                    <h4 class="font-semibold text-primary-800 mb-4">Danh sách phiếu nhập hàng</h4>
+                    <div id="importHistory">
+                        <p class="text-center text-primary-500 py-8">Chưa có phiếu nhập hàng nào</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         let suppliers = [];
+        let allProducts = [];
+        let selectedSupplierProducts = [];
 
         async function loadSuppliers() {
             try {
@@ -202,6 +325,17 @@
                 }
             } catch (error) {
                 console.error('Error loading suppliers:', error);
+            }
+        }
+
+        async function loadAllProducts() {
+            try {
+                const response = await apiCall('/api/admin/products');
+                if (response.success) {
+                    allProducts = response.data;
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
             }
         }
 
@@ -250,6 +384,10 @@
                         <div class="text-xs text-primary-500">${supplier.phone || '-'}</div>
                     </td>
                     <td class="px-6 py-4 text-center">
+                        <span class="text-sm font-semibold text-primary-700">${supplier.productCount || supplier.products?.length || 0}</span>
+                        <span class="text-xs text-primary-400 block">sản phẩm</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
                         <span class="text-sm font-semibold text-primary-700">${supplier.totalOrders || 0}</span>
                     </td>
                     <td class="px-6 py-4 text-right">
@@ -290,6 +428,14 @@
             document.getElementById('modalTitle').textContent = 'Thêm nhà cung cấp mới';
             document.getElementById('supplierForm').reset();
             document.getElementById('supplierId').value = '';
+            selectedSupplierProducts = [];
+            renderSupplierProductsList();
+            
+            // Reset input mode
+            document.getElementById('newProductInputSection').style.display = 'flex';
+            document.getElementById('existingProductSelectSection').style.display = 'none';
+            document.getElementById('toggleProductInputModeBtn').textContent = 'Chuyển sang chế độ chọn sản phẩm có sẵn';
+            
             document.getElementById('formModal').classList.remove('hidden');
         }
 
@@ -310,6 +456,15 @@
             document.getElementById('supplierDescription').value = supplier.description || '';
             document.getElementById('supplierNotes').value = supplier.notes || '';
             document.getElementById('supplierStatus').value = supplier.status || 'ACTIVE';
+            
+            // Load supplier's products
+            selectedSupplierProducts = supplier.products || [];
+            renderSupplierProductsList();
+            
+            // Reset input mode
+            document.getElementById('newProductInputSection').style.display = 'flex';
+            document.getElementById('existingProductSelectSection').style.display = 'none';
+            document.getElementById('toggleProductInputModeBtn').textContent = 'Chuyển sang chế độ chọn sản phẩm có sẵn';
 
             document.getElementById('formModal').classList.remove('hidden');
         }
@@ -318,9 +473,115 @@
             document.getElementById('formModal').classList.add('hidden');
         }
 
+        function renderSupplierProductsList() {
+            const container = document.getElementById('supplierProductsList');
+            if (selectedSupplierProducts.length === 0) {
+                container.innerHTML = '<p class="text-sm text-primary-400 text-center py-2">Chưa có sản phẩm nào được thêm</p>';
+                return;
+            }
+            container.innerHTML = selectedSupplierProducts.map((p, index) => `
+                <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-primary-200">
+                    <div class="flex items-center">
+                        <span class="w-6 h-6 bg-primary-100 text-primary-700 rounded flex items-center justify-center text-xs font-bold mr-2">${index + 1}</span>
+                        <span class="text-sm text-primary-800">${p.name}</span>
+                        ${p.isNew ? '<span class="text-xs text-green-600 ml-2 px-2 py-0.5 bg-green-50 rounded">Mới</span>' : 
+                          (p.sku ? `<span class="text-xs text-primary-400 ml-2">${p.sku}</span>` : '')}
+                    </div>
+                    <button type="button" onclick="removeSupplierProduct(${p.id})" class="text-red-500 hover:text-red-700 p-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function populateNewSupplierProductSelect() {
+            // Không cần nữa vì dùng input text
+        }
+
+        function addSupplierProductByText() {
+            const input = document.getElementById('newSupplierProductText');
+            const productName = input.value.trim();
+            if (!productName) return;
+            
+            // Tạo sản phẩm mới với tên được nhập
+            const newProduct = {
+                id: 'new_' + Date.now(), // Tạo id tạm thời
+                name: productName,
+                isNew: true
+            };
+            
+            if (!selectedSupplierProducts.find(p => p.name === productName)) {
+                selectedSupplierProducts.push(newProduct);
+                renderSupplierProductsList();
+            }
+            
+            input.value = '';
+        }
+
+        function addSupplierProductBySelect() {
+            const select = document.getElementById('newSupplierProductSelect');
+            const productId = parseInt(select.value);
+            if (!productId) return;
+            
+            const product = allProducts.find(p => p.id === productId);
+            if (product && !selectedSupplierProducts.find(p => p.id === productId)) {
+                selectedSupplierProducts.push(product);
+                renderSupplierProductsList();
+            }
+            
+            select.value = '';
+        }
+
+        function toggleProductInputMode() {
+            const textSection = document.getElementById('newProductInputSection');
+            const selectSection = document.getElementById('existingProductSelectSection');
+            const toggleBtn = document.getElementById('toggleProductInputModeBtn');
+            
+            if (textSection.style.display === 'none') {
+                // Switch to text input mode
+                textSection.style.display = 'flex';
+                selectSection.style.display = 'none';
+                toggleBtn.textContent = 'Chuyển sang chế độ chọn sản phẩm có sẵn';
+            } else {
+                // Switch to select mode - populate dropdown first
+                textSection.style.display = 'none';
+                selectSection.style.display = 'flex';
+                populateExistingProductsSelect();
+                toggleBtn.textContent = 'Chuyển sang chế độ nhập sản phẩm mới';
+            }
+        }
+
+        function populateExistingProductsSelect() {
+            const select = document.getElementById('newSupplierProductSelect');
+            const existingIds = selectedSupplierProducts.map(p => p.id);
+            const availableProducts = allProducts.filter(p => !existingIds.includes(p.id));
+            select.innerHTML = '<option value="">-- Chọn sản phẩm có sẵn --</option>' + 
+                availableProducts.map(p => `<option value="${p.id}">${p.name} (${p.sku || 'Không có SKU'})</option>`).join('');
+        }
+
+        function removeSupplierProduct(productId) {
+            // Handle both numeric IDs and temporary IDs (new_*)
+            selectedSupplierProducts = selectedSupplierProducts.filter(p => {
+                const idStr = String(p.id);
+                return idStr !== String(productId) && idStr !== productId && !idStr.endsWith(productId);
+            });
+            renderSupplierProductsList();
+        }
+
         document.getElementById('supplierForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const id = document.getElementById('supplierId').value;
+            
+            // Tách riêng sản phẩm mới và sản phẩm có sẵn
+            const productNames = selectedSupplierProducts
+                .filter(p => p.isNew)
+                .map(p => p.name);
+            const productIds = selectedSupplierProducts
+                .filter(p => !p.isNew)
+                .map(p => p.id)
+                .filter(id => id > 0); // Loại bỏ temp ID
             
             const data = {
                 name: document.getElementById('supplierName').value,
@@ -333,7 +594,9 @@
                 contactPhone: document.getElementById('supplierContactPhone').value,
                 description: document.getElementById('supplierDescription').value,
                 notes: document.getElementById('supplierNotes').value,
-                status: document.getElementById('supplierStatus').value
+                status: document.getElementById('supplierStatus').value,
+                productNames: productNames,
+                productIds: productIds
             };
 
             try {
@@ -370,8 +633,364 @@
         document.getElementById('searchInput').addEventListener('input', renderSuppliers);
         document.getElementById('filterStatus').addEventListener('change', renderSuppliers);
 
+        // Import receipt functionality
+        let importProducts = [];
+        let importHistory = [];
+        let selectedImportProductId = null;
+
+        async function loadProductsForImport() {
+            try {
+                const response = await apiCall('/api/admin/products');
+                if (response.success) {
+                    importProducts = response.data;
+                    populateImportProductSelect();
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+            }
+        }
+
+        function populateImportProductSelect() {
+            const select = document.getElementById('importProductSelect');
+            select.innerHTML = '<option value="">-- Chọn sản phẩm --</option>' +
+                importProducts.map(p => `<option value="${p.id}">${p.name} (${p.sku || 'Không có SKU'})</option>`).join('');
+        }
+
+        function openImportModal() {
+            document.getElementById('importModal').classList.remove('hidden');
+            document.getElementById('importDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('importNote').value = '';
+
+            // Reset form
+            resetImportForm();
+
+            // Load import history
+            loadImportHistory();
+        }
+
+        function resetImportForm() {
+            selectedImportProductId = null;
+            document.getElementById('importProductSelect').value = '';
+            document.getElementById('supplierSelectionSection').classList.add('hidden');
+            document.getElementById('importDetailsSection').classList.add('hidden');
+            document.getElementById('importItemsTable').innerHTML = '';
+            document.getElementById('importTotal').textContent = '0 ₫';
+            document.getElementById('importSupplier').innerHTML = '<option value="">-- Chọn nhà cung cấp --</option>';
+            document.getElementById('noSupplierHint').classList.add('hidden');
+        }
+
+        function onProductChangeForImport() {
+            const productId = document.getElementById('importProductSelect').value;
+            selectedImportProductId = productId;
+            const supplierSection = document.getElementById('supplierSelectionSection');
+            const detailsSection = document.getElementById('importDetailsSection');
+            const noSupplierHint = document.getElementById('noSupplierHint');
+            const supplierSelect = document.getElementById('importSupplier');
+
+            if (!productId) {
+                supplierSection.classList.add('hidden');
+                detailsSection.classList.add('hidden');
+                return;
+            }
+
+            // Find suppliers that have this product
+            const suppliersWithProduct = suppliers.filter(s => {
+                return s.status === 'ACTIVE' && s.products && s.products.some(p => {
+                    const pid = typeof p.id === 'string' ? p.id : String(p.id);
+                    return pid === productId || pid === parseInt(productId);
+                });
+            });
+
+            if (suppliersWithProduct.length === 0) {
+                noSupplierHint.classList.remove('hidden');
+                supplierSelect.innerHTML = '<option value="">-- Không có nhà cung cấp --</option>';
+            } else {
+                noSupplierHint.classList.add('hidden');
+                supplierSelect.innerHTML = '<option value="">-- Chọn nhà cung cấp --</option>' +
+                    suppliersWithProduct.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            }
+
+            supplierSection.classList.remove('hidden');
+            detailsSection.classList.add('hidden');
+        }
+
+        function onSupplierChangeForImport() {
+            const supplierId = document.getElementById('importSupplier').value;
+            const detailsSection = document.getElementById('importDetailsSection');
+            const productId = selectedImportProductId;
+
+            if (!supplierId) {
+                detailsSection.classList.add('hidden');
+                return;
+            }
+
+            // Show details section
+            detailsSection.classList.remove('hidden');
+
+            // Add the selected product as the first row
+            const tbody = document.getElementById('importItemsTable');
+            tbody.innerHTML = '';
+
+            const product = importProducts.find(p => p.id === parseInt(productId) || String(p.id) === productId);
+            if (product) {
+                addImportRow(product);
+            }
+        }
+
+        async function loadImportHistory() {
+            try {
+                const response = await apiCall('/api/admin/import-receipts');
+                if (response.success) {
+                    importHistory = response.data;
+                    renderImportHistory();
+                }
+            } catch (error) {
+                console.error('Error loading import history:', error);
+            }
+        }
+
+        function renderImportHistory() {
+            const container = document.getElementById('importHistory');
+            if (importHistory.length === 0) {
+                container.innerHTML = '<p class="text-center text-primary-500 py-8">Chưa có phiếu nhập hàng nào</p>';
+                return;
+            }
+            container.innerHTML = `
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-primary-50">
+                                <th class="px-3 py-2 text-left text-primary-700 font-semibold">Mã phiếu</th>
+                                <th class="px-3 py-2 text-left text-primary-700 font-semibold">Nhà cung cấp</th>
+                                <th class="px-3 py-2 text-center text-primary-700 font-semibold">Số SP</th>
+                                <th class="px-3 py-2 text-right text-primary-700 font-semibold">Tổng tiền</th>
+                                <th class="px-3 py-2 text-center text-primary-700 font-semibold">Trạng thái</th>
+                                <th class="px-3 py-2 text-center text-primary-700 font-semibold">Ngày</th>
+                                <th class="px-3 py-2 text-center text-primary-700 font-semibold">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${importHistory.map(receipt => `
+                                <tr class="border-b border-primary-100">
+                                    <td class="px-3 py-2 text-primary-700 font-medium">${receipt.receiptCode || '-'}</td>
+                                    <td class="px-3 py-2 text-primary-800">${receipt.supplierName || '-'}</td>
+                                    <td class="px-3 py-2 text-center">${receipt.itemCount || 0}</td>
+                                    <td class="px-3 py-2 text-right font-semibold">${formatCurrency(receipt.finalAmount || 0)}</td>
+                                    <td class="px-3 py-2 text-center">
+                                        ${getImportStatusBadge(receipt.status)}
+                                    </td>
+                                    <td class="px-3 py-2 text-center text-primary-500">${receipt.importDate ? new Date(receipt.importDate).toLocaleDateString('vi-VN') : '-'}</td>
+                                    <td class="px-3 py-2 text-center">
+                                        ${getImportActionButtons(receipt)}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function getImportActionButtons(receipt) {
+            if (receipt.status === 'PENDING') {
+                return `
+                    <button onclick="completeReceipt(${receipt.id})" class="px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 text-xs font-medium mr-1">
+                        Hoàn tất
+                    </button>
+                    <button onclick="cancelReceipt(${receipt.id})" class="px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-xs font-medium">
+                        Hủy
+                    </button>
+                `;
+            } else if (receipt.status === 'COMPLETED') {
+                return `<span class="text-xs text-green-600 font-medium">Đã hoàn tất</span>`;
+            } else {
+                return `<span class="text-xs text-red-600 font-medium">Đã hủy</span>`;
+            }
+        }
+
+        function getImportStatusBadge(status) {
+            const statusMap = {
+                'PENDING': '<span class="status-badge bg-yellow-100 text-yellow-700">Chờ xử lý</span>',
+                'COMPLETED': '<span class="status-badge bg-green-100 text-green-700">Hoàn tất</span>',
+                'CANCELLED': '<span class="status-badge bg-red-100 text-red-700">Đã hủy</span>'
+            };
+            return statusMap[status] || `<span class="status-badge bg-gray-100 text-gray-600">${status}</span>`;
+        }
+
+        async function completeReceipt(id) {
+            try {
+                const response = await apiCall(`/api/admin/import-receipts/${id}/complete`, 'POST');
+                if (response.success) {
+                    showToast('Phiếu nhập đã được hoàn tất! Tồn kho đã được cập nhật.');
+                    loadImportHistory();
+                    loadSuppliers(); // Reload to update stats
+                }
+            } catch (error) {
+                console.error('Error completing receipt:', error);
+            }
+        }
+
+        async function cancelReceipt(id) {
+            showDeleteModal('Bạn có chắc chắn muốn hủy phiếu nhập này?', async () => {
+                try {
+                    const response = await apiCall(`/api/admin/import-receipts/${id}/cancel`, 'POST');
+                    if (response.success) {
+                        showToast('Phiếu nhập đã bị hủy');
+                        loadImportHistory();
+                        loadSuppliers(); // Reload to update stats
+                    }
+                } catch (error) {
+                    console.error('Error cancelling receipt:', error);
+                }
+            });
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').classList.add('hidden');
+        }
+
+        function addImportRow(preSelectedProduct = null) {
+            const tbody = document.getElementById('importItemsTable');
+            const productId = selectedImportProductId;
+            let productsForSelect = importProducts;
+
+            const row = document.createElement('tr');
+            row.className = 'border-b border-primary-100 import-item-row';
+            row.innerHTML = `
+                <td class="px-3 py-2">
+                    <select class="import-product w-full px-3 py-2 border border-primary-200 rounded-lg text-sm" onchange="updateImportTotal()">
+                        <option value="">-- Chọn sản phẩm --</option>
+                        ${productsForSelect.map(p => `<option value="${p.id}" ${preSelectedProduct && p.id === preSelectedProduct.id ? 'selected' : ''}>${p.name} (${p.sku || 'Không có SKU'})</option>`).join('')}
+                    </select>
+                </td>
+                <td class="px-3 py-2">
+                    <input type="number" class="import-quantity w-full px-3 py-2 border border-primary-200 rounded-lg text-sm text-center" value="1" min="1" onchange="updateImportTotal()">
+                </td>
+                <td class="px-3 py-2">
+                    <input type="number" class="import-price w-full px-3 py-2 border border-primary-200 rounded-lg text-sm text-right" placeholder="0" onchange="updateImportTotal()">
+                </td>
+                <td class="px-3 py-2 text-right font-semibold text-primary-800 import-subtotal">0 ₫</td>
+                <td class="px-3 py-2 text-center">
+                    <button type="button" onclick="removeThisImportRow(this)" class="text-red-500 hover:text-red-700 p-1">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+            updateImportTotal();
+        }
+
+        function removeThisImportRow(btn) {
+            const row = btn.closest('tr');
+            const tbody = document.getElementById('importItemsTable');
+            if (tbody.querySelectorAll('tr').length > 1) {
+                row.remove();
+            } else {
+                showToast('Phải có ít nhất một sản phẩm', 'error');
+            }
+            updateImportTotal();
+        }
+
+        function updateImportTotal() {
+            let total = 0;
+            document.querySelectorAll('#importItemsTable > tr').forEach(row => {
+                const quantity = parseInt(row.querySelector('.import-quantity').value) || 0;
+                const price = parseFloat(row.querySelector('.import-price').value) || 0;
+                const subtotal = quantity * price;
+                row.querySelector('.import-subtotal').textContent = formatCurrency(subtotal);
+                total += subtotal;
+            });
+            document.getElementById('importTotal').textContent = formatCurrency(total);
+        }
+
+        async function saveImportReceipt() {
+            const supplierId = document.getElementById('importSupplier').value;
+            const importDate = document.getElementById('importDate').value;
+            const note = document.getElementById('importNote').value;
+
+            if (!supplierId) {
+                showToast('Vui lòng chọn nhà cung cấp', 'error');
+                return;
+            }
+
+            const items = [];
+            let hasValidItem = false;
+            document.querySelectorAll('#importItemsTable > tr').forEach(row => {
+                const productId = row.querySelector('.import-product').value;
+                const quantity = parseInt(row.querySelector('.import-quantity').value) || 0;
+                const price = parseFloat(row.querySelector('.import-price').value) || 0;
+
+                if (productId && quantity > 0 && price > 0) {
+                    hasValidItem = true;
+                    items.push({
+                        productId: parseInt(productId),
+                        quantity: quantity,
+                        unitPriceNumber: price
+                    });
+                }
+            });
+
+            if (!hasValidItem) {
+                showToast('Vui lòng thêm ít nhất một sản phẩm với số lượng và đơn giá', 'error');
+                return;
+            }
+
+            const data = {
+                supplierId: parseInt(supplierId),
+                importDate: importDate,
+                note: note,
+                items: items
+            };
+
+            try {
+                const response = await apiCall('/api/admin/import-receipts', 'POST', data);
+                if (response.success) {
+                    showToast('Lưu phiếu nhập hàng thành công! Phiếu đang ở trạng thái chờ xử lý.');
+                    resetImportForm();
+                    loadImportHistory();
+                    loadSuppliers(); // Reload suppliers to update stats
+                } else {
+                    showToast(response.message || 'Có lỗi xảy ra', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving import receipt:', error);
+                showToast('Có lỗi xảy ra khi lưu phiếu nhập', 'error');
+            }
+        }
+
+        // Listen for product selection change in import modal
+        document.getElementById('importProductSelect')?.addEventListener('change', function() {
+            const productId = this.value;
+            if (productId) {
+                // Update supplier dropdown with filtered suppliers
+                const suppliersWithProduct = suppliers.filter(s => {
+                    return s.status === 'ACTIVE' && s.products && s.products.some(p => {
+                        const pid = typeof p.id === 'string' ? p.id : String(p.id);
+                        return pid === productId || pid === parseInt(productId);
+                    });
+                });
+
+                const supplierSelect = document.getElementById('importSupplier');
+                if (suppliersWithProduct.length === 0) {
+                    document.getElementById('noSupplierHint').classList.remove('hidden');
+                    supplierSelect.innerHTML = '<option value="">-- Không có nhà cung cấp --</option>';
+                } else {
+                    document.getElementById('noSupplierHint').classList.add('hidden');
+                    supplierSelect.innerHTML = '<option value="">-- Chọn nhà cung cấp --</option>' +
+                        suppliersWithProduct.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+                }
+            }
+        });
+
         // Load data
-        document.addEventListener('DOMContentLoaded', loadSuppliers);
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSuppliers();
+            loadAllProducts();
+            loadProductsForImport();
+            initTableSort('suppliersTableSortable');
+        });
     </script>
     </th:block>
 </th:block>

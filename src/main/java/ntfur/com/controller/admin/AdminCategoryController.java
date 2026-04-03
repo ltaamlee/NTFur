@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import ntfur.com.entity.dto.ApiResponse;
-import ntfur.com.entity.dto.CreateCategoryRequest;
 import ntfur.com.entity.dto.category.CategoryDTO;
+import ntfur.com.entity.dto.category.CreateCategoryRequest;
 import ntfur.com.entity.dto.category.UpdateCategoryRequest;
 import ntfur.com.service.CategoryService;
 
@@ -33,10 +33,34 @@ public class AdminCategoryController {
         List<CategoryDTO> categories = categoryService.getAllCategories();
         return ResponseEntity.ok(ApiResponse.success(categories));
     }
+    
+    @GetMapping("/hierarchy")
+    public ResponseEntity<ApiResponse<List<CategoryDTO>>> getAllCategoriesWithHierarchy() {
+        List<CategoryDTO> categories = categoryService.getAllCategoriesWithHierarchy();
+        return ResponseEntity.ok(ApiResponse.success(categories));
+    }
+    
+    @GetMapping("/active/hierarchy")
+    public ResponseEntity<ApiResponse<List<CategoryDTO>>> getActiveCategoriesWithHierarchy() {
+        List<CategoryDTO> categories = categoryService.getActiveCategoriesWithHierarchy();
+        return ResponseEntity.ok(ApiResponse.success(categories));
+    }
 
     @GetMapping("/active")
     public ResponseEntity<ApiResponse<List<CategoryDTO>>> getActiveCategories() {
         List<CategoryDTO> categories = categoryService.getActiveCategories();
+        return ResponseEntity.ok(ApiResponse.success(categories));
+    }
+    
+    @GetMapping("/roots")
+    public ResponseEntity<ApiResponse<List<CategoryDTO>>> getRootCategories() {
+        List<CategoryDTO> categories = categoryService.getRootCategories();
+        return ResponseEntity.ok(ApiResponse.success(categories));
+    }
+    
+    @GetMapping("/children/{parentId}")
+    public ResponseEntity<ApiResponse<List<CategoryDTO>>> getChildCategories(@PathVariable Long parentId) {
+        List<CategoryDTO> categories = categoryService.getChildCategories(parentId);
         return ResponseEntity.ok(ApiResponse.success(categories));
     }
 

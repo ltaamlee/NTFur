@@ -3,6 +3,7 @@ package ntfur.com.service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,6 +49,13 @@ public class OrderService {
 
     public List<OrderDTO> getOrdersByStatus(String status) {
         return orderRepository.findByStatusOrderByCreatedAtDesc(OrderStatus.valueOf(status)).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<OrderDTO> getOrdersByUserId(Long userId) {
+        return orderRepository.findByUserId(userId).stream()
+                .sorted(Comparator.comparing(Order::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }

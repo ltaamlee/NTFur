@@ -40,6 +40,10 @@ public class CreateProductRequest {
 
     private Long supplierId;
 
+    private Long productSetId;
+
+    private String newProductSetName;
+
     private Double weight;
 
     private String dimensions;

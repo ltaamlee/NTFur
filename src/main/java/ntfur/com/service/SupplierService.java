@@ -1,5 +1,7 @@
 package ntfur.com.service;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -7,9 +9,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import ntfur.com.entity.Product;
 import ntfur.com.entity.Supplier;
 import ntfur.com.entity.Supplier.SupplierStatus;
 import ntfur.com.entity.dto.SupplierDTO;
+import ntfur.com.entity.dto.product.ProductDTO;
+import ntfur.com.repository.ProductRepository;
 import ntfur.com.repository.SupplierRepository;
 
 @Service
@@ -17,6 +22,7 @@ import ntfur.com.repository.SupplierRepository;
 public class SupplierService {
 
     private final SupplierRepository supplierRepository;
+    private final ProductRepository productRepository;
 
     public List<SupplierDTO> getAllSuppliers() {
         return supplierRepository.findAll().stream()
@@ -70,7 +76,11 @@ public class SupplierService {
         supplier.setStatus(dto.getStatus() != null ? SupplierStatus.valueOf(dto.getStatus()) : SupplierStatus.ACTIVE);
 
         Supplier saved = supplierRepository.save(supplier);
-        return toDTO(saved);
+        
+        // Xử lý sản phẩm
+        addProductsToSupplier(saved, dto.getProductNames(), dto.getProductIds());
+        
+        return toDTO(supplierRepository.findById(saved.getId()).orElse(saved));
     }
 
     @Transactional
@@ -97,7 +107,52 @@ public class SupplierService {
         if (dto.getStatus() != null) supplier.setStatus(SupplierStatus.valueOf(dto.getStatus()));
 
         Supplier updated = supplierRepository.save(supplier);
-        return toDTO(updated);
+        
+        // Xử lý sản phẩm nếu có thay đổi
+        if (dto.getProductNames() != null || dto.getProductIds() != null) {
+            addProductsToSupplier(updated, dto.getProductNames(), dto.getProductIds());
+        }
+        
+        return toDTO(supplierRepository.findById(updated.getId()).orElse(updated));
+    }
+
+    private void addProductsToSupplier(Supplier supplier, List<String> productNames, List<Long> productIds) {
+        List<Product> productsToAdd = new ArrayList<>();
+        
+        // Gán sản phẩm có sẵn
+        if (productIds != null && !productIds.isEmpty()) {
+            for (Long productId : productIds) {
+                if (productId != null && !isTempId(productId)) {
+                    productRepository.findById(productId).ifPresent(product -> {
+                        product.setSupplier(supplier);
+                        productsToAdd.add(product);
+                    });
+                }
+            }
+        }
+        
+        // Tạo sản phẩm mới từ tên
+        if (productNames != null && !productNames.isEmpty()) {
+            for (String productName : productNames) {
+                if (productName != null && !productName.trim().isEmpty()) {
+                    Product newProduct = new Product();
+                    newProduct.setName(productName.trim());
+                    newProduct.setSupplier(supplier);
+                    newProduct.setStatus(Product.ProductStatus.ACTIVE);
+                    newProduct.setStock(0);
+                    newProduct.setPrice(BigDecimal.valueOf(0.0));
+                    productsToAdd.add(newProduct);
+                }
+            }
+        }
+        
+        if (!productsToAdd.isEmpty()) {
+            productRepository.saveAll(productsToAdd);
+        }
+    }
+
+    private boolean isTempId(Long id) {
+        return id != null && id < 0;
     }
 
     @Transactional
@@ -117,6 +172,20 @@ public class SupplierService {
     }
 
     private SupplierDTO toDTO(Supplier supplier) {
+        List<ProductDTO> productDTOs = supplier.getProducts().stream()
+                .map(p -> ProductDTO.builder()
+                        .id(p.getId())
+                        .name(p.getName())
+                        .price(p.getPrice())
+                        .stock(p.getStock())
+                        .sku(p.getSku())
+                        .status(p.getStatus() != null ? p.getStatus().name() : null)
+                        .mainImage(p.getMainImage())
+                        .featured(p.isFeatured())
+                        .createdAt(p.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+
         return SupplierDTO.builder()
                 .id(supplier.getId())
                 .name(supplier.getName())
@@ -141,6 +210,8 @@ public class SupplierService {
                 .totalAmount(supplier.getTotalAmount())
                 .status(supplier.getStatus() != null ? supplier.getStatus().name() : null)
                 .notes(supplier.getNotes())
+                .products(productDTOs)
+                .productCount(supplier.getProducts().size())
                 .createdAt(supplier.getCreatedAt() != null ? supplier.getCreatedAt().toString() : null)
                 .updatedAt(supplier.getUpdatedAt() != null ? supplier.getUpdatedAt().toString() : null)
                 .build();

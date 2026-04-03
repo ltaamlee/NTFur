@@ -1,9 +1,12 @@
 package ntfur.com.entity.dto;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ntfur.com.entity.dto.product.ProductDTO;
 
 @Data
 @Builder
@@ -33,6 +36,12 @@ public class SupplierDTO {
     private Double totalAmount;
     private String status;
     private String notes;
+    private List<ProductDTO> products;
+    private Integer productCount;
     private String createdAt;
     private String updatedAt;
+    
+    // Fields for creating/updating products
+    private List<String> productNames;  // Tên sản phẩm mới cần tạo
+    private List<Long> productIds;        // ID sản phẩm có sẵn cần gán
 }

@@ -87,7 +87,7 @@ public class Supplier {
     private Double rating = 0.0;
 
     @Column(name = "total_orders")
-    private int totalOrders = 0;
+    private Integer totalOrders = 0;
 
     @Column(name = "total_amount")
     private Double totalAmount = 0.0;

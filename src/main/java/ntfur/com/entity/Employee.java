@@ -69,9 +69,6 @@ public class Employee {
     @Column(name = "status")
     private EmployeeStatus status = EmployeeStatus.ACTIVE;
 
-    @Column(name = "is_admin")
-    private boolean isAdmin = false;
-
     @Column(name = "createdAt", updatable = false)
     private LocalDateTime createdAt;
 

@@ -1,0 +1,124 @@
+<th:block th:fragment="page-content">
+    <div class="max-w-5xl mx-auto space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white rounded-2xl card-shadow border border-primary-100 p-6 md:p-8">
+                <h2 class="text-xl font-display font-bold text-primary-900 mb-2">Thông tin cá nhân</h2>
+                <p class="text-sm text-primary-600 mb-6">Cập nhật họ tên và địa chỉ giao hàng. Dữ liệu được lưu qua API.</p>
+                <form id="profileForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-medium text-primary-700">Họ và tên <span class="text-red-500">*</span></label>
+                        <input id="fullName" type="text" class="mt-1 w-full border border-primary-200 rounded-xl px-4 py-2.5 text-sm focus:border-secondary-700 focus:ring-1 focus:ring-secondary-700/30">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-primary-700">Số điện thoại <span class="text-red-500">*</span></label>
+                        <input id="phone" type="tel" class="mt-1 w-full border border-primary-200 rounded-xl px-4 py-2.5 text-sm focus:border-secondary-700 focus:ring-1 focus:ring-secondary-700/30">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-primary-700">Tỉnh / Thành phố</label>
+                        <input id="city" type="text" class="mt-1 w-full border border-primary-200 rounded-xl px-4 py-2.5 text-sm focus:border-secondary-700">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-primary-700">Quận / Huyện</label>
+                        <input id="district" type="text" class="mt-1 w-full border border-primary-200 rounded-xl px-4 py-2.5 text-sm focus:border-secondary-700">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-primary-700">Phường / Xã</label>
+                        <input id="ward" type="text" class="mt-1 w-full border border-primary-200 rounded-xl px-4 py-2.5 text-sm focus:border-secondary-700">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-xs font-medium text-primary-700">Địa chỉ cụ thể</label>
+                        <input id="address" type="text" class="mt-1 w-full border border-primary-200 rounded-xl px-4 py-2.5 text-sm focus:border-secondary-700">
+                    </div>
+                    <div class="md:col-span-2 flex flex-wrap gap-3 pt-2">
+                        <button type="submit" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-secondary-700 to-primary-800 text-white text-sm font-semibold hover:opacity-95 active:scale-[0.98] transition shadow-md">Lưu thay đổi</button>
+                        <button type="button" id="btnLogout" class="px-6 py-2.5 rounded-xl border border-primary-300 text-primary-800 text-sm font-medium hover:bg-primary-50 transition">Đăng xuất</button>
+                    </div>
+                </form>
+            </div>
+            <div class="bg-white rounded-2xl card-shadow border border-primary-100 p-6">
+                <h3 class="font-display font-semibold text-primary-900 mb-4">Tóm tắt</h3>
+                <p id="emailDisplay" class="text-sm text-primary-600 break-all mb-4"></p>
+                <div class="rounded-xl bg-primary-50 p-4 text-sm text-primary-800 space-y-1">
+                    <p>Tổng đơn: <strong id="orderCount">0</strong></p>
+                    <p>Tổng chi: <strong id="spentTotal">0đ</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl card-shadow border border-primary-100 p-6 md:p-8">
+            <h2 class="text-xl font-display font-bold text-primary-900 mb-4">Đơn hàng của tôi</h2>
+            <div id="orders" class="space-y-3"></div>
+        </div>
+    </div>
+    <script>
+        (function () {
+            function token() { return localStorage.getItem('accessToken'); }
+            function authHeaders() {
+                var t = token();
+                var h = {'Content-Type': 'application/json'};
+                if (t) h['Authorization'] = 'Bearer ' + t;
+                return h;
+            }
+            async function api(url, method, body) {
+                var res = await fetch(url, { method: method || 'GET', headers: authHeaders(), body: body ? JSON.stringify(body) : undefined });
+                return res.json();
+            }
+            function formatVnd(v) {
+                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(v) || 0);
+            }
+
+            if (!token()) { window.location.href = '/login'; return; }
+
+            async function loadProfile() {
+                var p = await api('/api/customer/profile');
+                if (!p.success) { alert(p.message || 'Không tải được hồ sơ'); return; }
+                var d = p.data;
+                ['fullName','phone','city','district','ward','address'].forEach(function (k) {
+                    var el = document.getElementById(k);
+                    if (el) el.value = d[k] || '';
+                });
+                document.getElementById('emailDisplay').textContent = d.email || '';
+                document.getElementById('orderCount').textContent = d.totalOrders != null ? d.totalOrders : '0';
+                document.getElementById('spentTotal').textContent = formatVnd(d.totalSpent);
+            }
+
+            async function loadOrders() {
+                var r = await api('/api/customer/orders');
+                var box = document.getElementById('orders');
+                if (!r.success || !r.data || !r.data.length) {
+                    box.innerHTML = '<p class="text-primary-500 text-sm py-6 text-center border border-dashed border-primary-200 rounded-xl">Chưa có đơn hàng.</p>';
+                    return;
+                }
+                box.innerHTML = r.data.map(function (o) {
+                    return '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border border-primary-100 rounded-xl p-4 hover:bg-primary-50/50 transition">' +
+                        '<div><p class="font-semibold text-primary-900">' + (o.orderNumber || '') + '</p>' +
+                        '<p class="text-xs text-primary-500 mt-1">' + (o.status || '') + ' · ' + (o.paymentStatus || '') + '</p></div>' +
+                        '<p class="font-bold text-secondary-800">' + formatVnd(o.totalAmount) + '</p></div>';
+                }).join('');
+            }
+
+            document.getElementById('profileForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                var body = {
+                    fullName: document.getElementById('fullName').value,
+                    phone: document.getElementById('phone').value,
+                    city: document.getElementById('city').value,
+                    district: document.getElementById('district').value,
+                    ward: document.getElementById('ward').value,
+                    address: document.getElementById('address').value
+                };
+                var r = await api('/api/customer/profile', 'PUT', body);
+                alert(r.success ? 'Đã cập nhật hồ sơ' : (r.message || 'Thất bại'));
+            });
+
+            document.getElementById('btnLogout').addEventListener('click', function () {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('user');
+                window.location.href = '/';
+            });
+
+            loadProfile();
+            loadOrders();
+        })();
+    </script>
+</th:block>

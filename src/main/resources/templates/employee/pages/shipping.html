@@ -1,0 +1,122 @@
+<th:block th:fragment="page-content">
+    <th:block th:with="title='Vận chuyển', pageTitle='Vận chuyển', activePage='shipping'">
+
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-display font-bold text-primary-800">Quản lý vận chuyển</h2>
+            <p class="text-primary-500 mt-1">Theo dõi và cập nhật trạng thái giao hàng</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl card-shadow border border-primary-100 p-4 mb-6">
+        <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1">
+                <input type="text" id="searchInput" placeholder="Tìm theo mã đơn, tên khách hàng..." class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500">
+            </div>
+            <select id="filterStatus" class="px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500">
+                <option value="">Tất cả trạng thái</option>
+                <option value="PENDING">Chờ giao</option>
+                <option value="SHIPPING">Đang giao</option>
+                <option value="DELIVERED">Đã giao</option>
+                <option value="FAILED">Giao thất bại</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Shipping Table -->
+    <div class="bg-white rounded-2xl card-shadow border border-primary-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full" id="shippingTableSortable">
+                <thead>
+                    <tr class="table-header">
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="code">Mã đơn</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="customer">Khách hàng</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="address">Địa chỉ giao</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="status">Trạng thái</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="date">Ngày giao dự kiến</th>
+                    </tr>
+                </thead>
+                <tbody id="shippingTable">
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-primary-500">Đang tải dữ liệu...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let allOrders = [];
+        
+        async function loadOrders() {
+            try {
+                const response = await apiCall('/api/admin/orders');
+                if (response.success) {
+                    allOrders = (response.data || []).filter(o => 
+                        ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPING'].includes(o.status)
+                    );
+                    renderOrders();
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+            }
+        }
+        
+        function renderOrders() {
+            const tbody = document.getElementById('shippingTable');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+            
+            let filtered = allOrders.filter(o => {
+                const matchSearch = !searchTerm || 
+                    (o.orderNumber && o.orderNumber.toLowerCase().includes(searchTerm)) ||
+                    (o.customerName && o.customerName.toLowerCase().includes(searchTerm)) ||
+                    (o.shippingPhone && o.shippingPhone.includes(searchTerm));
+                const matchStatus = !statusFilter || o.status === statusFilter;
+                return matchSearch && matchStatus;
+            });
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-primary-500">Không có đơn hàng nào cần giao</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filtered.map(order => `
+                <tr class="border-b border-primary-50 hover:bg-primary-50/50">
+                    <td class="px-6 py-4 text-sm font-medium text-primary-800">${order.orderNumber || order.id}</td>
+                    <td class="px-6 py-4 text-sm">
+                        <p class="text-primary-800">${order.customerName || order.shippingFullName || 'Khách hàng'}</p>
+                        <p class="text-xs text-primary-400">${order.shippingPhone || '-'}</p>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-primary-600">${order.shippingAddress || '-'}, ${order.shippingDistrict || ''}, ${order.shippingCity || ''}</td>
+                    <td class="px-6 py-4 text-center">${getStatusBadge(order.status)}</td>
+                    <td class="px-6 py-4 text-center text-sm text-primary-500">${order.createdAt ? new Date(order.createdAt).toLocaleDateString('vi-VN') : '-'}</td>
+                </tr>
+            `).join('');
+        }
+        
+        function getStatusBadge(status) {
+            const statusMap = {
+                'PENDING': '<span class="status-badge bg-yellow-100 text-yellow-700">Chờ giao</span>',
+                'CONFIRMED': '<span class="status-badge bg-blue-100 text-blue-700">Đã xác nhận</span>',
+                'PROCESSING': '<span class="status-badge bg-indigo-100 text-indigo-700">Đang đóng gói</span>',
+                'SHIPPING': '<span class="status-badge bg-cyan-100 text-cyan-700">Đang giao</span>',
+                'DELIVERED': '<span class="status-badge bg-green-100 text-green-700">Đã giao</span>',
+                'FAILED': '<span class="status-badge bg-red-100 text-red-700">Giao thất bại</span>'
+            };
+            return statusMap[status] || `<span class="status-badge bg-gray-100 text-gray-600">${status}</span>`;
+        }
+        
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', renderOrders);
+        document.getElementById('filterStatus').addEventListener('change', renderOrders);
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOrders();
+            initTableSort('shippingTableSortable');
+        });
+    </script>
+    </th:block>
+</th:block>

@@ -97,14 +97,14 @@
     <!-- Products Table -->
     <div class="bg-white rounded-2xl card-shadow border border-primary-100 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full">
+            <table class="w-full" id="productsTableSortable">
                 <thead>
                     <tr class="table-header">
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider">Sản phẩm</th>
-                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider">Danh mục</th>
-                        <th class="px-6 py-4 text-right text-xs font-semibold text-primary-700 uppercase tracking-wider">Giá</th>
-                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider">Tồn kho</th>
-                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider">Trạng thái</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="name">Sản phẩm</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="category">Danh mục</th>
+                        <th class="px-6 py-4 text-right text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="price">Giá</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="stock">Tồn kho</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider" data-sortable data-sort="status">Trạng thái</th>
                         <th class="px-6 py-4 text-center text-xs font-semibold text-primary-700 uppercase tracking-wider">Hành động</th>
                     </tr>
                 </thead>
@@ -193,6 +193,31 @@
                                     <input type="text" id="productColor" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="VD: Nâu">
                                 </div>
                             </div>
+                            <!-- Product Set Section -->
+                            <div class="border-t border-primary-100 pt-4 mt-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <label class="block text-sm font-medium text-primary-700">Sản phẩm thuộc bộ</label>
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="checkbox" id="isPartOfSet" class="w-4 h-4 text-primary-600 border-primary-300 rounded focus:ring-primary-500" onchange="toggleProductSetSection()">
+                                        <span class="ml-2 text-sm text-primary-700">Là sản phẩm trong bộ</span>
+                                    </label>
+                                </div>
+                                <div id="productSetSection" class="hidden">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-primary-700 mb-2">Chọn bộ sản phẩm có sẵn</label>
+                                            <select id="productSet" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500">
+                                                <option value="">-- Chọn bộ sản phẩm --</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-primary-700 mb-2">Hoặc tạo bộ sản phẩm mới</label>
+                                            <input type="text" id="newProductSetName" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="VD: Bộ Sofa Milano">
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-primary-400 mt-2">* Chọn một trong hai: bộ có sẵn hoặc tạo bộ mới.</p>
+                                </div>
+                            </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-primary-700 mb-2">Bảo hành (tháng)</label>
@@ -259,9 +284,12 @@
         let products = [];
         let categories = [];
         let suppliers = [];
+        let productSets = [];
         let currentPage = 1;
         const itemsPerPage = 10;
         let uploadedImages = [];
+        let viewImages = [];
+        let viewImageIndex = 0;
 
         async function loadProducts() {
             try {
@@ -273,6 +301,34 @@
                 }
             } catch (error) {
                 console.error('Error loading products:', error);
+            }
+        }
+
+        async function loadProductSets() {
+            try {
+                const response = await apiCall('/api/admin/product-sets');
+                if (response.success) {
+                    productSets = response.data;
+                    populateProductSetSelect();
+                }
+            } catch (error) {
+                console.error('Error loading product sets:', error);
+            }
+        }
+
+        function populateProductSetSelect() {
+            const select = document.getElementById('productSet');
+            if (select) {
+                select.innerHTML = '<option value="">-- Chọn bộ sản phẩm --</option>' + 
+                    productSets.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            }
+        }
+
+        function toggleProductSetSection() {
+            const checkbox = document.getElementById('isPartOfSet');
+            const section = document.getElementById('productSetSection');
+            if (checkbox && section) {
+                section.classList.toggle('hidden', !checkbox.checked);
             }
         }
 
@@ -289,6 +345,11 @@
         }
 
         async function loadSuppliers() {
+            // Wait for products to be loaded first
+            while (products.length === 0) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
             try {
                 const response = await apiCall('/api/admin/suppliers');
                 if (response.success) {
@@ -314,8 +375,13 @@
         function populateSupplierSelects() {
             const select = document.getElementById('productSupplier');
             if (select) {
+                // Lọc chỉ hiển thị nhà cung cấp có sản phẩm
+                const suppliersWithProducts = suppliers.filter(s => 
+                    (s.products && s.products.length > 0) || 
+                    products.some(p => p.supplierId === s.id)
+                );
                 select.innerHTML = `<option value="">Chọn nhà cung cấp</option>` + 
-                    suppliers.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+                    suppliersWithProducts.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
             }
         }
 
@@ -461,8 +527,25 @@
             const product = products.find(p => p.id === id);
             if (!product) return;
 
-            const imagesHtml = product.images && product.images.length > 0 
-                ? product.images.map((img, i) => `<img src="${img.imageUrl}" alt="${product.name}" class="${i === 0 ? 'w-full h-64 object-cover rounded-xl' : 'w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80'}">`).join('')
+            viewImages = product.images && product.images.length > 0
+                ? product.images.map(i => i.imageUrl)
+                : (product.mainImage ? [product.mainImage] : []);
+            viewImageIndex = 0;
+
+            const imagesHtml = viewImages.length > 0
+                ? `
+                <div class="relative overflow-hidden rounded-xl bg-primary-50">
+                    <div id="adminViewSlides" class="flex transition-transform duration-300" style="transform:translateX(0%)">
+                        ${viewImages.map(url => `<img src="${url}" alt="${product.name}" class="w-full shrink-0 h-72 object-cover">`).join('')}
+                    </div>
+                    ${viewImages.length > 1 ? `
+                    <button onclick="changeAdminViewSlide(-1)" class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white">‹</button>
+                    <button onclick="changeAdminViewSlide(1)" class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white">›</button>
+                    ` : ''}
+                </div>
+                <div id="adminViewThumbs" class="mt-3 flex gap-2 overflow-x-auto">
+                    ${viewImages.map((url, i) => `<button onclick="goAdminViewSlide(${i})" class="border-2 ${i===0 ? 'border-primary-500' : 'border-transparent'} rounded"><img src="${url}" class="w-16 h-16 object-cover rounded"></button>`).join('')}
+                </div>`
                 : `<div class="w-full h-48 bg-primary-100 rounded-xl flex items-center justify-center"><svg class="w-16 h-16 text-primary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4"/></svg></div>`;
 
             const content = `
@@ -503,6 +586,29 @@
 
             document.getElementById('viewModalContent').innerHTML = content;
             document.getElementById('viewModal').classList.remove('hidden');
+        }
+
+        function changeAdminViewSlide(direction) {
+            if (viewImages.length <= 1) return;
+            viewImageIndex = (viewImageIndex + direction + viewImages.length) % viewImages.length;
+            updateAdminViewSlide();
+        }
+
+        function goAdminViewSlide(index) {
+            viewImageIndex = index;
+            updateAdminViewSlide();
+        }
+
+        function updateAdminViewSlide() {
+            const slides = document.getElementById('adminViewSlides');
+            if (slides) {
+                slides.style.transform = `translateX(-${viewImageIndex * 100}%)`;
+            }
+            const thumbs = document.querySelectorAll('#adminViewThumbs button');
+            thumbs.forEach((el, i) => {
+                el.classList.toggle('border-primary-500', i === viewImageIndex);
+                el.classList.toggle('border-transparent', i !== viewImageIndex);
+            });
         }
 
         function closeViewModal() {
@@ -577,7 +683,11 @@
                 warrantyMonths: parseInt(document.getElementById('productWarranty').value) || null,
                 status: document.getElementById('productStatus').value,
                 featured: document.getElementById('productFeatured').checked,
-                imageUrls: uploadedImages.map(img => img.imageUrl)
+                imageUrls: uploadedImages.map(img => img.imageUrl),
+                productSetId: document.getElementById('isPartOfSet').checked ? 
+                    (parseInt(document.getElementById('productSet').value) || null) : null,
+                newProductSetName: document.getElementById('isPartOfSet').checked ? 
+                    document.getElementById('newProductSetName').value : null
             };
 
             try {
@@ -620,6 +730,8 @@
             loadProducts();
             loadCategories();
             loadSuppliers();
+            loadProductSets();
+            initTableSort('productsTableSortable');
         });
     </script>
     </th:block>

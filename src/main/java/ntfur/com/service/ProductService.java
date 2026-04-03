@@ -15,6 +15,7 @@ import ntfur.com.entity.Category;
 import ntfur.com.entity.Product;
 import ntfur.com.entity.Product.ProductStatus;
 import ntfur.com.entity.ProductImage;
+import ntfur.com.entity.ProductSet;
 import ntfur.com.entity.Supplier;
 import ntfur.com.entity.dto.product.CreateProductRequest;
 import ntfur.com.entity.dto.product.ProductDTO;
@@ -24,6 +25,7 @@ import ntfur.com.entity.dto.product.UpdateProductRequest;
 import ntfur.com.repository.CategoryRepository;
 import ntfur.com.repository.ProductImageRepository;
 import ntfur.com.repository.ProductRepository;
+import ntfur.com.repository.ProductSetRepository;
 import ntfur.com.repository.SupplierRepository;
 
 @Service
@@ -34,6 +36,7 @@ public class ProductService {
     private final ProductImageRepository productImageRepository;
     private final CategoryRepository categoryRepository;
     private final SupplierRepository supplierRepository;
+    private final ProductSetRepository productSetRepository;
     
     public List<ProductDTO> getAllProducts() {
         return productRepository.findAll().stream()
@@ -49,6 +52,15 @@ public class ProductService {
 
     public List<ProductDTO> getProductsByCategory(Long categoryId) {
         return productRepository.findByCategoryId(categoryId).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+    
+    public List<ProductDTO> getProductsByCategoryIncludingSubcategories(Long categoryId) {
+        // Get all category IDs including subcategories
+        List<Long> categoryIds = categoryRepository.findAllChildIds(categoryId);
+        categoryIds.add(categoryId);
+        return productRepository.findByCategoryIdIn(categoryIds).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -107,6 +119,19 @@ public class ProductService {
             Supplier supplier = supplierRepository.findById(request.getSupplierId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà cung cấp"));
             product.setSupplier(supplier);
+        }
+        
+        // Xử lý ProductSet - ưu tiên tạo mới nếu có newProductSetName
+        if (request.getNewProductSetName() != null && !request.getNewProductSetName().trim().isEmpty()) {
+            ProductSet newSet = new ProductSet();
+            newSet.setName(request.getNewProductSetName().trim());
+            newSet.setActive(true);
+            ProductSet savedSet = productSetRepository.save(newSet);
+            product.setProductSet(savedSet);
+        } else if (request.getProductSetId() != null) {
+            ProductSet productSet = productSetRepository.findById(request.getProductSetId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bộ sản phẩm"));
+            product.setProductSet(productSet);
         }
         
         Product savedProduct = productRepository.save(product);
@@ -187,7 +212,19 @@ public class ProductService {
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà cung cấp"));
             product.setSupplier(supplier);
         }
-        
+        // Xử lý ProductSet - ưu tiên tạo mới nếu có newProductSetName
+        if (request.getNewProductSetName() != null && !request.getNewProductSetName().trim().isEmpty()) {
+            ProductSet newSet = new ProductSet();
+            newSet.setName(request.getNewProductSetName().trim());
+            newSet.setActive(true);
+            ProductSet savedSet = productSetRepository.save(newSet);
+            product.setProductSet(savedSet);
+        } else if (request.getProductSetId() != null) {
+            ProductSet productSet = productSetRepository.findById(request.getProductSetId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bộ sản phẩm"));
+            product.setProductSet(productSet);
+        }
+
         Product updatedProduct = productRepository.save(product);
         
         if (request.getImages() != null) {
@@ -314,6 +351,8 @@ public class ProductService {
                 .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
                 .supplierId(product.getSupplier() != null ? product.getSupplier().getId() : null)
                 .supplierName(product.getSupplier() != null ? product.getSupplier().getName() : null)
+                .productSetId(product.getProductSet() != null ? product.getProductSet().getId() : null)
+                .productSetName(product.getProductSet() != null ? product.getProductSet().getName() : null)
                 .weight(product.getWeight())
                 .dimensions(product.getDimensions())
                 .material(product.getMaterial())

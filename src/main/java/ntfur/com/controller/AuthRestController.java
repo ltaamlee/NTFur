@@ -5,6 +5,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import ntfur.com.entity.dto.ApiResponse;
+import ntfur.com.entity.dto.auth.ForgotPasswordRequest;
+import ntfur.com.entity.dto.auth.LoginRequest;
+import ntfur.com.entity.dto.auth.RefreshTokenRequest;
+import ntfur.com.entity.dto.auth.RegisterRequest;
+import ntfur.com.entity.dto.auth.ResetPasswordRequest;
 import ntfur.com.entity.dto.*;
 import ntfur.com.service.AuthService;
 
@@ -16,6 +21,16 @@ import java.util.Map;
 public class AuthRestController {
 
     private final AuthService authService;
+
+    /** Trả về thông tin user khi gửi kèm Bearer token; dùng để hiển thị tên trên header. */
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserDTO>> me() {
+        ApiResponse<UserDTO> res = authService.getCurrentUserProfile();
+        if (res.isSuccess()) {
+            return ResponseEntity.ok(res);
+        }
+        return ResponseEntity.status(401).body(res);
+    }
 
     // Đăng nhập
     @PostMapping("/login")

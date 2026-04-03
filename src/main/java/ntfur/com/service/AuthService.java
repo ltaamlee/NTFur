@@ -13,6 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ntfur.com.entity.User;
 import ntfur.com.entity.dto.*;
+import ntfur.com.entity.dto.auth.ChangePasswordRequest;
+import ntfur.com.entity.dto.auth.ForgotPasswordRequest;
+import ntfur.com.entity.dto.auth.LoginRequest;
+import ntfur.com.entity.dto.auth.RegisterRequest;
+import ntfur.com.entity.dto.auth.ResetPasswordRequest;
 import ntfur.com.repository.UserRepository;
 import ntfur.com.security.CustomUserDetails;
 import ntfur.com.security.JwtTokenProvider;
@@ -311,6 +316,20 @@ public class AuthService {
             log.error("Lỗi refresh token: {}", e.getMessage());
             return ApiResponse.error("Refresh token thất bại: " + e.getMessage());
         }
+    }
+
+    /** Thông tin user hiện tại theo JWT (dùng cho header / trang công khai). */
+    public ApiResponse<UserDTO> getCurrentUserProfile() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()
+                || auth.getPrincipal() == null
+                || "anonymousUser".equals(auth.getPrincipal().toString())) {
+            return ApiResponse.error("Chưa đăng nhập");
+        }
+        String username = auth.getName();
+        return userRepository.findByUsername(username)
+                .map(u -> ApiResponse.success(convertToUserDTO(u)))
+                .orElseGet(() -> ApiResponse.error("Không tìm thấy người dùng"));
     }
 
     // Chuyển đổi User sang UserDTO

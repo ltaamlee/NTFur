@@ -1,6 +1,5 @@
 package ntfur.com.entity.dto.product;
 
-import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -27,7 +26,7 @@ public class ProductImageDTO {
     @Size(max = 255, message = "Alt text không được vượt quá 255 ký tự")
     private String altText;
 
-    private int displayOrder;
+    private Integer displayOrder;
 
     private boolean isPrimary;
 

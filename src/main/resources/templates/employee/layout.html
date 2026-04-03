@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">NTFurniture Nhân viên</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fdf8f6',
+                            100: '#f2e8e5',
+                            200: '#eaddd7',
+                            300: '#e0cec7',
+                            400: '#d2bab0',
+                            500: '#bfa094',
+                            600: '#a18072',
+                            700: '#977669',
+                            800: '#846358',
+                            900: '#43302b',
+                        },
+                        secondary: {
+                            50: '#fefcf9',
+                            100: '#fdf8f3',
+                            200: '#f5efe6',
+                            300: '#ebe2d3',
+                            400: '#ddd0b8',
+                            500: '#cdb99a',
+                            600: '#c4a47d',
+                            700: '#a67c52',
+                            800: '#866744',
+                            900: '#6e553a',
+                        },
+                        warm: {
+                            white: '#FFFBF7',
+                            cream: '#FDF6F0',
+                            beige: '#F5EDE4',
+                        }
+                    },
+                    fontFamily: {
+                        display: ['Montserrat', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Montserrat', sans-serif; }
+        .sidebar-link.active { background: linear-gradient(135deg, #a67c52 0%, #977669 100%); color: white; }
+        .sidebar-link:hover:not(.active) { background: rgba(166, 124, 82, 0.1); }
+        .card-shadow { box-shadow: 0 4px 20px rgba(67, 48, 43, 0.08); }
+        .btn-primary { background: linear-gradient(135deg, #a67c52 0%, #977669 100%); transition: all 0.3s ease; }
+        .btn-primary:hover { background: linear-gradient(135deg, #977669 0%, #866744 100%); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(166, 124, 82, 0.3); }
+        .stat-card { background: linear-gradient(135deg, #FFFBF7 0%, #FDF6F0 100%); }
+        .table-header { background: linear-gradient(135deg, #f5efe6 0%, #ebe2d3 100%); }
+        .table-row:hover { background: rgba(166, 124, 82, 0.05); }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #a67c52; box-shadow: 0 0 0 3px rgba(166, 124, 82, 0.1); }
+        .modal-backdrop { animation: fadeIn 0.2s ease-out; }
+        .modal-content { animation: slideUp 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .status-badge { font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: 9999px; font-weight: 500; }
+        .status-pending { background: #FEF3C7; color: #92400E; }
+        .status-confirmed { background: #DBEAFE; color: #1E40AF; }
+        .status-processing { background: #E0E7FF; color: #3730A3; }
+        .status-shipped { background: #CFFAFE; color: #0E7490; }
+        .status-delivered { background: #D1FAE5; color: #065F46; }
+        .status-cancelled { background: #FEE2E2; color: #991B1B; }
+        .status-paid { background: #D1FAE5; color: #065F46; }
+        .status-failed { background: #FEE2E2; color: #991B1B; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #d2bab0; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a67c52; }
+    </style>
+</head>
+<body class="bg-warm-white">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-primary-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+            <div class="h-16 flex items-center justify-center border-b border-primary-200 bg-gradient-to-r from-primary-700 to-secondary-700">
+                <a href="/employee" class="flex items-center space-x-2">
+                    <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-primary-700" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <span class="text-xl font-display font-bold text-white">NTFurniture</span>
+                </a>
+            </div>
+            <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+                <div class="pb-2"><p class="px-4 text-xs font-semibold text-primary-400 uppercase tracking-wider">Nhân viên</p></div>
+                <a href="/employee" class="sidebar-link flex items-center px-4 py-3 rounded-lg text-primary-800 transition-all duration-200" th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    <span class="font-medium">Tổng quan</span>
+                </a>
+                <div class="pt-4 pb-2"><p class="px-4 text-xs font-semibold text-primary-400 uppercase tracking-wider">Sản phẩm</p></div>
+                <a href="/employee/products" class="sidebar-link flex items-center px-4 py-3 rounded-lg text-primary-800 transition-all duration-200" th:classappend="${activePage == 'products' ? 'active' : ''}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <span class="font-medium">Sản phẩm</span>
+                </a>
+                <a href="/employee/suppliers" class="sidebar-link flex items-center px-4 py-3 rounded-lg text-primary-800 transition-all duration-200" th:classappend="${activePage == 'suppliers' ? 'active' : ''}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                    <span class="font-medium">Nhà cung cấp</span>
+                </a>
+                <div class="pt-4 pb-2"><p class="px-4 text-xs font-semibold text-primary-400 uppercase tracking-wider">Kho hàng</p></div>
+                <a href="/employee/import" class="sidebar-link flex items-center px-4 py-3 rounded-lg text-primary-800 transition-all duration-200" th:classappend="${activePage == 'import' ? 'active' : ''}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                    <span class="font-medium">Nhập hàng</span>
+                </a>
+                <div class="pt-4 pb-2"><p class="px-4 text-xs font-semibold text-primary-400 uppercase tracking-wider">Đơn hàng</p></div>
+                <a href="/employee/orders" class="sidebar-link flex items-center px-4 py-3 rounded-lg text-primary-800 transition-all duration-200" th:classappend="${activePage == 'orders' ? 'active' : ''}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                    <span class="font-medium">Đơn hàng</span>
+                </a>
+                <a href="/employee/shipping" class="sidebar-link flex items-center px-4 py-3 rounded-lg text-primary-800 transition-all duration-200" th:classappend="${activePage == 'shipping' ? 'active' : ''}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2"/></svg>
+                    <span class="font-medium">Vận chuyển</span>
+                </a>
+                <div class="pt-4 pb-2"><p class="px-4 text-xs font-semibold text-primary-400 uppercase tracking-wider">Khách hàng</p></div>
+                <a href="/employee/customers" class="sidebar-link flex items-center px-4 py-3 rounded-lg text-primary-800 transition-all duration-200" th:classappend="${activePage == 'customers' ? 'active' : ''}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    <span class="font-medium">Khách hàng</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t border-primary-200">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-semibold">NV</div>
+                    <div class="ml-3"><p class="text-sm font-medium text-primary-800">Nhân viên</p><p class="text-xs text-primary-500">staff@ntfurniture.com</p></div>
+                </div>
+                <a href="/logout" class="mt-3 flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    Đăng xuất
+                </a>
+            </div>
+        </aside>
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+        <main class="flex-1 min-h-screen">
+            <header class="h-16 bg-white border-b border-primary-200 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-30">
+                <div class="flex items-center">
+                    <button class="lg:hidden p-2 text-primary-600 hover:text-primary-800 mr-2" onclick="toggleSidebar()">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    <h1 class="text-xl font-display font-semibold text-primary-800" th:text="${pageTitle}">Tổng quan</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative hidden md:block">
+                        <input type="text" placeholder="Tìm kiếm..." class="w-64 pl-10 pr-4 py-2 border border-primary-200 rounded-lg text-sm focus:border-primary-500">
+                        <svg class="w-5 h-5 text-primary-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                </div>
+            </header>
+            <div class="p-4 lg:p-8" th:insert="${content}"></div>
+        </main>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop absolute inset-0 bg-black bg-opacity-50"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="modal-content relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                <div class="text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </div>
+                    <h3 class="text-xl font-display font-semibold text-primary-800 mb-2">Xác nhận xóa</h3>
+                    <p class="text-primary-600 mb-6" id="deleteMessage">Bạn có chắc chắn muốn xóa mục này?</p>
+                    <div class="flex space-x-3">
+                        <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2 border border-primary-300 text-primary-700 rounded-lg hover:bg-primary-50 font-medium transition-colors">Hủy bỏ</button>
+                        <button onclick="confirmDelete()" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors">Xóa</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-y-full opacity-0 transition-all duration-300">
+        <div class="bg-primary-800 text-white px-6 py-3 rounded-lg shadow-lg flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span id="toastMessage">Thành công!</span>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+        let deleteCallback = null;
+        function showDeleteModal(message, callback) {
+            const modal = document.getElementById('deleteModal');
+            const messageEl = document.getElementById('deleteMessage');
+            messageEl.textContent = message;
+            modal.classList.remove('hidden');
+            deleteCallback = callback;
+        }
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteModal');
+            modal.classList.add('hidden');
+            deleteCallback = null;
+        }
+        function confirmDelete() {
+            if (deleteCallback) { deleteCallback(); }
+            closeDeleteModal();
+        }
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.classList.remove('translate-y-full', 'opacity-0');
+            setTimeout(() => { toast.classList.add('translate-y-full', 'opacity-0'); }, 3000);
+        }
+        async function apiCall(url, method = 'GET', data = null) {
+            const options = { method, headers: { 'Content-Type': 'application/json' } };
+            if (data) { options.body = JSON.stringify(data); }
+            try {
+                const response = await fetch(url, options);
+                const result = await response.json();
+                if (!response.ok) { throw new Error(result.message || 'Đã xảy ra lỗi'); }
+                return result;
+            } catch (error) {
+                showToast(error.message, 'error');
+                throw error;
+            }
+        }
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        }
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
+        }
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeDeleteModal(); } });
+        
+        // Table Sorting Functions
+        let currentSortColumn = null;
+        let currentSortDirection = 'asc';
+        
+        function initTableSort(tableId) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            
+            const headers = table.querySelectorAll('thead th[data-sortable]');
+            headers.forEach((header, index) => {
+                header.style.cursor = 'pointer';
+                header.classList.add('select-none');
+                header.innerHTML += `<svg class="w-4 h-4 inline-block ml-1 text-primary-300 opacity-0 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/></svg>`;
+                
+                header.addEventListener('click', () => {
+                    const column = header.dataset.sort;
+                    sortTable(tableId, column, index);
+                });
+            });
+        }
+        
+        function sortTable(tableId, column, colIndex) {
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const headers = table.querySelectorAll('thead th');
+            
+            if (currentSortColumn === column) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortColumn = column;
+                currentSortDirection = 'asc';
+            }
+            
+            headers.forEach(h => {
+                const icon = h.querySelector('.sort-icon');
+                if (icon) {
+                    icon.classList.remove('opacity-100');
+                    icon.classList.add('opacity-0');
+                    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>';
+                }
+            });
+            
+            const currentHeader = headers[colIndex];
+            const currentIcon = currentHeader.querySelector('.sort-icon');
+            if (currentIcon) {
+                currentIcon.classList.remove('opacity-0');
+                currentIcon.classList.add('opacity-100');
+                currentIcon.innerHTML = currentSortDirection === 'asc' 
+                    ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>'
+                    : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l-5-5m0 0l-5 5m5-5v12"/>';
+            }
+            
+            rows.sort((a, b) => {
+                let aVal = a.cells[colIndex]?.textContent?.trim() || '';
+                let bVal = b.cells[colIndex]?.textContent?.trim() || '';
+                
+                const aNum = parseFloat(aVal.replace(/[^\d.-]/g, ''));
+                const bNum = parseFloat(bVal.replace(/[^\d.-]/g, ''));
+                
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return currentSortDirection === 'asc' ? aNum - bNum : bNum - aNum;
+                }
+                
+                return currentSortDirection === 'asc' 
+                    ? aVal.localeCompare(bVal, 'vi') 
+                    : bVal.localeCompare(aVal, 'vi');
+            });
+            
+            rows.forEach(row => tbody.appendChild(row));
+        }
+    </script>
+</body>
+</html>
