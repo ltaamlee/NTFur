@@ -126,6 +126,9 @@ public class Order {
     @Column(name = "cancellation_reason", columnDefinition = "nvarchar(MAX)")
     private String cancellationReason;
 
+    @Column(name = "payment_deadline")
+    private LocalDateTime paymentDeadline;
+
     @Column(name = "createdAt", updatable = false)
     private LocalDateTime createdAt;
 
@@ -173,7 +176,15 @@ public class Order {
     }
 
     private String generateOrderNumber() {
-        return "NTF-" + System.currentTimeMillis();
+        LocalDateTime now = LocalDateTime.now();
+        return String.format("NTF-%s%s%s-%s%s%s",
+                now.getYear() % 100,
+                String.format("%02d", now.getMonthValue()),
+                String.format("%02d", now.getDayOfMonth()),
+                String.format("%02d", now.getHour()),
+                String.format("%02d", now.getMinute()),
+                String.format("%02d", now.getSecond())
+        );
     }
 
     public void calculateTotal() {
@@ -204,5 +215,10 @@ public class Order {
             sb.append(shippingCity);
         }
         return sb.toString();
+    }
+
+    public boolean isPaymentExpired() {
+        if (paymentDeadline == null) return false;
+        return LocalDateTime.now().isAfter(paymentDeadline);
     }
 }

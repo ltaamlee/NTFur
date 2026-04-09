@@ -1,18 +1,62 @@
 <th:block th:fragment="page-content">
     <div class="max-w-4xl mx-auto bg-white rounded-2xl card-shadow border border-primary-100 p-6 md:p-8">
         <h2 class="text-xl font-display font-bold text-primary-900 mb-2">Giỏ hàng</h2>
-        <p class="text-sm text-primary-600 mb-6">Số lượng và giá đồng bộ từ API sản phẩm.</p>
+        <p class="text-sm text-primary-600 mb-6">Kiểm tra tồn kho tự động trước khi thanh toán.</p>
+        
+        <!-- Toast container -->
+        <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+        
         <div id="cartList" class="space-y-4"></div>
         <div id="cartEmpty" class="hidden text-center py-12 text-primary-500 border border-dashed border-primary-200 rounded-xl">Giỏ hàng trống.</div>
-        <div class="border-t border-primary-100 mt-8 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <p class="text-lg">Tổng: <strong id="total" class="text-secondary-800">0đ</strong></p>
-            <a href="/checkout" id="btnCheckout" class="inline-flex justify-center px-8 py-3 rounded-xl bg-gradient-to-r from-secondary-700 to-primary-800 text-white font-semibold text-sm hover:opacity-95 active:scale-[0.98] transition shadow-md">Tiến hành thanh toán</a>
+        
+        <!-- Select all checkbox -->
+        <div id="selectAllRow" class="hidden mt-4 flex items-center gap-2 py-3 border-t border-primary-100">
+            <input type="checkbox" id="selectAll" class="w-5 h-5 accent-secondary-700" checked>
+            <label for="selectAll" class="text-sm font-medium text-primary-700">Chọn tất cả sản phẩm</label>
+            <span id="selectedCount" class="text-xs text-primary-500">(0 sản phẩm)</span>
+        </div>
+        
+        <div class="border-t border-primary-100 mt-6 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <p class="text-lg">Tổng: <strong id="total" class="text-secondary-800">0đ</strong></p>
+                <p id="selectedTotal" class="text-sm text-primary-500">Đã chọn: 0đ</p>
+            </div>
+            <a href="/checkout" id="btnCheckout" class="inline-flex justify-center px-8 py-3 rounded-xl bg-gradient-to-r from-secondary-700 to-primary-800 text-white font-semibold text-sm hover:opacity-95 active:scale-[0.98] transition shadow-md">
+                Tiến hành thanh toán
+            </a>
         </div>
     </div>
+    
     <script>
         (function () {
+            var toastId = 0;
             function token() { return localStorage.getItem('accessToken'); }
             if (!token()) { window.location.href = '/login'; return; }
+
+            function showToast(message, type) {
+                var colors = {
+                    'error': 'bg-red-50 border-red-200 text-red-700',
+                    'warning': 'bg-yellow-50 border-yellow-200 text-yellow-700',
+                    'success': 'bg-green-50 border-green-200 text-green-700'
+                };
+                var icons = {
+                    'error': '✕',
+                    'warning': '⚠',
+                    'success': '✓'
+                };
+                var toast = document.createElement('div');
+                toast.id = 'toast_' + (toastId++);
+                toast.className = colors[type] + ' border px-4 py-3 rounded-xl shadow-lg max-w-sm text-sm flex items-center gap-2 transform translate-x-full transition-transform duration-300';
+                toast.innerHTML = '<span class="font-bold">' + icons[type] + '</span><span>' + message + '</span>';
+                document.getElementById('toastContainer').appendChild(toast);
+                requestAnimationFrame(function() {
+                    toast.classList.remove('translate-x-full');
+                });
+                setTimeout(function() {
+                    toast.classList.add('translate-x-full');
+                    setTimeout(function() { toast.remove(); }, 300);
+                }, 4000);
+            }
 
             function loadLocalCart() {
                 try { return JSON.parse(localStorage.getItem('cart') || '[]'); } catch (e) { return []; }
@@ -26,6 +70,18 @@
                 return data.success && data.data ? data.data : [];
             }
 
+            function getStockStatus(stock, quantity) {
+                if (stock <= 0) {
+                    return { class: 'text-red-600', label: 'Hết hàng', available: false, disabled: true };
+                } else if (stock < quantity) {
+                    return { class: 'text-orange-600', label: 'Chỉ còn ' + stock, available: true, disabled: false, maxQty: stock };
+                } else if (stock <= 3) {
+                    return { class: 'text-orange-600', label: 'Còn ' + stock, available: true, disabled: false };
+                } else {
+                    return { class: 'text-green-700', label: 'Còn hàng', available: true, disabled: false };
+                }
+            }
+
             async function render() {
                 var products = await loadProducts();
                 var byId = {};
@@ -33,31 +89,117 @@
                 var cart = loadLocalCart();
                 var box = document.getElementById('cartList');
                 var empty = document.getElementById('cartEmpty');
+                var selectAllRow = document.getElementById('selectAllRow');
+                
                 if (!cart.length) {
                     box.innerHTML = '';
                     empty.classList.remove('hidden');
+                    selectAllRow.classList.add('hidden');
                     document.getElementById('total').textContent = formatVnd(0);
+                    document.getElementById('selectedTotal').textContent = 'Đã chọn: 0đ';
+                    document.getElementById('btnCheckout').classList.add('opacity-50', 'pointer-events-none');
                     return;
                 }
+                
                 empty.classList.add('hidden');
+                selectAllRow.classList.remove('hidden');
+                
                 var total = 0;
+                var selectedTotal = 0;
+                var selectedCount = 0;
+                var hasUnavailable = false;
+                var unavailableNames = [];
+                var removedNames = [];
+                
+                // Check for unavailable/removed products
+                cart = cart.filter(function(item) {
+                    var p = byId[item.id];
+                    if (!p) {
+                        removedNames.push(item.name || 'Sản phẩm #' + item.id);
+                        return false;
+                    }
+                    if (p.stock <= 0) {
+                        unavailableNames.push(p.name);
+                        hasUnavailable = true;
+                        return false;
+                    }
+                    return true;
+                });
+                
+                if (removedNames.length > 0) {
+                    showToast('Đã xóa: ' + removedNames.join(', ') + ' (sản phẩm không tồn tại)', 'warning');
+                }
+                if (unavailableNames.length > 0) {
+                    showToast('Đã xóa sản phẩm hết hàng: ' + unavailableNames.join(', '), 'warning');
+                }
+                saveLocalCart(cart);
+                
+                if (!cart.length) {
+                    box.innerHTML = '<p class="text-center text-primary-500 py-6">Giỏ hàng trống.</p>';
+                    empty.classList.remove('hidden');
+                    selectAllRow.classList.add('hidden');
+                    document.getElementById('total').textContent = formatVnd(0);
+                    document.getElementById('selectedTotal').textContent = 'Đã chọn: 0đ';
+                    document.getElementById('btnCheckout').classList.add('opacity-50', 'pointer-events-none');
+                    return;
+                }
+                
                 box.innerHTML = cart.map(function (item, idx) {
                     var p = byId[item.id];
                     var name = p ? p.name : (item.name || 'Sản phẩm');
                     var price = p ? Number(p.price) : Number(item.price);
-                    var stock = p ? p.stock : (item.stock != null ? item.stock : 999);
+                    var stock = p ? p.stock : 0;
                     var img = p && p.mainImage ? p.mainImage : (item.mainImage || '');
-                    var qty = Math.min(Math.max(1, item.quantity), Math.max(1, stock));
-                    if (p && qty !== item.quantity) { item.quantity = qty; saveLocalCart(cart); }
+                    var stockInfo = getStockStatus(stock, item.quantity);
+                    var qty = stockInfo.maxQty ? Math.min(item.quantity, stockInfo.maxQty) : item.quantity;
+                    var isSelected = item.selected !== false;
+                    
+                    if (isSelected) {
+                        selectedTotal += price * qty;
+                        selectedCount++;
+                    }
                     total += price * qty;
-                    var stockLabel = stock <= 0 ? '<span class="text-red-600 text-xs">Hết hàng</span>' : '<span class="text-green-700 text-xs">Còn ' + stock + '</span>';
-                    return '<div class="flex gap-4 items-center border border-primary-100 rounded-xl p-3">' +
+                    
+                    return '<div class="cart-item flex gap-4 items-center border border-primary-100 rounded-xl p-4 ' + (stockInfo.disabled ? 'opacity-50 bg-primary-50' : '') + '" data-idx="' + idx + '">' +
+                        '<input type="checkbox" class="item-select w-5 h-5 accent-secondary-700 shrink-0" ' + (stockInfo.disabled ? 'disabled' : '') + ' ' + (isSelected && !stockInfo.disabled ? 'checked' : '') + ' data-idx="' + idx + '">' +
                         (img ? '<img src="' + img + '" alt="" class="w-20 h-20 rounded-lg object-cover shrink-0">' : '<div class="w-20 h-20 rounded-lg bg-primary-100 shrink-0"></div>') +
-                        '<div class="flex-1 min-w-0"><p class="font-medium text-primary-900 truncate">' + name + '</p><p class="text-sm text-primary-600">' + formatVnd(price) + '</p>' + stockLabel + '</div>' +
-                        '<input type="number" min="1" max="' + stock + '" value="' + qty + '" data-idx="' + idx + '" class="cart-qty w-20 border border-primary-200 rounded-lg px-2 py-1 text-sm">' +
-                        '<button type="button" data-idx="' + idx + '" class="cart-remove text-red-600 text-sm px-2">Xóa</button></div>';
+                        '<div class="flex-1 min-w-0">' +
+                            '<p class="font-medium text-primary-900 truncate">' + name + '</p>' +
+                            '<p class="text-sm text-primary-600">' + formatVnd(price) + '</p>' +
+                            '<span class="text-xs ' + stockInfo.class + '">' + stockInfo.label + '</span>' +
+                        '</div>' +
+                        '<div class="flex flex-col items-end gap-2">' +
+                            '<p class="font-semibold text-primary-800">' + formatVnd(price * qty) + '</p>' +
+                            '<div class="flex items-center gap-2">' +
+                                '<input type="number" min="1" max="' + (stockInfo.maxQty || stock) + '" value="' + qty + '" ' + (stockInfo.disabled ? 'disabled' : '') + ' data-idx="' + idx + '" class="cart-qty w-16 border border-primary-200 rounded-lg px-2 py-1 text-sm text-center">' +
+                                '<button type="button" data-idx="' + idx + '" class="cart-remove text-red-600 text-sm px-2 py-1 hover:bg-red-50 rounded-lg">Xóa</button>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
                 }).join('');
+                
                 document.getElementById('total').textContent = formatVnd(total);
+                document.getElementById('selectedTotal').textContent = 'Đã chọn: ' + formatVnd(selectedTotal);
+                document.getElementById('selectedCount').textContent = '(' + selectedCount + ' sản phẩm)';
+                
+                // Update checkout button
+                var checkoutBtn = document.getElementById('btnCheckout');
+                if (selectedCount === 0) {
+                    checkoutBtn.classList.add('opacity-50', 'pointer-events-none');
+                } else {
+                    checkoutBtn.classList.remove('opacity-50', 'pointer-events-none');
+                }
+
+                // Event listeners
+                box.querySelectorAll('.item-select').forEach(function(cb) {
+                    cb.addEventListener('change', function () {
+                        var i = parseInt(cb.getAttribute('data-idx'), 10);
+                        var c = loadLocalCart();
+                        c[i].selected = cb.checked;
+                        saveLocalCart(c);
+                        render();
+                    });
+                });
 
                 box.querySelectorAll('.cart-qty').forEach(function (inp) {
                     inp.addEventListener('change', function () {
@@ -65,18 +207,37 @@
                         var c = loadLocalCart();
                         var max = parseInt(inp.max, 10);
                         c[i].quantity = Math.max(1, Math.min(max, parseInt(inp.value, 10) || 1));
-                        saveLocalCart(c); render();
+                        saveLocalCart(c);
+                        render();
                     });
                 });
+
                 box.querySelectorAll('.cart-remove').forEach(function (btn) {
                     btn.addEventListener('click', function () {
                         var i = parseInt(btn.getAttribute('data-idx'), 10);
                         var c = loadLocalCart();
+                        var itemName = c[i].name || 'Sản phẩm';
                         c.splice(i, 1);
-                        saveLocalCart(c); render();
+                        saveLocalCart(c);
+                        showToast('Đã xóa ' + itemName, 'success');
+                        render();
                     });
                 });
+                
+                // Select all
+                document.getElementById('selectAll').addEventListener('change', function() {
+                    var c = loadLocalCart();
+                    var checked = this.checked;
+                    c.forEach(function(item) {
+                        var p = byId[item.id];
+                        var stock = p ? p.stock : 0;
+                        item.selected = checked && stock > 0;
+                    });
+                    saveLocalCart(c);
+                    render();
+                });
             }
+            
             render();
         })();
     </script>

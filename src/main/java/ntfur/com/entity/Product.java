@@ -118,8 +118,27 @@ public class Product {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (sku == null || sku.isEmpty()) {
-            sku = "SKU-" + System.currentTimeMillis();
+            sku = generateSkuFromName(name);
         }
+    }
+
+    private String generateSkuFromName(String productName) {
+        if (productName == null || productName.trim().isEmpty()) {
+            return "SKU-" + String.format("%03d", new java.util.Random().nextInt(1000));
+        }
+
+        // Lấy chữ cái đầu của mỗi từ, viết hoa
+        StringBuilder initials = new StringBuilder();
+        String[] words = productName.trim().split("\\s+");
+        for (String word : words) {
+            if (!word.isEmpty()) {
+                initials.append(Character.toUpperCase(word.charAt(0)));
+            }
+        }
+
+        // Thêm số ngẫu nhiên 3 chữ số
+        int randomNum = new java.util.Random().nextInt(1000);
+        return initials.toString() + "-" + String.format("%03d", randomNum);
     }
 
     @PreUpdate

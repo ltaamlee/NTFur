@@ -160,7 +160,8 @@
                 <!-- Order Status Filter Bar -->
                 <div class="flex flex-wrap gap-2 mb-6" id="orderStatusBar">
                     <button id="filterAllBtn" class="order-status-btn active" data-status="">Tất cả</button>
-                    <button id="filterPENDINGBtn" class="order-status-btn" data-status="PENDING">Chờ xác nhận</button>
+                    <button id="filterUNPAIDBtn" class="order-status-btn" data-status="PENDING">Chưa thanh toán</button>
+                    <button id="filterPENDINGBtn" class="order-status-btn" data-status="PENDING_STATUS">Chờ xác nhận</button>
                     <button id="filterCONFIRMEDBtn" class="order-status-btn" data-status="CONFIRMED">Đã xác nhận</button>
                     <button id="filterPROCESSINGBtn" class="order-status-btn" data-status="PROCESSING">Đang xử lý</button>
                     <button id="filterSHIPPEDBtn" class="order-status-btn" data-status="SHIPPED">Đang giao</button>
@@ -254,6 +255,79 @@
                 </div>
             </div>
         </div>
+
+        <!-- Payment Modal -->
+        <div id="paymentModal" class="fixed inset-0 z-50 hidden">
+            <div id="paymentBackdrop" class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-4 my-auto">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-base font-semibold text-primary-800">Thanh toán đơn hàng</h3>
+                        <button id="btnClosePaymentModal" class="p-1.5 text-primary-400 hover:text-primary-600 rounded-lg hover:bg-primary-50">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Order Info -->
+                    <div id="paymentOrderInfo" class="mb-3 p-2.5 bg-primary-50 rounded-xl">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-primary-500">Mã đơn:</span>
+                            <span id="paymentOrderNumber" class="font-medium text-primary-800"></span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm mt-1">
+                            <span class="text-primary-500">Số tiền:</span>
+                            <span id="paymentAmount" class="font-bold text-secondary-800"></span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method Selection -->
+                    <div class="mb-3">
+                        <div class="space-y-2">
+                            <label id="codLabel" class="flex items-center gap-2 p-2.5 border border-primary-200 rounded-lg cursor-pointer hover:border-secondary-500 transition-colors has-[:checked]:border-green-500 has-[:checked]:bg-green-50/50">
+                                <input type="radio" name="paymentMethod" value="COD" checked class="accent-green-600">
+                                <span class="flex-1 text-sm font-medium text-primary-900">COD - Thanh toán khi nhận hàng</span>
+                                <span class="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded">Tiền mặt</span>
+                            </label>
+                            <label id="qrLabel" class="flex items-center gap-2 p-2.5 border border-primary-200 rounded-lg cursor-pointer hover:border-secondary-500 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50/50">
+                                <input type="radio" name="paymentMethod" value="QR" class="accent-blue-600">
+                                <span class="flex-1 text-sm font-medium text-primary-900">QR - Quét mã VietQR</span>
+                                <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">QR</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- QR Code Display (hidden by default) -->
+                    <div id="qrPaymentSection" class="hidden mb-3">
+                        <p class="text-xs text-center text-primary-500 mb-2">Quét mã QR để thanh toán:</p>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                            <img id="qrCodeImg" class="w-48 h-48 mx-auto rounded-lg" alt="QR Code">
+                        </div>
+                    </div>
+
+                    <!-- QR Waiting Section -->
+                    <div id="qrWaitingSection" class="hidden mb-3">
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+                            <div class="flex items-center justify-center gap-2 mb-1">
+                                <svg class="w-5 h-5 text-yellow-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <p class="text-sm font-medium text-yellow-800">Đang chờ xác nhận...</p>
+                            </div>
+                            <p class="text-xs text-yellow-600">Còn lại: <span id="qrTimeRemaining" class="font-bold">5p 0s</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="space-y-2">
+                        <button type="button" id="btnProcessPayment" class="w-full py-2.5 rounded-lg bg-green-600 text-white font-medium text-sm hover:bg-green-700 active:scale-[0.98] transition flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <span>Xác nhận thanh toán</span>
+                        </button>
+                        <button type="button" id="btnCancelPayment" class="w-full py-1.5 text-red-500 text-xs hover:text-red-700">
+                            Hủy bỏ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <style>
@@ -307,6 +381,11 @@
             }
             function formatVnd(v) {
                 return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(v) || 0);
+            }
+            function formatDate(dateStr) {
+                if (!dateStr) return '';
+                var d = new Date(dateStr);
+                return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
             }
 
             if (!token()) { window.location.href = '/login'; return; }
@@ -560,7 +639,18 @@
 
             function renderOrders() {
                 var box = document.getElementById('ordersList');
-                var filtered = currentStatusFilter ? allOrders.filter(function(o) { return o.status === currentStatusFilter; }) : allOrders;
+                var filtered = allOrders;
+
+                // Lọc theo trạng thái
+                if (currentStatusFilter === 'PENDING') {
+                    // Chưa thanh toán - lọc theo paymentStatus
+                    filtered = allOrders.filter(function(o) { return o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED'; });
+                } else if (currentStatusFilter === 'PENDING_STATUS') {
+                    // Chờ xác nhận - lọc theo order status
+                    filtered = allOrders.filter(function(o) { return o.status === 'PENDING'; });
+                } else if (currentStatusFilter) {
+                    filtered = allOrders.filter(function(o) { return o.status === currentStatusFilter; });
+                }
 
                 if (!filtered.length) {
                     box.innerHTML = '<p class="text-primary-500 text-sm py-8 text-center border border-dashed border-primary-200 rounded-xl">' +
@@ -591,6 +681,9 @@
                     var pst = paymentStatusMap[o.paymentStatus] || {'bg': 'bg-gray-50', 'text': 'text-gray-700', 'label': o.paymentStatus || 'N/A'};
                     var itemCount = (o.items && o.items.length) ? o.items.length : 1;
                     var detailBtnId = 'orderDetail_' + o.id;
+                    var payBtnId = 'orderPay_' + o.id;
+                    // Hiện nút thanh toán nếu paymentStatus là PENDING và đơn chưa bị hủy
+                    var showPayBtn = (o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED');
                     return '<div class="border border-primary-100 rounded-xl p-4 hover:bg-primary-50/50 transition" id="orderCard_' + o.id + '">' +
                         '<div class="flex items-start justify-between gap-3">' +
                             '<div class="flex-1 min-w-0">' +
@@ -604,7 +697,10 @@
                             '<div class="text-right shrink-0 flex flex-col items-end gap-1">' +
                                 '<p class="font-bold text-secondary-800 text-sm">' + formatVnd(o.totalAmount) + '</p>' +
                                 '<span class="' + pst.bg + ' ' + pst.text + ' text-xs px-2 py-0.5 rounded">' + pst.label + '</span>' +
-                                '<button id="' + detailBtnId + '" class="text-xs text-secondary-700 hover:underline mt-1">Xem chi tiết</button>' +
+                                '<div class="flex items-center gap-1 mt-1">' +
+                                    (showPayBtn ? '<button id="' + payBtnId + '" class="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 font-medium">Thanh toán</button>' : '') +
+                                    '<button id="' + detailBtnId + '" class="text-xs text-secondary-700 hover:underline">Xem</button>' +
+                                '</div>' +
                             '</div>' +
                         '</div>' +
                     '</div>';
@@ -613,6 +709,8 @@
                 filtered.forEach(function(o) {
                     var btn = document.getElementById('orderDetail_' + o.id);
                     if (btn) btn.addEventListener('click', function() { window.showOrderDetail(o.id); });
+                    var payBtn = document.getElementById('orderPay_' + o.id);
+                    if (payBtn) payBtn.addEventListener('click', function() { window.openPaymentModal(o.id); });
                 });
             }
 
@@ -684,6 +782,7 @@
                             '<div class="bg-primary-50 rounded-xl p-3 text-sm space-y-1">' +
                                 '<p class="font-medium text-primary-800">' + (order.paymentMethod || 'COD') + '</p>' +
                                 '<span class="' + pst.bg + ' ' + pst.text + ' text-xs px-2 py-0.5 rounded inline-block">' + pst.label + '</span>' +
+                                (order.paymentDeadline ? '' : '') +
                             '</div>' +
                         '</div>' +
                     '</div>' +
@@ -708,6 +807,182 @@
             window.closeOrderDetailModal = function() {
                 document.getElementById('orderDetailModal').classList.add('hidden');
             };
+
+            // ================== Payment ==================
+            var currentPaymentOrderId = null;
+
+            window.openPaymentModal = function(orderId) {
+                var order = allOrders.find(function(o) { return o.id === orderId; });
+                if (!order) return;
+
+                currentPaymentOrderId = orderId;
+
+                // Set order info
+                document.getElementById('paymentOrderNumber').textContent = order.orderNumber || '';
+                document.getElementById('paymentAmount').textContent = formatVnd(order.totalAmount);
+
+                // Reset selection
+                document.querySelector('input[name="paymentMethod"][value="COD"]').checked = true;
+                document.getElementById('qrPaymentSection').classList.add('hidden');
+                document.getElementById('qrWaitingSection').classList.add('hidden');
+
+                // Reset buttons
+                var btnPayment = document.getElementById('btnProcessPayment');
+                btnPayment.classList.remove('hidden');
+                btnPayment.disabled = false;
+                btnPayment.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Xác nhận thanh toán</span>';
+
+                var btnCancel = document.getElementById('btnCancelPayment');
+                if (btnCancel) btnCancel.classList.remove('hidden');
+
+                document.getElementById('paymentModal').classList.remove('hidden');
+            };
+
+            window.closePaymentModal = function() {
+                document.getElementById('paymentModal').classList.add('hidden');
+                currentPaymentOrderId = null;
+            };
+
+            // Toggle QR section based on payment method
+            document.querySelectorAll('input[name="paymentMethod"]').forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'QR') {
+                        document.getElementById('qrPaymentSection').classList.remove('hidden');
+                    } else {
+                        document.getElementById('qrPaymentSection').classList.add('hidden');
+                    }
+                    // Reset button về trạng thái ban đầu
+                    document.getElementById('btnProcessPayment').disabled = false;
+                    document.getElementById('btnProcessPayment').innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Xác nhận thanh toán</span>';
+                    document.getElementById('btnProcessPayment').onclick = null;
+                    document.getElementById('qrWaitingSection').classList.add('hidden');
+                });
+            });
+
+            // ================== QR Payment Polling ==================
+            var paymentCheckInterval = null;
+
+            function startPaymentPolling(orderId) {
+                var checkCount = 0;
+                var maxChecks = 60; // Tối đa 60 lần kiểm tra (5 phút với 5s/lần)
+
+                document.getElementById('qrWaitingSection').classList.remove('hidden');
+                document.getElementById('btnProcessPayment').disabled = true;
+                document.getElementById('btnProcessPayment').innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Đang kiểm tra...</span>';
+
+                paymentCheckInterval = setInterval(async function() {
+                    checkCount++;
+
+                    if (checkCount > maxChecks) {
+                        stopPaymentPolling();
+                        alert('Hết thời gian chờ xác nhận. Vui lòng thử lại hoặc liên hệ hỗ trợ.');
+                        window.closePaymentModal();
+                        await loadOrders();
+                        return;
+                    }
+
+                    try {
+                        var status = await api('/api/payment/status/' + orderId);
+
+                        if (status.success && status.data && status.data.paymentStatus === 'PAID') {
+                            stopPaymentPolling();
+                            alert('Thanh toán thành công! Cảm ơn bạn đã thanh toán đơn hàng.');
+                            document.getElementById('btnProcessPayment').classList.add('hidden');
+                            document.getElementById('btnCancelPayment').classList.add('hidden');
+                            await loadOrders();
+                            return;
+                        }
+
+                        // Cập nhật thời gian chờ
+                        var secondsLeft = (maxChecks - checkCount) * 5;
+                        var minutes = Math.floor(secondsLeft / 60);
+                        var seconds = secondsLeft % 60;
+                        document.getElementById('qrTimeRemaining').textContent = minutes + 'p ' + seconds + 's';
+
+                    } catch (err) {
+                        console.log('Đang chờ xác nhận...');
+                    }
+                }, 5000); // Kiểm tra mỗi 5 giây
+            }
+
+            function stopPaymentPolling() {
+                if (paymentCheckInterval) {
+                    clearInterval(paymentCheckInterval);
+                    paymentCheckInterval = null;
+                }
+            }
+
+            window.closePaymentModal = function() {
+                stopPaymentPolling();
+                document.getElementById('paymentModal').classList.add('hidden');
+                currentPaymentOrderId = null;
+            };
+
+            // ================== Process Payment ==================
+            document.getElementById('btnProcessPayment').addEventListener('click', async function() {
+                if (!currentPaymentOrderId) return;
+
+                var paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value || 'COD';
+
+                document.getElementById('btnProcessPayment').disabled = true;
+                document.getElementById('btnProcessPayment').innerHTML = '<span>Đang xử lý...</span>';
+
+                try {
+                    if (paymentMethod === 'COD') {
+                        // COD: Chỉ xác nhận phương thức COD, không đánh dấu đã thanh toán
+                        var confirmResult = await api('/api/payment/confirm/' + currentPaymentOrderId + '?paymentMethod=COD', 'POST');
+
+                        if (!confirmResult.success) {
+                            alert(confirmResult.message || 'Xác nhận phương thức COD thất bại.');
+                            document.getElementById('btnProcessPayment').disabled = false;
+                            document.getElementById('btnProcessPayment').innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Xác nhận thanh toán</span>';
+                            return;
+                        }
+
+                        alert('Xác nhận phương thức thanh toán COD thành công!\nBạn sẽ thanh toán khi nhận hàng.');
+                        document.getElementById('btnProcessPayment').classList.add('hidden');
+                        document.getElementById('btnCancelPayment').classList.add('hidden');
+                        await loadOrders();
+
+                    } else {
+                        // QR: Khởi tạo thanh toán QR
+                        var initResult = await api('/api/payment/process', 'POST', {
+                            orderId: currentPaymentOrderId,
+                            paymentMethod: 'QR'
+                        });
+
+                        if (!initResult.success) {
+                            alert(initResult.message || 'Khởi tạo thanh toán QR thất bại.');
+                            document.getElementById('btnProcessPayment').disabled = false;
+                            document.getElementById('btnProcessPayment').innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Xác nhận thanh toán</span>';
+                            return;
+                        }
+
+                        // Hiện QR code để quét
+                        document.getElementById('qrCodeImg').src = initResult.data.vietQrUrl || '';
+
+                        // Bắt đầu polling kiểm tra thanh toán
+                        startPaymentPolling(currentPaymentOrderId);
+                    }
+
+                } catch (err) {
+                    alert('Xử lý thanh toán thất bại. Vui lòng thử lại.');
+                    document.getElementById('btnProcessPayment').disabled = false;
+                    document.getElementById('btnProcessPayment').innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Xác nhận thanh toán</span>';
+                }
+            });
+
+            document.getElementById('btnCancelPayment').addEventListener('click', function() {
+                window.closePaymentModal();
+            });
+
+            document.getElementById('btnClosePaymentModal').addEventListener('click', function() {
+                window.closePaymentModal();
+            });
+
+            document.getElementById('paymentBackdrop').addEventListener('click', function() {
+                window.closePaymentModal();
+            });
 
             // ================== Init ==================
             loadProfile();

@@ -3,7 +3,7 @@
         <!-- Page Title -->
         <div class="mb-6">
             <h2 class="text-xl font-display font-bold text-primary-900">Xem lại đơn hàng</h2>
-            <p class="text-sm text-primary-600 mt-1">Kiểm tra thông tin sản phẩm, địa chỉ giao hàng và chọn phương thức thanh toán.</p>
+            <p class="text-sm text-primary-600 mt-1">Kiểm tra thông tin sản phẩm và địa chỉ giao hàng.</p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -39,78 +39,8 @@
                     <div id="addressesSection">
                         <p class="text-center text-primary-500 py-4">Đang tải địa chỉ...</p>
                     </div>
-                    <!-- Address selection radio -->
-                    <div id="addressSelection" class="hidden mt-4 border-t border-primary-100 pt-4">
-                        <p class="text-xs font-medium text-primary-500 mb-2">Chọn địa chỉ giao hàng:</p>
-                        <div id="addressOptions" class="space-y-2"></div>
-                    </div>
-                    <!-- Inline address form -->
-                    <div id="inlineAddressForm" class="hidden mt-4 border-t border-primary-100 pt-4">
-                        <p class="text-xs font-medium text-primary-500 mb-3">Hoặc nhập địa chỉ khác:</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div>
-                                <label class="text-xs font-medium text-primary-700">Họ tên <span class="text-red-500">*</span></label>
-                                <input id="inlineFullName" type="text" required class="mt-1 w-full border border-primary-200 rounded-xl px-3 py-2 text-sm" placeholder="Người nhận hàng">
-                            </div>
-                            <div>
-                                <label class="text-xs font-medium text-primary-700">SĐT <span class="text-red-500">*</span></label>
-                                <input id="inlinePhone" type="tel" required class="mt-1 w-full border border-primary-200 rounded-xl px-3 py-2 text-sm" placeholder="0xxx xxx xxx">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="text-xs font-medium text-primary-700">Địa chỉ cụ thể <span class="text-red-500">*</span></label>
-                                <input id="inlineAddressLine" type="text" required class="mt-1 w-full border border-primary-200 rounded-xl px-3 py-2 text-sm" placeholder="Số nhà, đường...">
-                            </div>
-                            <div>
-                                <label class="text-xs font-medium text-primary-700">Tỉnh/TP <span class="text-red-500">*</span></label>
-                                <input id="inlineCity" type="text" required class="mt-1 w-full border border-primary-200 rounded-xl px-3 py-2 text-sm" placeholder="VD: TP. Hồ Chí Minh">
-                            </div>
-                            <div>
-                                <label class="text-xs font-medium text-primary-700">Quận/Huyện</label>
-                                <input id="inlineDistrict" type="text" class="mt-1 w-full border border-primary-200 rounded-xl px-3 py-2 text-sm" placeholder="VD: Quận 1">
-                            </div>
-                            <div>
-                                <label class="text-xs font-medium text-primary-700">Phường/Xã</label>
-                                <input id="inlineWard" type="text" class="mt-1 w-full border border-primary-200 rounded-xl px-3 py-2 text-sm" placeholder="VD: Phường Bến Nghé">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="text-xs font-medium text-primary-700">Ghi chú</label>
-                                <textarea id="inlineNotes" rows="2" class="mt-1 w-full border border-primary-200 rounded-xl px-3 py-2 text-sm" placeholder="Ghi chú giao hàng (nếu có)"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Quick address toggle -->
-                    <div id="addressModeToggle" class="hidden mt-3 pt-3 border-t border-primary-100">
-                        <button type="button" id="btnToggleAddressMode" class="text-sm text-secondary-700 hover:underline">
-                            <span id="addressModeLabel">Nhập địa chỉ khác</span>
-                        </button>
-                    </div>
                 </div>
 
-                <!-- Payment Method -->
-                <div class="bg-white rounded-2xl card-shadow border border-primary-100 p-6">
-                    <h3 class="font-semibold text-primary-900 flex items-center mb-4">
-                        <svg class="w-5 h-5 mr-2 text-secondary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                        Phương thức thanh toán
-                    </h3>
-                    <div class="space-y-3">
-                        <label class="flex items-start gap-3 p-4 border border-primary-200 rounded-xl cursor-pointer hover:border-secondary-500 transition-colors has-[:checked]:border-secondary-500 has-[:checked]:bg-secondary-50/50">
-                            <input type="radio" name="paymentMethod" value="COD" checked class="mt-0.5 accent-secondary-700">
-                            <div class="flex-1">
-                                <p class="font-medium text-primary-900 text-sm">Thanh toán khi nhận hàng (COD)</p>
-                                <p class="text-xs text-primary-500 mt-0.5">Bạn sẽ thanh toán bằng tiền mặt khi nhận được hàng. Trạng thái thanh toán: <span class="font-medium text-yellow-700">Chưa thanh toán</span>.</p>
-                            </div>
-                            <span class="shrink-0 px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded">COD</span>
-                        </label>
-                        <label class="flex items-start gap-3 p-4 border border-primary-200 rounded-xl cursor-pointer hover:border-secondary-500 transition-colors has-[:checked]:border-secondary-500 has-[:checked]:bg-secondary-50/50">
-                            <input type="radio" name="paymentMethod" value="VNPAY" class="mt-0.5 accent-secondary-700">
-                            <div class="flex-1">
-                                <p class="font-medium text-primary-900 text-sm">Thanh toán qua VNPay</p>
-                                <p class="text-xs text-primary-500 mt-0.5">Chuyển đến cổng thanh toán VNPay. Nếu không thanh toán trong <strong>5 phút</strong>, đơn hàng sẽ tự động bị hủy. Trạng thái thanh toán: <span class="font-medium text-yellow-700">Chưa thanh toán</span> cho đến khi hoàn tất.</p>
-                            </div>
-                            <span class="shrink-0 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">VNPay</span>
-                        </label>
-                    </div>
-                </div>
             </div>
 
             <!-- Right: Order Summary -->
@@ -129,30 +59,30 @@
                             <span class="text-primary-500">Phí giao hàng</span>
                             <span id="shippingFee" class="font-medium">0đ</span>
                         </div>
-                        <div id="discountRow" class="hidden flex justify-between">
-                            <span class="text-green-600">Giảm giá</span>
-                            <span id="discountAmount" class="font-medium text-green-600">-0đ</span>
-                        </div>
                         <div class="flex justify-between font-bold text-base border-t border-primary-100 pt-2 mt-2">
                             <span>Tổng cộng</span>
                             <span id="totalAmount" class="text-secondary-800">0đ</span>
                         </div>
                     </div>
-                    <div id="vnpayWarning" class="hidden mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-xs text-yellow-700">
-                        <svg class="w-4 h-4 inline mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                        Nếu chọn VNPay, đơn hàng sẽ bị hủy nếu không thanh toán trong 5 phút.
-                    </div>
-                    <button type="button" id="btnPlaceOrderSubmit" class="w-full mt-5 px-6 py-3 rounded-xl bg-gradient-to-r from-secondary-700 to-primary-800 text-white font-semibold text-sm hover:opacity-95 active:scale-[0.98] transition shadow-md flex items-center justify-center gap-2">
+
+                    <!-- Nút đặt hàng -->
+                    <button type="button" id="btnPlaceOrder" class="w-full mt-5 px-6 py-3 rounded-xl bg-gradient-to-r from-secondary-700 to-primary-800 text-white font-semibold text-sm hover:opacity-95 active:scale-[0.98] transition shadow-md flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        <span id="btnPlaceOrderLabel">Đặt hàng</span>
+                        <span id="btnPlaceOrderLabel">Đặt hàng ngay</span>
                     </button>
+
+                    <!-- Thông báo thanh toán sau -->
+                    <p id="paymentNote" class="text-xs text-center text-primary-400 mt-2 hidden">
+                        Bạn sẽ thanh toán sau khi đặt hàng thành công.
+                    </p>
+
                     <p class="text-center text-xs text-primary-400 mt-3">Bằng cách đặt hàng, bạn đồng ý với <a href="#" class="underline">điều khoản dịch vụ</a>.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Address Modal (from profile page) -->
+    <!-- Address Modal -->
     <div id="addressModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
         <div id="checkoutAddrBackdrop" class="absolute inset-0 bg-black/50"></div>
         <div class="flex items-center justify-center min-h-screen p-4">
@@ -218,6 +148,7 @@
         </div>
     </div>
 
+
     <!-- Order Success Modal -->
     <div id="orderSuccessModal" class="fixed inset-0 z-50 hidden">
         <div class="absolute inset-0 bg-black/50"></div>
@@ -227,16 +158,18 @@
                     <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 </div>
                 <h3 class="text-xl font-display font-bold text-primary-900 mb-2">Đặt hàng thành công!</h3>
-                <p id="orderSuccessMsg" class="text-sm text-primary-600 mb-6"></p>
-                <div id="vnpaySection" class="hidden mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-700 text-left">
-                    <p class="font-semibold mb-2">Thanh toán VNPay</p>
-                    <p class="text-xs mb-3">Vui lòng quét mã QR hoặc nhấn nút bên dưới để thanh toán trong <strong id="countdownTime">5:00</strong>.</p>
-                    <div id="vnpayQrContainer" class="text-center mb-3">
-                        <img id="vnpayQrImg" class="max-w-xs mx-auto rounded-xl border border-white shadow" alt="VNPay QR">
-                    </div>
-                    <a id="vnpayPayUrl" href="#" target="_blank" class="block w-full text-center py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition text-sm">Mở cổng thanh toán VNPay</a>
-                    <p class="text-xs text-center mt-2">Đơn hàng sẽ bị hủy nếu không thanh toán trong thời gian quy định.</p>
+                <p class="text-sm text-primary-600 mb-4">Cảm ơn bạn đã đặt hàng tại NTFurniture!</p>
+                <p class="text-lg font-bold text-secondary-800 mb-2">Mã đơn hàng: <span id="orderNumberDisplay" class="text-primary-900"></span></p>
+
+                <div class="bg-orange-50 border-2 border-orange-300 rounded-xl p-4 mb-4 text-left">
+                    <p class="font-semibold text-orange-800 mb-2 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        Vui lòng thanh toán trước ngày
+                    </p>
+                    <p class="text-2xl font-bold text-orange-900 mb-2" id="paymentDeadlineSuccess"></p>
+                    <p class="text-sm text-orange-700">để giữ đơn hàng. Bạn có thể thanh toán tại trang <a href="/profile" class="underline font-medium">Đơn hàng</a>.</p>
                 </div>
+
                 <a href="/profile" class="inline-block w-full py-3 rounded-xl bg-gradient-to-r from-secondary-700 to-primary-800 text-white font-semibold text-sm hover:opacity-95 transition shadow-md">Xem đơn hàng</a>
             </div>
         </div>
@@ -260,11 +193,16 @@
             function formatVnd(v) {
                 return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(v) || 0);
             }
+            function formatDate(dateStr) {
+                if (!dateStr) return '';
+                var d = new Date(dateStr);
+                return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            }
 
             var savedAddresses = [];
             var selectedAddressId = null;
-            var useInlineAddress = false;
-            var orderCreated = false;
+            var currentOrderId = null;
+            var currentOrderNumber = null;
 
             // ================== Cart ==================
             function cart() { try { return JSON.parse(localStorage.getItem('cart') || '[]'); } catch (e) { return []; } }
@@ -288,7 +226,6 @@
                 var removedItems = [];
                 var updatedItems = [];
 
-                // Lọc và xóa sản phẩm không tồn tại hoặc hết hàng
                 items = items.filter(function(i) {
                     var p = byId[i.id];
                     if (!p) {
@@ -300,29 +237,17 @@
                         return false;
                     }
                     if (p.stock < i.quantity) {
-                        removedItems.push(p.name);
                         i.quantity = p.stock;
                         updatedItems.push(p.name + ' (còn ' + p.stock + ')');
                     }
                     return true;
                 });
 
-                // Hiển thị thông báo nếu có sản phẩm bị xóa/cập nhật
                 if (removedItems.length > 0) {
-                    var msg = 'Một số sản phẩm đã được xóa khỏi giỏ hàng vì không còn tồn tại hoặc hết hàng: ' + removedItems.join(', ');
-                    var toast = document.createElement('div');
-                    toast.className = 'fixed top-4 right-4 z-50 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-lg max-w-sm text-sm';
-                    toast.textContent = msg;
-                    document.body.appendChild(toast);
-                    setTimeout(function() { toast.remove(); }, 5000);
+                    alert('Một số sản phẩm đã được xóa khỏi giỏ hàng: ' + removedItems.join(', '));
                 }
                 if (updatedItems.length > 0) {
-                    var msg2 = 'Số lượng một số sản phẩm đã được cập nhật theo số lượng trong kho: ' + updatedItems.join(', ');
-                    var toast2 = document.createElement('div');
-                    toast2.className = 'fixed top-4 right-4 z-50 bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-xl shadow-lg max-w-sm text-sm';
-                    toast2.textContent = msg2;
-                    document.body.appendChild(toast2);
-                    setTimeout(function() { toast2.remove(); }, 5000);
+                    alert('Số lượng một số sản phẩm đã được cập nhật: ' + updatedItems.join(', '));
                 }
 
                 saveCart(items);
@@ -330,8 +255,8 @@
                 var box = document.getElementById('cartItems');
                 if (!items.length) {
                     box.innerHTML = '<p class="text-center text-primary-500 py-6">Giỏ hàng trống. <a href="/products" class="text-secondary-700 underline">Mua sắm ngay</a></p>';
-                document.getElementById('btnPlaceOrderSubmit').disabled = true;
-                document.getElementById('btnPlaceOrderSubmit').classList.add('opacity-50', 'cursor-not-allowed');
+                    document.getElementById('btnPlaceOrder').disabled = true;
+                    document.getElementById('btnPlaceOrder').classList.add('opacity-50', 'cursor-not-allowed');
                     return;
                 }
                 var total = 0;
@@ -352,7 +277,6 @@
                     '</div>';
                 }).join('');
 
-                // Render summary
                 var summary = document.getElementById('orderSummary');
                 summary.innerHTML = items.map(function(i) {
                     var p = byId[i.id];
@@ -361,7 +285,14 @@
                     return '<div class="flex justify-between gap-2"><span class="truncate text-primary-700">' + name + ' ×' + i.quantity + '</span><span class="shrink-0">' + formatVnd(price * i.quantity) + '</span></div>';
                 }).join('');
                 document.getElementById('subtotal').textContent = formatVnd(total);
-                document.getElementById('totalAmount').textContent = formatVnd(total + 30000); // estimated
+
+                var shippingFee = 30000;
+                var totalQty = items.reduce(function(sum, i) { return sum + i.quantity; }, 0);
+                if (totalQty > 1) {
+                    shippingFee = 30000 + (totalQty - 1) * 5000;
+                }
+                document.getElementById('shippingFee').textContent = formatVnd(shippingFee);
+                document.getElementById('totalAmount').textContent = formatVnd(total + shippingFee);
             }
 
             // ================== Addresses ==================
@@ -371,7 +302,6 @@
                     savedAddresses = [];
                     document.getElementById('addressesSection').innerHTML = '<p class="text-sm text-primary-500 text-center py-2">Chưa có địa chỉ. Vui lòng thêm địa chỉ giao hàng.</p>';
                     document.getElementById('addressSelection').classList.add('hidden');
-                    document.getElementById('addressModeToggle').classList.add('hidden');
                     return;
                 }
                 savedAddresses = r.data;
@@ -379,7 +309,6 @@
                 selectedAddressId = defaultAddr ? defaultAddr.id : null;
                 renderSavedAddresses(defaultAddr);
                 document.getElementById('addressSelection').classList.remove('hidden');
-                document.getElementById('addressModeToggle').classList.remove('hidden');
                 renderAddressOptions();
             }
 
@@ -423,32 +352,9 @@
 
             window.selectAddress = function(id) {
                 selectedAddressId = id;
-                useInlineAddress = false;
                 var addr = savedAddresses.find(function(a) { return a.id === id; });
                 renderSavedAddresses(addr);
                 renderAddressOptions();
-                document.getElementById('inlineAddressForm').classList.add('hidden');
-                document.getElementById('addressModeLabel').textContent = 'Nhập địa chỉ khác';
-            };
-
-            window.toggleAddressMode = function() {
-                useInlineAddress = !useInlineAddress;
-                var form = document.getElementById('inlineAddressForm');
-                var label = document.getElementById('addressModeLabel');
-                if (useInlineAddress) {
-                    form.classList.remove('hidden');
-                    label.textContent = '← Chọn địa chỉ đã lưu';
-                    document.querySelectorAll('input[name="addrRadio"]').forEach(function(r) { r.checked = false; });
-                    selectedAddressId = null;
-                    renderAddressOptions();
-                } else {
-                    form.classList.add('hidden');
-                    label.textContent = 'Nhập địa chỉ khác';
-                    if (savedAddresses.length > 0) {
-                        var def = savedAddresses.find(function(a) { return a.isDefault; }) || savedAddresses[0];
-                        selectAddress(def.id);
-                    }
-                }
             };
 
             // Address Modal
@@ -507,128 +413,103 @@
                 alert(r.success ? (id ? 'Đã cập nhật địa chỉ' : 'Đã thêm địa chỉ mới') : (r.message || 'Thất bại'));
             });
 
-            // VNPay warning toggle
-            document.querySelectorAll('input[name="paymentMethod"]').forEach(function(radio) {
-                radio.addEventListener('change', function() {
-                    document.getElementById('vnpayWarning').classList.toggle('hidden', this.value !== 'VNPAY');
-                });
-            });
+            // ================== Validation ==================
+            function validatePhone(phone) {
+                return /^(0|\+84)[0-9]{9,10}$/.test(phone);
+            }
 
-            // ================== Place Order ==================
+            function isSupportedCity(city) {
+                if (!city) return false;
+                var c = city.toLowerCase();
+                return c.includes('hồ chí minh') || c.includes('ho chi minh') ||
+                       c.includes('tp.hcm') || c.includes('tphcm') || c.includes('tp hcm');
+            }
+
+            // ================== Đặt hàng ==================
             window.placeOrder = async function() {
-                if (orderCreated) return;
                 var items = cart();
                 if (!items.length) { alert('Giỏ hàng trống!'); return; }
 
-                // Validate address
-                var fullName, phone, addressLine, city, district, ward, notes;
-                if (useInlineAddress) {
-                    fullName = document.getElementById('inlineFullName').value.trim();
-                    phone = document.getElementById('inlinePhone').value.trim();
-                    addressLine = document.getElementById('inlineAddressLine').value.trim();
-                    city = document.getElementById('inlineCity').value.trim();
-                    district = document.getElementById('inlineDistrict').value.trim();
-                    ward = document.getElementById('inlineWard').value.trim();
-                    notes = document.getElementById('inlineNotes').value.trim();
-                    if (!fullName || !phone || !addressLine || !city) {
-                        alert('Vui lòng nhập đầy đủ thông tin giao hàng bắt buộc!');
-                        return;
-                    }
-                } else if (selectedAddressId) {
-                    var addr = savedAddresses.find(function(a) { return a.id === selectedAddressId; });
-                    if (!addr) { alert('Vui lòng chọn địa chỉ giao hàng!'); return; }
-                    fullName = addr.recipientName || '';
-                    phone = addr.phone || '';
-                    addressLine = addr.addressLine || '';
-                    city = addr.city || '';
-                    district = addr.district || '';
-                    ward = addr.ward || '';
-                    notes = '';
-                } else {
-                    alert('Vui lòng chọn hoặc nhập địa chỉ giao hàng!');
+                // Kiểm tra địa chỉ
+                if (!selectedAddressId) {
+                    alert('Vui lòng chọn địa chỉ giao hàng!');
+                    return;
+                }
+                var addr = savedAddresses.find(function(a) { return a.id === selectedAddressId; });
+                if (!addr) {
+                    alert('Vui lòng chọn địa chỉ giao hàng!');
+                    return;
+                }
+                if (!isSupportedCity(addr.city)) {
+                    alert('Rất tiếc, khu vực này hiện chưa có dịch vụ giao hàng.');
                     return;
                 }
 
-                var paymentMethod = (document.querySelector('input[name="paymentMethod"]:checked') || {}).value || 'COD';
-
-                document.getElementById('btnPlaceOrderSubmit').disabled = true;
-                document.getElementById('btnPlaceOrderLabel').textContent = 'Đang xử lý...';
+                document.getElementById('btnPlaceOrder').disabled = true;
+                document.getElementById('btnPlaceOrderLabel').textContent = 'Đang đặt hàng...';
 
                 try {
                     var body = {
-                        fullName: fullName,
-                        phone: phone,
-                        city: city,
-                        district: district || '',
-                        ward: ward || '',
-                        address: addressLine,
-                        notes: notes,
-                        paymentMethod: paymentMethod === 'VNPAY' ? 'ONLINE' : 'COD',
+                        fullName: addr.recipientName || '',
+                        phone: addr.phone || '',
+                        city: addr.city || '',
+                        district: addr.district || '',
+                        ward: addr.ward || '',
+                        address: addr.addressLine || '',
+                        notes: '',
                         items: items.map(function(i) { return { productId: i.id, quantity: i.quantity }; })
                     };
 
                     var r = await api('/api/customer/orders', 'POST', body);
 
                     if (!r.success) {
+                        if (r.message && r.message.includes('hết hàng')) {
+                            alert(r.message);
+                            window.location.href = '/cart';
+                            return;
+                        }
                         alert(r.message || 'Đặt hàng thất bại. Vui lòng thử lại.');
-                        document.getElementById('btnPlaceOrderSubmit').disabled = false;
-                        document.getElementById('btnPlaceOrderSubmit').classList.remove('opacity-50', 'cursor-not-allowed');
-                        document.getElementById('btnPlaceOrderLabel').textContent = 'Đặt hàng';
+                        document.getElementById('btnPlaceOrder').disabled = false;
+                        document.getElementById('btnPlaceOrderLabel').textContent = 'Đặt hàng ngay';
                         return;
                     }
 
-                    orderCreated = true;
+                    // Lưu thông tin đơn hàng
+                    currentOrderId = r.data.orderId;
+                    currentOrderNumber = r.data.orderNumber;
 
-                    if (paymentMethod === 'VNPAY' && r.data.vnpayUrl) {
-                        // Show VNPay payment
-                        document.getElementById('orderSuccessMsg').textContent = 'Đơn hàng ' + r.data.orderNumber + ' đã được tạo. Vui lòng thanh toán trong 5 phút!';
-                        document.getElementById('vnpaySection').classList.remove('hidden');
-                        document.getElementById('vnpayQrImg').src = r.data.vietQrUrl || '';
-                        document.getElementById('vnpayPayUrl').href = r.data.vnpayUrl || '#';
-                        startVnpayCountdown(r.data.orderId);
-                    } else {
-                        document.getElementById('orderSuccessMsg').textContent = 'Đơn hàng ' + r.data.orderNumber + ' đã được tạo thành công. Trạng thái thanh toán: Chưa thanh toán (COD).';
-                        document.getElementById('vnpaySection').classList.add('hidden');
-                    }
-
-                    document.getElementById('orderSuccessModal').classList.remove('hidden');
+                    // Xóa giỏ hàng
                     localStorage.removeItem('cart');
+
+                    // Hiện modal đặt hàng thành công với thông báo thanh toán sau
+                    document.getElementById('orderNumberDisplay').textContent = currentOrderNumber;
+                    document.getElementById('paymentDeadlineSuccess').textContent = formatDate(r.data.paymentDeadline);
+                    document.getElementById('orderSuccessModal').classList.remove('hidden');
+
+                    document.getElementById('orderSuccessModal').querySelector('a').addEventListener('click', function() {
+                        window.location.href = '/profile';
+                    });
+
+                    // Auto chuyển sau 3 giây
+                    setTimeout(function() {
+                        document.getElementById('orderSuccessModal').classList.add('hidden');
+                        window.location.href = '/profile';
+                    }, 3000);
 
                 } catch (err) {
                     alert('Đặt hàng thất bại. Vui lòng thử lại.');
-                    document.getElementById('btnPlaceOrderSubmit').disabled = false;
-                    document.getElementById('btnPlaceOrderSubmit').classList.remove('opacity-50', 'cursor-not-allowed');
-                    document.getElementById('btnPlaceOrderLabel').textContent = 'Đặt hàng';
+                    document.getElementById('btnPlaceOrder').disabled = false;
+                    document.getElementById('btnPlaceOrderLabel').textContent = 'Đặt hàng ngay';
                 }
             };
 
-            // VNPay countdown
-            function startVnpayCountdown(orderId) {
-                var countdown = 5 * 60; // 5 minutes
-                var display = document.getElementById('countdownTime');
-                var timer = setInterval(function() {
-                    countdown--;
-                    if (countdown <= 0) {
-                        clearInterval(timer);
-                        alert('Đơn hàng đã bị hủy do không thanh toán trong thời gian quy định.');
-                        window.location.href = '/profile';
-                        return;
-                    }
-                    var mins = Math.floor(countdown / 60);
-                    var secs = countdown % 60;
-                    display.textContent = (mins < 10 ? '0' + mins : mins) + ':' + (secs < 10 ? '0' + secs : secs);
-                }, 1000);
-
-                // Store timer reference for potential cleanup
-                window.vnpayTimer = timer;
-                window.vnpayOrderId = orderId;
-            }
+            window.closePaymentModal = function() {
+                document.getElementById('paymentModal').classList.add('hidden');
+            };
 
             // ================== Init ==================
-            // Button event listeners (replace inline onclick)
             document.getElementById('btnOpenAddressModalCheckout').addEventListener('click', function() { window.openAddressModal(); });
-            document.getElementById('btnToggleAddressMode').addEventListener('click', function() { window.toggleAddressMode(); });
-            document.getElementById('btnPlaceOrderSubmit').addEventListener('click', function() { window.placeOrder(); });
+            document.getElementById('btnPlaceOrder').addEventListener('click', function() { window.placeOrder(); });
             document.getElementById('btnCheckoutCloseAddrModal').addEventListener('click', function() { window.closeAddressModal(); });
             document.getElementById('checkoutAddrBackdrop').addEventListener('click', function() { window.closeAddressModal(); });
             document.getElementById('btnCheckoutCancelAddr').addEventListener('click', function() { window.closeAddressModal(); });

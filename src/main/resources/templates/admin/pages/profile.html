@@ -1,0 +1,360 @@
+<th:block th:fragment="page-content">
+    <th:block th:with="title='Hồ sơ cá nhân', pageTitle='Hồ sơ cá nhân', activePage='profile'">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Profile Header -->
+        <div class="bg-white rounded-2xl card-shadow border border-primary-100 p-6 mb-6">
+            <div class="flex items-center space-x-6">
+                <div class="relative">
+                    <div id="avatarPreview" class="w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white text-3xl font-bold">
+                        A
+                    </div>
+                    <button onclick="document.getElementById('avatarInput').click()" class="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center text-primary-600 hover:text-primary-800 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </button>
+                    <input type="file" id="avatarInput" class="hidden" accept="image/*" onchange="previewAvatar(this)">
+                </div>
+                <div>
+                    <h2 class="text-2xl font-display font-bold text-primary-800" id="profileName">Đang tải...</h2>
+                    <p class="text-primary-500" id="profileRole">-</p>
+                    <span id="profileStatusBadge" class="status-badge bg-green-100 text-green-700 mt-2 inline-block">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="bg-white rounded-2xl card-shadow border border-primary-100 overflow-hidden">
+            <div class="border-b border-primary-100">
+                <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                    <button onclick="switchTab('info')" id="tabInfo" class="tab-btn py-4 px-1 border-b-2 border-primary-500 text-primary-600 font-medium">
+                        Thông tin cá nhân
+                    </button>
+                    <button onclick="switchTab('security')" id="tabSecurity" class="tab-btn py-4 px-1 border-b-2 border-transparent text-primary-500 hover:text-primary-700 font-medium">
+                        Bảo mật
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab: Thông tin cá nhân -->
+            <div id="contentInfo" class="p-6">
+                <form id="profileForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Tên đăng nhập</label>
+                            <input type="text" id="username" class="w-full px-4 py-3 border border-primary-200 rounded-lg bg-primary-50" readonly>
+                            <p class="text-xs text-primary-400 mt-1">Không thể thay đổi</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Email</label>
+                            <input type="email" id="email" class="w-full px-4 py-3 border border-primary-200 rounded-lg bg-primary-50" readonly>
+                            <p class="text-xs text-primary-400 mt-1">Không thể thay đổi</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Họ và tên <span class="text-red-500">*</span></label>
+                            <input type="text" id="fullName" class="w-full px-4 py-3 border border-primary-200 rounded-lg focus:border-primary-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Số điện thoại</label>
+                            <input type="tel" id="phone" class="w-full px-4 py-3 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="0xxx xxx xxx">
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <button type="submit" class="px-6 py-3 btn-primary text-white rounded-lg font-medium flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Lưu thay đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tab: Bảo mật -->
+            <div id="contentSecurity" class="p-6 hidden">
+                <h3 class="text-lg font-semibold text-primary-800 mb-6">Đổi mật khẩu</h3>
+                <form id="passwordForm" class="max-w-lg">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Mật khẩu hiện tại</label>
+                            <div class="relative">
+                                <input type="password" id="currentPassword" class="w-full px-4 py-3 border border-primary-200 rounded-lg focus:border-primary-500 pr-12" required>
+                                <button type="button" onclick="togglePassword('currentPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-primary-400 hover:text-primary-600">
+                                    <svg id="eyeCurrentPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Mật khẩu mới</label>
+                            <div class="relative">
+                                <input type="password" id="newPassword" class="w-full px-4 py-3 border border-primary-200 rounded-lg focus:border-primary-500 pr-12" required minlength="6">
+                                <button type="button" onclick="togglePassword('newPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-primary-400 hover:text-primary-600">
+                                    <svg id="eyeNewPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <p class="text-xs text-primary-400 mt-1">Ít nhất 6 ký tự</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Xác nhận mật khẩu mới</label>
+                            <div class="relative">
+                                <input type="password" id="confirmPassword" class="w-full px-4 py-3 border border-primary-200 rounded-lg focus:border-primary-500 pr-12" required minlength="6">
+                                <button type="button" onclick="togglePassword('confirmPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-primary-400 hover:text-primary-600">
+                                    <svg id="eyeConfirmPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <button type="submit" class="px-6 py-3 bg-primary-800 text-white rounded-lg font-medium hover:bg-primary-900 transition-colors">
+                            Đổi mật khẩu
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Account Info -->
+        <div class="bg-white rounded-2xl card-shadow border border-primary-100 p-6 mt-6">
+            <h3 class="text-lg font-semibold text-primary-800 mb-4">Thông tin tài khoản</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div class="flex items-center p-3 bg-primary-50 rounded-lg">
+                    <svg class="w-5 h-5 text-primary-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div>
+                        <p class="text-primary-500">Ngày tham gia</p>
+                        <p class="font-medium text-primary-800" id="createdAt">-</p>
+                    </div>
+                </div>
+                <div class="flex items-center p-3 bg-primary-50 rounded-lg">
+                    <svg class="w-5 h-5 text-primary-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+                    </svg>
+                    <div>
+                        <p class="text-primary-500">Mã tài khoản</p>
+                        <p class="font-medium text-primary-800" id="accountCode">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentProfile = null;
+
+        // Load profile data
+        async function loadProfile() {
+            try {
+                const response = await fetch('/admin/profile/api', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+                    }
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentProfile = result.data;
+                    displayProfile(currentProfile);
+                } else {
+                    showToast('Không thể tải thông tin profile: ' + result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showToast('Lỗi khi tải thông tin', 'error');
+            }
+        }
+
+        function displayProfile(data) {
+            document.getElementById('profileName').textContent = data.fullName || data.username;
+            document.getElementById('profileRole').textContent = getRoleName(data.role);
+            document.getElementById('username').value = data.username;
+            document.getElementById('email').value = data.email;
+            document.getElementById('fullName').value = data.fullName || '';
+            document.getElementById('phone').value = data.phone || '';
+            
+            // Avatar
+            const avatarPreview = document.getElementById('avatarPreview');
+            if (data.avatarUrl) {
+                avatarPreview.innerHTML = `<img src="${data.avatarUrl}" class="w-full h-full rounded-full object-cover">`;
+            } else {
+                avatarPreview.textContent = (data.fullName || data.username).charAt(0).toUpperCase();
+            }
+            
+            // Status badge
+            const statusBadge = document.getElementById('profileStatusBadge');
+            statusBadge.className = 'status-badge mt-2 inline-block';
+            if (data.status === 'ACTIVE') {
+                statusBadge.classList.add('bg-green-100', 'text-green-700');
+                statusBadge.textContent = 'Đang hoạt động';
+            } else if (data.status === 'INACTIVE') {
+                statusBadge.classList.add('bg-gray-100', 'text-gray-600');
+                statusBadge.textContent = 'Không hoạt động';
+            } else if (data.status === 'PENDING') {
+                statusBadge.classList.add('bg-yellow-100', 'text-yellow-700');
+                statusBadge.textContent = 'Chờ xác thực';
+            }
+            
+            // Account info
+            if (data.createdAt) {
+                const date = new Date(data.createdAt);
+                document.getElementById('createdAt').textContent = date.toLocaleDateString('vi-VN');
+            }
+        }
+
+        function getRoleName(role) {
+            const roleMap = {
+                'ADMIN': 'Quản trị viên',
+                'MANAGER': 'Quản lý',
+                'STAFF': 'Nhân viên',
+                'CUSTOMER': 'Khách hàng'
+            };
+            return roleMap[role] || role;
+        }
+
+        // Tab switching
+        function switchTab(tab) {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const contentInfo = document.getElementById('contentInfo');
+            const contentSecurity = document.getElementById('contentSecurity');
+            
+            tabBtns.forEach(btn => {
+                btn.classList.remove('border-primary-500', 'text-primary-600');
+                btn.classList.add('border-transparent', 'text-primary-500');
+            });
+            
+            if (tab === 'info') {
+                document.getElementById('tabInfo').classList.remove('border-transparent', 'text-primary-500');
+                document.getElementById('tabInfo').classList.add('border-primary-500', 'text-primary-600');
+                contentInfo.classList.remove('hidden');
+                contentSecurity.classList.add('hidden');
+            } else {
+                document.getElementById('tabSecurity').classList.remove('border-transparent', 'text-primary-500');
+                document.getElementById('tabSecurity').classList.add('border-primary-500', 'text-primary-600');
+                contentInfo.classList.add('hidden');
+                contentSecurity.classList.remove('hidden');
+            }
+        }
+
+        // Toggle password visibility
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const eyeIcon = document.getElementById('eye' + inputId.charAt(0).toUpperCase() + inputId.slice(1));
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+            } else {
+                input.type = 'password';
+            }
+        }
+
+        // Avatar preview
+        function previewAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const avatarPreview = document.getElementById('avatarPreview');
+                    avatarPreview.innerHTML = `<img src="${e.target.result}" class="w-full h-full rounded-full object-cover">`;
+                    
+                    // TODO: Upload avatar to server
+                    // updateAvatar(e.target.result);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Profile form submit
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const data = {
+                fullName: document.getElementById('fullName').value,
+                phone: document.getElementById('phone').value
+            };
+            
+            try {
+                const response = await fetch('/admin/profile/api', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('Cập nhật thông tin thành công!');
+                    loadProfile(); // Reload to update display
+                } else {
+                    showToast(result.message || 'Cập nhật thất bại', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                showToast('Lỗi khi cập nhật', 'error');
+            }
+        });
+
+        // Password form submit
+        document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                showToast('Mật khẩu mới không khớp', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                showToast('Mật khẩu mới phải có ít nhất 6 ký tự', 'error');
+                return;
+            }
+            
+            const data = {
+                currentPassword: document.getElementById('currentPassword').value,
+                newPassword: newPassword,
+                confirmPassword: confirmPassword
+            };
+            
+            try {
+                const response = await fetch('/admin/profile/api/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('Đổi mật khẩu thành công!');
+                    document.getElementById('passwordForm').reset();
+                } else {
+                    showToast(result.message || 'Đổi mật khẩu thất bại', 'error');
+                }
+            } catch (error) {
+                console.error('Error changing password:', error);
+                showToast('Lỗi khi đổi mật khẩu', 'error');
+            }
+        });
+
+        // Load profile on page load
+        document.addEventListener('DOMContentLoaded', loadProfile);
+    </script>
+    </th:block>
+</th:block>

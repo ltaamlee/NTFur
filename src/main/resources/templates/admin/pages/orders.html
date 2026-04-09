@@ -89,6 +89,15 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
             </div>
+            <select id="filterOrderStatus" class="px-4 py-2 border border-primary-200 rounded-lg text-sm focus:border-primary-500">
+                <option value="">Tất cả đơn hàng</option>
+                <option value="PENDING">Chờ xác nhận</option>
+                <option value="CONFIRMED">Đã xác nhận</option>
+                <option value="PROCESSING">Đang xử lý</option>
+                <option value="SHIPPED">Đang giao</option>
+                <option value="DELIVERED">Đã giao</option>
+                <option value="CANCELLED">Đã hủy</option>
+            </select>
             <select id="filterPaymentStatus" class="px-4 py-2 border border-primary-200 rounded-lg text-sm focus:border-primary-500">
                 <option value="">Tất cả thanh toán</option>
                 <option value="PENDING">Chưa thanh toán</option>
@@ -172,6 +181,7 @@
 
         function filterByStatus(status) {
             currentStatusFilter = status;
+            document.getElementById('filterOrderStatus').value = status;
             document.getElementById('filterPaymentStatus').value = '';
             renderOrders();
         }
@@ -179,12 +189,13 @@
         function renderOrders() {
             const tbody = document.getElementById('ordersTable');
             const search = document.getElementById('searchInput').value.toLowerCase();
+            const orderStatusFilter = document.getElementById('filterOrderStatus').value;
             const paymentFilter = document.getElementById('filterPaymentStatus').value;
             const dateFrom = document.getElementById('filterDateFrom').value;
             const dateTo = document.getElementById('filterDateTo').value;
 
             let filtered = orders.filter(o => {
-                const matchStatus = !currentStatusFilter || o.status === currentStatusFilter;
+                const matchStatus = !currentStatusFilter && !orderStatusFilter || o.status === (currentStatusFilter || orderStatusFilter);
                 const matchSearch = !search || 
                     (o.orderNumber && o.orderNumber.toLowerCase().includes(search)) ||
                     (o.customerName && o.customerName.toLowerCase().includes(search)) ||
@@ -415,6 +426,10 @@
 
         // Event listeners
         document.getElementById('searchInput').addEventListener('input', renderOrders);
+        document.getElementById('filterOrderStatus').addEventListener('change', function() {
+            currentStatusFilter = '';
+            renderOrders();
+        });
         document.getElementById('filterPaymentStatus').addEventListener('change', renderOrders);
         document.getElementById('filterDateFrom').addEventListener('change', renderOrders);
         document.getElementById('filterDateTo').addEventListener('change', renderOrders);

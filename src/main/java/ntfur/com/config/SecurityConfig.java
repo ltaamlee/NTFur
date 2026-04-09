@@ -36,7 +36,8 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/home", "/auth/**", "/api/auth/**", "/css/**", "/js/**", "/images/**",
-                        "/admin/**", "/employee/**", "/oauth2/**", "/login/google", "/api/admin/**", "/api/employee/**", "/cart", "/checkout").permitAll()
+                        "/admin/**", "/employee/**", "/oauth2/**", "/login/google", "/api/admin/**", "/api/employee/**", 
+                        "/cart", "/checkout", "/profile", "/admin/profile/**").permitAll()
                 // Cửa hàng công khai: khách không đăng nhập vẫn xem được danh mục & sản phẩm
                 .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories", "/api/categories/**").permitAll()

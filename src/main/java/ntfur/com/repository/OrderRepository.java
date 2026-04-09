@@ -66,4 +66,10 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
 
     @Query("SELECT YEAR(o.createdAt), SUM(o.totalAmount) FROM Order o GROUP BY YEAR(o.createdAt) ORDER BY YEAR(o.createdAt)")
     List<Object[]> getYearlyRevenue();
+
+    @Query("SELECT o FROM Order o WHERE o.status = 'PENDING' AND o.paymentStatus = 'PENDING' AND o.paymentDeadline < :now")
+    List<Order> findExpiredPendingOrders(@Param("now") LocalDateTime now);
+
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.status = 'PENDING' AND o.paymentStatus = 'PENDING' AND o.paymentDeadline < :now")
+    long countExpiredPendingOrders(@Param("now") LocalDateTime now);
 }
