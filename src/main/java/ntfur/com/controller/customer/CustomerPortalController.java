@@ -42,6 +42,7 @@ import ntfur.com.repository.ProductRepository;
 import ntfur.com.repository.UserRepository;
 import ntfur.com.service.CustomerAddressService;
 import ntfur.com.service.OrderService;
+import ntfur.com.service.PaymentService;
 
 @RestController
 @RequestMapping("/api/customer")
@@ -62,6 +63,7 @@ public class CustomerPortalController {
     private final OrderRepository orderRepository;
     private final OrderService orderService;
     private final CustomerAddressService customerAddressService;
+    private final PaymentService paymentService;
 
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getProfile(Principal principal) {
@@ -131,6 +133,24 @@ public class CustomerPortalController {
         User user = getCurrentUser(principal);
         List<OrderDTO> orders = orderService.getOrdersByUserId(user.getId());
         return ResponseEntity.ok(ApiResponse.success(orders));
+    }
+
+    @PostMapping("/orders/{id}/cancel")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> cancelOrder(Principal principal, @PathVariable Long id) {
+        User user = getCurrentUser(principal);
+        // Kiểm tra đơn hàng có thuộc về user không
+        orderService.getOrdersByUserId(user.getId()).stream()
+                .filter(o -> o.getId().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
+        
+        try {
+            Map<String, Object> result = paymentService.cancelPayment(id);
+            return ResponseEntity.ok(ApiResponse.success("Hủy đơn hàng thành công!", result));
+        } catch (RuntimeException e) {
+            log.warn("Cancel order error: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     // Address Management

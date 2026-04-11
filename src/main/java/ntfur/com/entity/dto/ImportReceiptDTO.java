@@ -19,6 +19,7 @@ public class ImportReceiptDTO {
     private Long supplierId;
     private String supplierName;
     private String importDate;
+    private String invoiceNumber;  // Số hóa đơn / chứng từ từ nhà cung cấp
     private BigDecimal totalAmount;
     private BigDecimal discountAmount;
     private BigDecimal finalAmount;

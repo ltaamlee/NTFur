@@ -1,10 +1,6 @@
 package ntfur.com.service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,8 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import ntfur.com.entity.Customer;
 import ntfur.com.entity.User;
-import ntfur.com.entity.User.UserRole;
-import ntfur.com.entity.User.UserStatus;
 import ntfur.com.entity.dto.customer.CustomerDTO;
 import ntfur.com.entity.dto.customer.UpdateCustomerRequest;
 import ntfur.com.repository.CustomerRepository;

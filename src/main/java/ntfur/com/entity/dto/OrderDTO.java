@@ -27,6 +27,8 @@ public class OrderDTO {
 
     private String customerPhone;
 
+    private String customerEmail;
+
     private String status;
 
     private String paymentStatus;
@@ -78,6 +80,12 @@ public class OrderDTO {
     private LocalDateTime cancelledAt;
 
     private String cancellationReason;
+
+    private Long payosOrderCode;
+
+    private String payosCheckoutUrl;
+
+    private LocalDateTime paymentDeadline;
 
     private LocalDateTime createdAt;
 

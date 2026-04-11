@@ -16,7 +16,9 @@ import ntfur.com.entity.Product;
 import ntfur.com.entity.Product.ProductStatus;
 import ntfur.com.entity.ProductImage;
 import ntfur.com.entity.ProductSet;
+import ntfur.com.entity.ProductVariant;
 import ntfur.com.entity.Supplier;
+import ntfur.com.entity.dto.ProductVariantDTO;
 import ntfur.com.entity.dto.product.CreateProductRequest;
 import ntfur.com.entity.dto.product.ProductDTO;
 import ntfur.com.entity.dto.product.ProductImageDTO;
@@ -26,6 +28,7 @@ import ntfur.com.repository.CategoryRepository;
 import ntfur.com.repository.ProductImageRepository;
 import ntfur.com.repository.ProductRepository;
 import ntfur.com.repository.ProductSetRepository;
+import ntfur.com.repository.ProductVariantRepository;
 import ntfur.com.repository.SupplierRepository;
 
 @Service
@@ -34,6 +37,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductImageRepository productImageRepository;
+    private final ProductVariantRepository productVariantRepository;
     private final CategoryRepository categoryRepository;
     private final SupplierRepository supplierRepository;
     private final ProductSetRepository productSetRepository;
@@ -332,6 +336,22 @@ public class ProductService {
                         .build())
                 .collect(Collectors.toList());
 
+        // Lấy biến thể của sản phẩm
+        List<ProductVariantDTO> variants = productVariantRepository
+                .findByProductIdAndActiveTrue(product.getId())
+                .stream()
+                .map(ProductVariantDTO::fromEntity)
+                .collect(Collectors.toList());
+
+        int totalStock = product.getStock();
+        if (product.getVariants() != null) {
+            for (ProductVariant v : product.getVariants()) {
+                if (v.isActive()) {
+                    totalStock += v.getStock();
+                }
+            }
+        }
+
         return ProductDTO.builder()
                 .id(product.getId())
                 .name(product.getName())
@@ -355,6 +375,8 @@ public class ProductService {
                 .featured(product.isFeatured())
                 .mainImage(product.getMainImage())
                 .images(images)
+                .variants(variants)
+                .totalStock(totalStock)
                 .viewCount(product.getViewCount())
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())

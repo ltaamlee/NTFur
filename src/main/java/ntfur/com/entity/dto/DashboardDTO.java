@@ -25,11 +25,15 @@ public class DashboardDTO {
 
     private long pendingOrders;
 
+    private long confirmedOrders;
+
     private long processingOrders;
 
     private long shippedOrders;
 
     private long deliveredOrders;
+
+    private long returnedOrders;
 
     private long cancelledOrders;
 

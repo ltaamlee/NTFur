@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ntfur.com.entity.dto.ProductVariantDTO;
 
 @Data
 @Builder
@@ -77,6 +78,12 @@ public class ProductDTO {
     private String mainImage;
 
     private List<ProductImageDTO> images;
+
+    // Biến thể sản phẩm
+    private List<ProductVariantDTO> variants;
+    
+    // Tổng tồn kho tính cả biến thể
+    private int totalStock;
 
     private int viewCount;
 

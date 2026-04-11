@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ntfur.com.entity.Order;
+import ntfur.com.entity.Order.PaymentMethod;
 import ntfur.com.entity.Order.PaymentStatus;
 import ntfur.com.repository.OrderRepository;
 
@@ -21,19 +22,9 @@ import ntfur.com.repository.OrderRepository;
 @Slf4j
 public class PaymentService {
 
-    private static final String VIETQR_BANK = "MB";
-    private static final String VIETQR_ACCOUNT = "0856006888";
-    private static final String VIETQR_ACCOUNT_NAME = "NTFurniture";
-
     private final OrderRepository orderRepository;
+    private final PayOSService payOSService;
 
-    public String buildVietQrUrl(BigDecimal amount, String orderNumber) {
-        String amountStr = amount.setScale(0, java.math.RoundingMode.HALF_UP).toPlainString();
-        String addInfo = URLEncoder.encode("Thanh toan don " + orderNumber, StandardCharsets.UTF_8);
-        String accountName = URLEncoder.encode(VIETQR_ACCOUNT_NAME, StandardCharsets.UTF_8);
-        return "https://img.vietqr.io/image/" + VIETQR_BANK + "-" + VIETQR_ACCOUNT
-                + "-compact2.png?amount=" + amountStr + "&addInfo=" + addInfo + "&accountName=" + accountName;
-    }
 
     public Map<String, Object> getPaymentInfo(Long orderId) {
         Order order = orderRepository.findById(orderId)
@@ -47,9 +38,12 @@ public class PaymentService {
         result.put("paymentStatus", order.getPaymentStatus() != null ? order.getPaymentStatus().name() : null);
         result.put("paymentDeadline", order.getPaymentDeadline());
         result.put("isExpired", order.isPaymentExpired());
-
-        if (order.getPaymentMethod() == Order.PaymentMethod.BANK_TRANSFER) {
-            result.put("vietQrUrl", buildVietQrUrl(order.getTotalAmount(), order.getOrderNumber()));
+        
+        // Thông tin khách hàng cho PayOS
+        if (order.getUser() != null) {
+            result.put("customerName", order.getUser().getFullName());
+            result.put("customerEmail", order.getUser().getEmail());
+            result.put("customerPhone", order.getUser().getPhone());
         }
 
         return result;
@@ -72,7 +66,19 @@ public class PaymentService {
             throw new RuntimeException("Đơn hàng đã quá hạn thanh toán");
         }
 
-        if ("QR".equalsIgnoreCase(paymentMethod) || "BANK_TRANSFER".equalsIgnoreCase(paymentMethod)) {
+        // === COD: Đã xác nhận thì không cho đổi sang phương thức khác ===
+        if (order.getPaymentMethod() == PaymentMethod.COD) {
+            throw new RuntimeException("Bạn đã xác nhận thanh toán COD. Không thể thay đổi phương thức thanh toán.");
+        }
+
+        // === PayOS: Cho phép đổi phương thức ===
+        // Xóa link cũ nếu có (link có thể đã hết hạn)
+        if (order.getPayosCheckoutUrl() != null || order.getPayosOrderCode() != null) {
+            order.setPayosCheckoutUrl(null);
+            order.setPayosOrderCode(null);
+        }
+
+        if ("PAYTOS".equalsIgnoreCase(paymentMethod) || "QR".equalsIgnoreCase(paymentMethod) || "BANK_TRANSFER".equalsIgnoreCase(paymentMethod)) {
             return initiateQrPayment(order);
         } else if ("COD".equalsIgnoreCase(paymentMethod)) {
             return initiateCodPayment(order);
@@ -83,19 +89,56 @@ public class PaymentService {
 
     @Transactional
     public Map<String, Object> initiateQrPayment(Order order) {
-        order.setPaymentMethod(Order.PaymentMethod.BANK_TRANSFER);
+        // Luôn tạo payment link mới để đảm bảo mã QR còn hạn
+        order.setPaymentMethod(Order.PaymentMethod.PAYTOS);
         orderRepository.save(order);
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("orderId", order.getId());
-        result.put("orderNumber", order.getOrderNumber());
-        result.put("vietQrUrl", buildVietQrUrl(order.getTotalAmount(), order.getOrderNumber()));
-        result.put("paymentMethod", "BANK_TRANSFER");
-        result.put("paymentStatus", order.getPaymentStatus().name());
-        result.put("message", "Vui lòng quét mã QR để thanh toán trước " + order.getPaymentDeadline());
-        result.put("paymentDeadline", order.getPaymentDeadline());
+        try {
+            // Tạo payment link từ PayOS với thời gian hết hạn
+            PayOSService.PaymentLinkResult linkResult = payOSService.createPaymentLinkWithId(
+                    order.getId(),
+                    order.getOrderNumber(),
+                    order.getTotalAmount()
+            );
 
-        return result;
+            // Lưu checkoutUrl và orderCode vào đơn hàng
+            order.setPayosCheckoutUrl(linkResult.checkoutUrl());
+            order.setPayosOrderCode(linkResult.orderCode());
+            orderRepository.save(order);
+
+            // Tính thời gian hết hạn để hiển thị cho user
+            java.time.Instant expiredInstant = java.time.Instant.ofEpochSecond(linkResult.expiredAt());
+            java.time.LocalDateTime expiredDateTime = expiredInstant.atZone(java.time.ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime();
+            String expiryTimeStr = expiredDateTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy"));
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("orderId", order.getId());
+            result.put("orderNumber", order.getOrderNumber());
+            result.put("paymentMethod", "PAYTOS");
+            result.put("paymentStatus", order.getPaymentStatus().name());
+            result.put("checkoutUrl", linkResult.checkoutUrl());
+            result.put("expiresAt", linkResult.expiredAt());
+            result.put("expiryTimeStr", expiryTimeStr);
+            result.put("message", "Vui lòng thanh toán trước " + expiryTimeStr);
+
+            return result;
+        } catch (Exception e) {
+            log.error("Failed to create PayOS payment link: {}", e.getMessage(), e);
+
+            // Fallback: Nếu PayOS lỗi, vẫn cho phép thanh toán COD
+            order.setPaymentMethod(Order.PaymentMethod.COD);
+            orderRepository.save(order);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("orderId", order.getId());
+            result.put("orderNumber", order.getOrderNumber());
+            result.put("paymentMethod", "COD");
+            result.put("paymentStatus", order.getPaymentStatus().name());
+            result.put("message", "PayOS không khả dụng. Đơn hàng chuyển sang thanh toán COD. Bạn sẽ thanh toán khi nhận hàng.");
+            result.put("paymentDeadline", order.getPaymentDeadline());
+
+            return result;
+        }
     }
 
     @Transactional
@@ -119,7 +162,20 @@ public class PaymentService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
 
-        // Nếu là COD: Chỉ xác nhận phương thức, KHÔNG đánh dấu đã thanh toán
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
+            throw new RuntimeException("Đơn hàng đã được thanh toán");
+        }
+
+        if (order.getStatus() == Order.OrderStatus.CANCELLED) {
+            throw new RuntimeException("Đơn hàng đã bị hủy");
+        }
+
+        // Cho phép đổi phương thức thanh toán - reset link cũ nếu có
+        if (order.getPayosCheckoutUrl() != null || order.getPayosOrderCode() != null) {
+            order.setPayosCheckoutUrl(null);
+            order.setPayosOrderCode(null);
+        }
+
         if ("COD".equalsIgnoreCase(paymentMethod)) {
             order.setPaymentMethod(Order.PaymentMethod.COD);
             orderRepository.save(order);
@@ -129,20 +185,12 @@ public class PaymentService {
             result.put("orderNumber", order.getOrderNumber());
             result.put("paymentMethod", "COD");
             result.put("paymentStatus", order.getPaymentStatus() != null ? order.getPaymentStatus().name() : "PENDING");
-            result.put("message", "Xác nhận phương thức COD thành công");
+            result.put("message", "Đã xác nhận thanh toán COD thành công. Bạn sẽ thanh toán khi nhận hàng.");
 
             return result;
         }
 
-        // Các phương thức khác (QR/BANK_TRANSFER): Xác nhận thanh toán thực sự
-        if (order.getPaymentStatus() == PaymentStatus.PAID) {
-            throw new RuntimeException("Đơn hàng đã được thanh toán");
-        }
-
-        if (order.getStatus() == Order.OrderStatus.CANCELLED) {
-            throw new RuntimeException("Đơn hàng đã bị hủy");
-        }
-
+        // Các phương thức khác (QR/BANK_TRANSFER/PAYTOS): Xác nhận thanh toán
         order.setPaymentStatus(PaymentStatus.PAID);
         orderRepository.save(order);
 
@@ -161,10 +209,16 @@ public class PaymentService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
 
+        // Chỉ cho phép hủy khi đơn hàng còn ở trạng thái chờ xác nhận (PENDING)
+        if (order.getStatus() != Order.OrderStatus.PENDING) {
+            throw new RuntimeException("Chỉ có thể hủy đơn hàng đang chờ xác nhận");
+        }
+
         if (order.getPaymentStatus() == PaymentStatus.PAID) {
             throw new RuntimeException("Không thể hủy đơn đã thanh toán");
         }
 
+        // Hoàn lại stock cho từng sản phẩm
         order.getItems().forEach(item -> {
             item.getProduct().setStock(item.getProduct().getStock() + item.getQuantity());
         });

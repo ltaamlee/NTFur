@@ -32,7 +32,9 @@ public class HomeController {
         
         model.addAttribute("featuredProducts", featuredProducts);
         model.addAttribute("categories", categories);
-        return "landing";
+        model.addAttribute("content", "home/pages/landing");
+        model.addAttribute("title", "Trang chủ");
+        return "home/layout";
     }
 
     @GetMapping("products")
@@ -42,7 +44,9 @@ public class HomeController {
         
         model.addAttribute("products", products);
         model.addAttribute("categories", categories);
-        return "products";
+        model.addAttribute("content", "home/pages/products");
+        model.addAttribute("title", "Sản phẩm");
+        return "home/layout";
     }
 
     @GetMapping("about")

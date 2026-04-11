@@ -1,0 +1,289 @@
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:fragment="content">
+<!-- Products Page Content Fragment -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col lg:flex-row gap-8">
+        
+        <!-- Sidebar Filters -->
+        <aside class="w-full lg:w-64 flex-shrink-0">
+            <div class="bg-white rounded-xl shadow-sm p-6 sidebar-filter">
+                <h3 class="font-semibold text-lg text-gray-800 mb-4">Danh mục</h3>
+                <div class="space-y-2" id="categoryFilters">
+                    <label class="flex items-center cursor-pointer hover:text-primary-600">
+                        <input type="checkbox" value="" class="category-checkbox w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" checked>
+                        <span class="ml-2 text-sm">Tất cả sản phẩm</span>
+                    </label>
+                </div>
+
+                <hr class="my-6 border-gray-200">
+
+                <h3 class="font-semibold text-lg text-gray-800 mb-4">Khoảng giá</h3>
+                <div class="space-y-2">
+                    <select id="priceFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-primary-500" onchange="applyFilters()">
+                        <option value="">Tất cả giá</option>
+                        <option value="0-1000000">Dưới 1 triệu</option>
+                        <option value="1000000-5000000">1 - 5 triệu</option>
+                        <option value="5000000-10000000">5 - 10 triệu</option>
+                        <option value="10000000-20000000">10 - 20 triệu</option>
+                        <option value="20000000-50000000">20 - 50 triệu</option>
+                        <option value="50000000-999999999">Trên 50 triệu</option>
+                    </select>
+                </div>
+
+                <hr class="my-6 border-gray-200">
+
+                <h3 class="font-semibold text-lg text-gray-800 mb-4">Trạng thái kho</h3>
+                <div class="space-y-2">
+                    <label class="flex items-center cursor-pointer hover:text-primary-600">
+                        <input type="checkbox" id="inStockFilter" class="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" checked onchange="applyFilters()">
+                        <span class="ml-2 text-sm">Còn hàng</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer hover:text-primary-600">
+                        <input type="checkbox" id="discountFilter" class="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" onchange="applyFilters()">
+                        <span class="ml-2 text-sm">Đang giảm giá</span>
+                    </label>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Products Grid -->
+        <div class="flex-1">
+            <!-- Sort & Results Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 bg-white rounded-xl shadow-sm p-4">
+                <div class="text-sm text-gray-600 mb-4 sm:mb-0">
+                    <span id="resultCount">0</span> sản phẩm
+                </div>
+                <div class="flex items-center space-x-4">
+                    <select id="sortSelect" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-primary-500" onchange="applySort()">
+                        <option value="default">Sắp xếp theo</option>
+                        <option value="price-asc">Giá: Thấp đến cao</option>
+                        <option value="price-desc">Giá: Cao đến thấp</option>
+                        <option value="name-asc">Tên: A đến Z</option>
+                        <option value="name-desc">Tên: Z đến A</option>
+                        <option value="newest">Mới nhất</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div id="productsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <!-- Products will be loaded here -->
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="mt-8 flex justify-center">
+                <!-- Pagination will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+</th:fragment>
+
+<!-- Products Page Scripts -->
+<script>
+(function() {
+    var products = [];
+    var categories = [];
+    var filteredProducts = [];
+    var currentPage = 1;
+    var itemsPerPage = 16;
+    var currentView = 'grid';
+    var cart = JSON.parse(localStorage.getItem('cart') || '[]');
+
+    function checkLoginStatus() {
+        return !!localStorage.getItem('accessToken');
+    }
+
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount || 0);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCategories();
+        loadProducts();
+        updateCartBadge();
+
+        var urlParams = new URLSearchParams(window.location.search);
+        var searchQuery = urlParams.get('q');
+        var searchInput = document.getElementById('headerSearchInput');
+        if (searchQuery && searchInput) {
+            searchInput.value = searchQuery;
+        }
+    });
+
+    async function loadProducts() {
+        try {
+            var response = await fetch('/api/products');
+            var result = await response.json();
+            if (result.success) {
+                products = result.data;
+                filteredProducts = products.slice();
+                applyFilters();
+            }
+        } catch (error) {
+            console.error('Error loading products:', error);
+        }
+    }
+
+    async function loadCategories() {
+        try {
+            var response = await fetch('/api/categories');
+            var result = await response.json();
+            if (result.success) {
+                categories = result.data;
+                renderCategoryFilters();
+            }
+        } catch (error) {
+            console.error('Error loading categories:', error);
+        }
+    }
+
+    function renderCategoryFilters() {
+        var container = document.getElementById('categoryFilters');
+        if (!container) return;
+        var html = '<label class="flex items-center cursor-pointer hover:text-primary-600"><input type="checkbox" value="" class="category-checkbox w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" checked onchange="applyFilters()"><span class="ml-2 text-sm">Tất cả sản phẩm</span></label>';
+        categories.forEach(function(c) {
+            html += '<label class="flex items-center cursor-pointer hover:text-primary-600"><input type="checkbox" value="' + c.id + '" class="category-checkbox w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" onchange="applyFilters()"><span class="ml-2 text-sm">' + c.name + '</span></label>';
+        });
+        container.innerHTML = html;
+    }
+
+    function applyFilters() {
+        var searchEl = document.getElementById('headerSearchInput');
+        var search = searchEl ? searchEl.value.toLowerCase() : '';
+        var selectedCategories = Array.prototype.slice.call(document.querySelectorAll('.category-checkbox:checked')).map(function(cb) { return cb.value; });
+        var priceRange = (document.getElementById('priceFilter') || {}).value || '';
+        var inStockOnly = (document.getElementById('inStockFilter') || {}).checked !== false;
+        var hasDiscount = (document.getElementById('discountFilter') || {}).checked || false;
+
+        var minPrice = 0, maxPrice = Infinity;
+        if (priceRange) {
+            var parts = priceRange.split('-');
+            minPrice = parseInt(parts[0]) || 0;
+            maxPrice = parseInt(parts[1]) || Infinity;
+        }
+
+        filteredProducts = products.filter(function(p) {
+            var matchSearch = !search || (p.name || '').toLowerCase().includes(search);
+            var matchCategory = selectedCategories.length === 0 || selectedCategories.indexOf('') !== -1 || selectedCategories.indexOf(String(p.categoryId)) !== -1;
+            var matchPrice = p.price >= minPrice && p.price <= maxPrice;
+            var matchStock = !inStockOnly || p.stock > 0;
+            var matchDiscount = !hasDiscount || (p.costPrice && p.costPrice > p.price);
+            return matchSearch && matchCategory && matchPrice && matchStock && matchDiscount;
+        });
+
+        applySort();
+    }
+
+    function applySort() {
+        var sortValue = (document.getElementById('sortSelect') || {}).value || 'default';
+        
+        switch (sortValue) {
+            case 'price-asc':
+                filteredProducts.sort(function(a, b) { return a.price - b.price; });
+                break;
+            case 'price-desc':
+                filteredProducts.sort(function(a, b) { return b.price - a.price; });
+                break;
+            case 'name-asc':
+                filteredProducts.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
+                break;
+            case 'name-desc':
+                filteredProducts.sort(function(a, b) { return (b.name || '').localeCompare(a.name || ''); });
+                break;
+            case 'newest':
+                filteredProducts.sort(function(a, b) { return new Date(b.createdAt || 0) - new Date(a.createdAt || 0); });
+                break;
+        }
+
+        currentPage = 1;
+        renderProducts();
+    }
+
+    function renderProducts() {
+        var container = document.getElementById('productsGrid');
+        var countEl = document.getElementById('resultCount');
+        if (countEl) countEl.textContent = filteredProducts.length;
+
+        var start = (currentPage - 1) * itemsPerPage;
+        var end = start + itemsPerPage;
+        var pageProducts = filteredProducts.slice(start, end);
+
+        if (pageProducts.length === 0) {
+            container.innerHTML = '<div class="col-span-full text-center py-16"><svg class="w-20 h-20 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><h3 class="text-xl font-semibold text-gray-600 mb-2">Không tìm thấy sản phẩm</h3><p class="text-gray-500">Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p></div>';
+            var pagination = document.getElementById('pagination');
+            if (pagination) pagination.innerHTML = '';
+            return;
+        }
+
+        var html = pageProducts.map(function(product) {
+            var discount = product.costPrice && product.costPrice > product.price ? Math.round((1 - product.price / product.costPrice) * 100) : 0;
+            return '<div class="product-card bg-white rounded-xl overflow-hidden shadow-sm cursor-pointer" onclick="window.location.href=\'/product/' + product.id + '\'"><div class="relative aspect-square bg-gray-100 overflow-hidden">' +
+                (product.mainImage ? '<img src="' + product.mainImage + '" alt="' + (product.name || '') + '" class="product-image w-full h-full object-cover">' : '<div class="w-full h-full flex items-center justify-center"><svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>') +
+                (discount > 0 ? '<div class="absolute top-0 left-0 bg-red-500 text-white px-3 py-1 text-xs font-bold">' + discount + '% OFF</div>' : '') +
+                (product.stock <= 0 ? '<div class="absolute inset-0 bg-black/40 flex items-center justify-center"><span class="bg-white text-gray-800 px-4 py-2 rounded-lg font-semibold">Hết hàng</span></div>' : '') +
+                '</div><div class="p-4"><p class="text-xs text-primary-600 font-medium mb-1">' + (product.categoryName || 'Nội thất') + '</p><h3 class="font-medium text-gray-800 mb-2 line-clamp-2 hover:text-primary-600 transition-colors">' + (product.name || '') + '</h3><span class="text-lg font-bold text-red-600">' + formatCurrency(product.price) + '</span></div></div>';
+        }).join('');
+
+        container.innerHTML = html;
+        renderPagination();
+    }
+
+    function renderPagination() {
+        var totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+        var container = document.getElementById('pagination');
+        if (!container || totalPages <= 1) {
+            if (container) container.innerHTML = '';
+            return;
+        }
+
+        var html = '<div class="flex items-center space-x-2">';
+        html += '<button onclick="goToPage(' + (currentPage - 1) + ')" ' + (currentPage === 1 ? 'disabled' : '') + ' class="px-3 py-2 rounded-lg border ' + (currentPage === 1 ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-gray-300 text-gray-600 hover:bg-gray-100') + '">‹</button>';
+
+        for (var i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                html += '<button onclick="goToPage(' + i + ')" class="px-4 py-2 rounded-lg ' + (i === currentPage ? 'bg-primary-600 text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-100') + '">' + i + '</button>';
+            } else if (i === currentPage - 2 || i === currentPage + 2) {
+                html += '<span class="px-2 text-gray-400">...</span>';
+            }
+        }
+
+        html += '<button onclick="goToPage(' + (currentPage + 1) + ')" ' + (currentPage === totalPages ? 'disabled' : '') + ' class="px-3 py-2 rounded-lg border ' + (currentPage === totalPages ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-gray-300 text-gray-600 hover:bg-gray-100') + '">›</button>';
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    window.goToPage = function(page) {
+        currentPage = page;
+        renderProducts();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.applyFilters = applyFilters;
+    window.applySort = applySort;
+
+    function updateCartBadge() {
+        var badge = document.getElementById('cartBadge');
+        if (!badge) return;
+        var totalItems = cart.reduce(function(sum, item) { return sum + (item.quantity || 1); }, 0);
+        if (totalItems > 0) {
+            badge.textContent = totalItems > 99 ? '99+' : totalItems;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+
+    // Search input listener
+    var headerSearchInput = document.getElementById('headerSearchInput');
+    if (headerSearchInput) {
+        headerSearchInput.addEventListener('input', applyFilters);
+        headerSearchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.trim()) {
+                window.location.href = '/products?q=' + encodeURIComponent(this.value.trim());
+            }
+        });
+    }
+})();
+</script>

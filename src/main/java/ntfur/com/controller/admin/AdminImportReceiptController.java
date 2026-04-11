@@ -57,7 +57,7 @@ public class AdminImportReceiptController {
     public ResponseEntity<ApiResponse<ImportReceiptDTO>> createImportReceipt(@RequestBody ImportReceiptDTO request) {
         try {
             ImportReceiptDTO receipt = importReceiptService.createImportReceipt(request);
-            return ResponseEntity.ok(ApiResponse.success("Tạo phiếu nhập hàng thành công", receipt));
+            return ResponseEntity.ok(ApiResponse.success("Nhập kho thành công! Mã phiếu: " + receipt.getReceiptCode(), receipt));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }

@@ -1,0 +1,362 @@
+<th:block th:fragment="content">
+<!-- Product Detail Content Fragment -->
+<div class="max-w-7xl mx-auto p-4 md:p-8">
+    <a href="/products" class="text-primary-700 hover:underline">← Quay lại danh sách sản phẩm</a>
+    <section class="mt-4 bg-white rounded-2xl shadow-sm p-4 md:p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div>
+            <div class="relative overflow-hidden rounded-xl bg-gray-100">
+                <div id="slides" class="flex transition-transform duration-300"></div>
+                <button id="prevBtn" class="hidden absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white w-9 h-9 rounded-full">‹</button>
+                <button id="nextBtn" class="hidden absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white w-9 h-9 rounded-full">›</button>
+            </div>
+            <div id="thumbs" class="mt-3 flex gap-2 overflow-x-auto"></div>
+        </div>
+        <div>
+            <p id="category" class="text-sm text-primary-700"></p>
+            <h1 id="name" class="text-2xl md:text-3xl font-bold text-gray-900 mt-1"></h1>
+            <div class="mt-4 bg-gray-50 rounded-xl p-4">
+                <div class="flex items-end gap-3">
+                    <span id="price" class="text-3xl font-bold text-red-600"></span>
+                    <span id="costPrice" class="text-gray-400 line-through hidden"></span>
+                </div>
+            </div>
+            <div class="mt-4 space-y-2 text-sm text-gray-700">
+                <p id="stock"></p><p id="material"></p><p id="color"></p><p id="warranty"></p>
+            </div>
+            <div id="variantSection" class="mt-6 hidden">
+                <h3 class="font-semibold text-lg mb-3">Tùy chọn sản phẩm</h3>
+                <div id="variantGroups" class="space-y-4"></div>
+            </div>
+            <div class="mt-6 flex flex-wrap gap-3 items-center">
+                <div class="inline-flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                    <button type="button" id="qtyMinus" class="px-3 py-2 text-gray-700 hover:bg-gray-100">-</button>
+                    <input id="qty" type="number" min="1" value="1" class="w-16 text-center border-x border-gray-300 py-2 focus:outline-none">
+                    <button type="button" id="qtyPlus" class="px-3 py-2 text-gray-700 hover:bg-gray-100">+</button>
+                </div>
+                <button id="addBtn" class="px-6 py-2.5 rounded-lg bg-primary-700 text-white hover:bg-primary-800">Thêm vào giỏ</button>
+                <button id="buyNowBtn" class="px-6 py-2.5 rounded-lg bg-secondary-700 text-white hover:opacity-90">Mua ngay</button>
+            </div>
+            <div class="mt-6">
+                <h2 class="font-semibold text-lg">Mô tả sản phẩm</h2>
+                <p id="description" class="text-gray-600 mt-2 whitespace-pre-line"></p>
+            </div>
+        </div>
+    </section>
+</div>
+</th:fragment>
+
+<script>
+(function() {
+    var productId = window.location.pathname.split('/').pop();
+    var product = null, images = [], index = 0;
+    var selectedVariants = {};
+    var variantStock = {};
+
+    function formatVnd(v) { 
+        return new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(v || 0); 
+    }
+    function getToken() { return localStorage.getItem('accessToken'); }
+    function isLoggedIn() { return !!getToken(); }
+
+    function renderSlider() {
+        var slides = document.getElementById('slides');
+        var thumbs = document.getElementById('thumbs');
+        if (!slides || !thumbs) return;
+        slides.innerHTML = images.map(function(url) { 
+            return '<img src="' + url + '" class="w-full shrink-0 h-[420px] object-cover" alt="image">'; 
+        }).join('');
+        thumbs.innerHTML = images.map(function(url, i) { 
+            return '<button onclick="goToSlide(' + i + ')" class="border-2 ' + (i === index ? 'border-secondary-700' : 'border-transparent') + ' rounded"><img src="' + url + '" class="w-16 h-16 object-cover rounded"></button>'; 
+        }).join('');
+        slides.style.transform = 'translateX(-' + (index * 100) + '%)';
+        var prevBtn = document.getElementById('prevBtn');
+        var nextBtn = document.getElementById('nextBtn');
+        if (prevBtn) prevBtn.classList.toggle('hidden', images.length <= 1);
+        if (nextBtn) nextBtn.classList.toggle('hidden', images.length <= 1);
+    }
+    window.goToSlide = function(i) { index = i; renderSlider(); };
+    
+    var prevBtn = document.getElementById('prevBtn');
+    var nextBtn = document.getElementById('nextBtn');
+    if (prevBtn) prevBtn.onclick = function() { 
+        index = (index - 1 + images.length) % images.length; renderSlider(); 
+    };
+    if (nextBtn) nextBtn.onclick = function() { 
+        index = (index + 1) % images.length; renderSlider(); 
+    };
+
+    function normalizeQty() {
+        var input = document.getElementById('qty');
+        if (!input) return 1;
+        var currentStock = calculateCurrentStock();
+        var max = Math.max(1, currentStock);
+        var v = parseInt(input.value) || 1;
+        if (isNaN(v)) v = 1;
+        v = Math.min(max, Math.max(1, Math.floor(v)));
+        input.value = v;
+        return v;
+    }
+    document.getElementById('qtyMinus').onclick = function() {
+        var input = document.getElementById('qty');
+        if (input) {
+            input.value = Math.max(1, (parseInt(input.value) || 1) - 1);
+            normalizeQty();
+        }
+    };
+    document.getElementById('qtyPlus').onclick = function() {
+        var input = document.getElementById('qty');
+        if (input) {
+            input.value = Math.min(calculateCurrentStock(), (parseInt(input.value) || 1) + 1);
+            normalizeQty();
+        }
+    };
+    var qtyInput = document.getElementById('qty');
+    if (qtyInput) qtyInput.onchange = normalizeQty;
+
+    function calculateCurrentStock() {
+        var hasVariants = product && product.variants && product.variants.length > 0;
+        if (!hasVariants) return product ? (product.stock || 0) : 0;
+        var selectedVariantId = getSelectedVariantId();
+        if (selectedVariantId && variantStock[selectedVariantId] !== undefined) {
+            return variantStock[selectedVariantId];
+        }
+        return product.totalStock || product.stock || 0;
+    }
+
+    function getSelectedVariantId() {
+        if (!selectedVariants || Object.keys(selectedVariants).length === 0) return null;
+        var variants = product && product.variants || [];
+        var variant = variants.find(function(v) {
+            for (var key in selectedVariants) {
+                if (v.attributeType !== key || v.attributeValue !== selectedVariants[key]) return false;
+            }
+            return true;
+        });
+        return variant ? variant.id : null;
+    }
+
+    function getSelectedVariantPrice() {
+        var variantId = getSelectedVariantId();
+        if (!variantId) return product ? product.price : 0;
+        var variant = (product && product.variants || []).find(function(v) { return v.id === variantId; });
+        if (!variant) return product ? product.price : 0;
+        return variant.finalPrice || product.price;
+    }
+
+    function renderVariants() {
+        var variantSection = document.getElementById('variantSection');
+        var variantGroups = document.getElementById('variantGroups');
+        if (!variantSection || !variantGroups) return;
+
+        var variants = product && product.variants || [];
+        if (!variants.length) {
+            variantSection.classList.add('hidden');
+            return;
+        }
+
+        variantSection.classList.remove('hidden');
+        var grouped = {};
+        variants.forEach(function(v) {
+            var type = v.attributeType || 'OTHER';
+            if (!grouped[type]) grouped[type] = [];
+            grouped[type].push(v);
+            variantStock[v.id] = v.stock;
+        });
+
+        var typeLabels = { SIZE: 'Kích thước', COLOR: 'Màu sắc', MATERIAL: 'Chất liệu', STYLE: 'Phong cách', OTHER: 'Tùy chọn' };
+        var html = '';
+        for (var type in grouped) {
+            var items = grouped[type];
+            var label = typeLabels[type] || type;
+            html += '<div class="variant-group"><label class="block text-sm font-medium text-gray-700 mb-2">' + label + ':</label><div class="flex flex-wrap gap-2">';
+            items.forEach(function(item) {
+                var disabled = item.stock <= 0 ? 'disabled opacity-50 cursor-not-allowed border-gray-200 text-gray-400' : 'border-primary-300 text-primary-700 hover:border-primary-500';
+                var priceAdj = item.priceAdjustment > 0 ? '<span class="text-xs text-secondary-600 ml-1">+' + formatVnd(item.priceAdjustment) + '</span>' : '';
+                var stockTxt = item.stock > 0 ? '<span class="text-xs text-gray-400 ml-1">(' + item.stock + ')</span>' : '<span class="text-xs text-red-500 ml-1">Hết</span>';
+                html += '<button type="button" onclick="selectVariant(\'' + type + '\', \'' + item.attributeValue + '\', ' + item.id + ')" class="variant-btn px-4 py-2 border-2 rounded-lg text-sm font-medium transition-all ' + disabled + '" data-type="' + type + '" data-value="' + item.attributeValue + '" data-id="' + item.id + '" ' + (item.stock <= 0 ? 'disabled' : '') + '>' + item.attributeValue + priceAdj + stockTxt + '</button>';
+            });
+            html += '</div></div>';
+        }
+        variantGroups.innerHTML = html;
+
+        for (var type in grouped) {
+            var available = grouped[type].find(function(item) { return item.stock > 0; });
+            if (available) {
+                selectVariant(type, available.attributeValue, available.id);
+                break;
+            }
+        }
+    }
+
+    window.selectVariant = function(type, value, variantId) {
+        selectedVariants[type] = value;
+        document.querySelectorAll('.variant-btn[data-type="' + type + '"]').forEach(function(btn) {
+            if (btn.dataset.value === value) {
+                btn.classList.add('border-primary-600', 'bg-primary-50');
+                btn.classList.remove('border-primary-300');
+            } else {
+                btn.classList.remove('border-primary-600', 'bg-primary-50');
+                btn.classList.add('border-primary-300');
+            }
+        });
+        updatePriceAndStock();
+    };
+
+    function updatePriceAndStock() {
+        var currentPrice = getSelectedVariantPrice();
+        var currentStock = calculateCurrentStock();
+        var priceEl = document.getElementById('price');
+        var stockEl = document.getElementById('stock');
+        var qtyInput = document.getElementById('qty');
+        var addBtn = document.getElementById('addBtn');
+        var buyBtn = document.getElementById('buyNowBtn');
+
+        if (priceEl) priceEl.textContent = formatVnd(currentPrice);
+        if (stockEl) {
+            if (currentStock > 0) {
+                stockEl.textContent = 'Còn ' + currentStock + ' sản phẩm';
+                stockEl.className = 'text-green-600';
+            } else {
+                stockEl.textContent = 'Hết hàng';
+                stockEl.className = 'text-red-600';
+            }
+        }
+        if (qtyInput) qtyInput.max = String(Math.max(1, currentStock));
+        var isOutOfStock = currentStock <= 0;
+        if (addBtn) { addBtn.disabled = isOutOfStock; addBtn.classList.toggle('opacity-50', isOutOfStock); addBtn.classList.toggle('cursor-not-allowed', isOutOfStock); }
+        if (buyBtn) { buyBtn.disabled = isOutOfStock; buyBtn.classList.toggle('opacity-50', isOutOfStock); buyBtn.classList.toggle('cursor-not-allowed', isOutOfStock); }
+    }
+
+    function addToCart() {
+        if (!isLoggedIn()) { window.location.href = '/login'; return; }
+        var qty = normalizeQty();
+        var currentStock = calculateCurrentStock();
+        if (qty > currentStock) { alert('Số lượng vượt quá tồn kho'); return; }
+        try {
+            var cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            var currentPrice = getSelectedVariantPrice();
+            var variantId = getSelectedVariantId();
+            var cartKey = variantId ? product.id + '_' + variantId : String(product.id);
+            var found = cart.find(function(i) { return (i.variantId ? i.id + '_' + i.variantId : String(i.id)) === cartKey; });
+
+            if (found) {
+                found.quantity = Math.min(found.quantity + qty, 999);
+            } else {
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: currentPrice,
+                    quantity: qty,
+                    variantId: variantId,
+                    variantInfo: variantId ? selectedVariants : null
+                });
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartBadge();
+            alert('Đã thêm sản phẩm vào giỏ hàng');
+        } catch (e) {
+            alert('Không thể thêm vào giỏ hàng.');
+        }
+    }
+
+    function buyNow() {
+        if (!isLoggedIn()) { window.location.href = '/login'; return; }
+        var qty = normalizeQty();
+        var currentStock = calculateCurrentStock();
+        if (qty > currentStock) { alert('Số lượng vượt quá tồn kho'); return; }
+        try {
+            var cart = [{
+                id: product.id,
+                name: product.name,
+                price: getSelectedVariantPrice(),
+                quantity: qty,
+                variantId: getSelectedVariantId(),
+                variantInfo: getSelectedVariantId() ? selectedVariants : null
+            }];
+            localStorage.setItem('cart', JSON.stringify(cart));
+            window.location.href = '/checkout';
+        } catch (e) {
+            alert('Không thể xử lý. Vui lòng thử lại.');
+        }
+    }
+
+    function updateCartBadge() {
+        var badge = document.getElementById('cartBadge');
+        if (!badge) return;
+        try {
+            var cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            var totalItems = cart.reduce(function(sum, item) { return sum + (item.quantity || 1); }, 0);
+            if (totalItems > 0) {
+                badge.textContent = totalItems > 99 ? '99+' : totalItems;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        } catch (e) {
+            badge.classList.add('hidden');
+        }
+    }
+
+    function loadProduct() {
+        fetch('/api/products')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) { window.location.href = '/products'; return; }
+                var list = data.data || [];
+                product = list.find(function(p) { return String(p.id) === String(productId); });
+                if (!product) { window.location.href = '/products'; return; }
+
+                images = (product.images || []).map(function(i) { return i.imageUrl; });
+                if (!images.length && product.mainImage) images = [product.mainImage];
+                if (!images.length) images = ['https://via.placeholder.com/800x800?text=NTFurniture'];
+
+                var categoryEl = document.getElementById('category');
+                var nameEl = document.getElementById('name');
+                var priceEl = document.getElementById('price');
+                var costPriceEl = document.getElementById('costPrice');
+                var stockEl = document.getElementById('stock');
+                var materialEl = document.getElementById('material');
+                var colorEl = document.getElementById('color');
+                var warrantyEl = document.getElementById('warranty');
+                var descEl = document.getElementById('description');
+
+                if (categoryEl) categoryEl.textContent = product.categoryName || 'Nội thất';
+                if (nameEl) nameEl.textContent = product.name || '';
+                if (priceEl) priceEl.textContent = formatVnd(product.price);
+                if (costPriceEl && product.costPrice && product.costPrice > product.price) {
+                    costPriceEl.textContent = formatVnd(product.costPrice);
+                    costPriceEl.classList.remove('hidden');
+                }
+                if (stockEl) {
+                    var total = product.totalStock || product.stock || 0;
+                    stockEl.textContent = total > 0 ? 'Còn ' + total + ' sản phẩm' : 'Hết hàng';
+                    stockEl.className = total > 0 ? 'text-green-600' : 'text-red-600';
+                }
+                if (materialEl) materialEl.textContent = product.material ? 'Chất liệu: ' + product.material : '';
+                if (colorEl) colorEl.textContent = product.color ? 'Màu sắc: ' + product.color : '';
+                if (warrantyEl) warrantyEl.textContent = product.warrantyMonths ? 'Bảo hành: ' + product.warrantyMonths + ' tháng' : '';
+                if (descEl) descEl.textContent = product.description || 'Chưa có mô tả';
+
+                var qtyInput = document.getElementById('qty');
+                if (qtyInput) qtyInput.max = String(Math.max(1, product.totalStock || product.stock || 1));
+                var isOut = (product.totalStock || product.stock || 0) <= 0;
+                var addBtn = document.getElementById('addBtn');
+                var buyBtn = document.getElementById('buyNowBtn');
+                if (addBtn) addBtn.disabled = isOut;
+                if (buyBtn) { buyBtn.disabled = isOut; if (isOut) buyBtn.classList.add('opacity-50', 'cursor-not-allowed'); }
+
+                renderVariants();
+                renderSlider();
+            })
+            .catch(function() { window.location.href = '/products'; });
+    }
+
+    var addBtn = document.getElementById('addBtn');
+    var buyBtn = document.getElementById('buyNowBtn');
+    if (addBtn) addBtn.addEventListener('click', addToCart);
+    if (buyBtn) buyBtn.addEventListener('click', buyNow);
+
+    loadProduct();
+    updateCartBadge();
+})();
+</script>

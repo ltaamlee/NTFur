@@ -162,12 +162,6 @@ public class AdminProfileController {
                 return ResponseEntity.status(404).body(ApiResponse.error("Không tìm thấy người dùng"));
             }
 
-            // Kiểm tra mật khẩu hiện tại
-            // Cần inject PasswordEncoder - tạm thời bỏ qua kiểm tra cho demo
-            // if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            //     return ResponseEntity.badRequest().body(ApiResponse.error("Mật khẩu hiện tại không đúng"));
-            // }
-
             user.setPassword(passwordData.get("newPassword")); // TODO: encode password
             userRepository.save(user);
 

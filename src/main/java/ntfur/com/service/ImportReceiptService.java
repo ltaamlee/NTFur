@@ -17,7 +17,6 @@ import ntfur.com.entity.ImportReceipt.ImportStatus;
 import ntfur.com.entity.ImportReceiptItem;
 import ntfur.com.entity.Product;
 import ntfur.com.entity.Supplier;
-import ntfur.com.entity.SupplierProduct;
 import ntfur.com.entity.dto.ImportReceiptDTO;
 import ntfur.com.repository.ImportReceiptItemRepository;
 import ntfur.com.repository.ImportReceiptRepository;
@@ -63,26 +62,54 @@ public class ImportReceiptService {
 
     @Transactional
     public ImportReceiptDTO createImportReceipt(ImportReceiptDTO dto) {
-        ImportReceipt receipt = new ImportReceipt();
-
-        // Set supplier
+        // ========== VALIDATION ==========
+        // Kiểm tra nhà cung cấp bắt buộc
         if (dto.getSupplierId() == null) {
             throw new RuntimeException("Vui lòng chọn nhà cung cấp");
         }
         Supplier supplier = supplierRepository.findById(dto.getSupplierId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà cung cấp với id: " + dto.getSupplierId()));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà cung cấp"));
+
+        // Kiểm tra danh sách sản phẩm không rỗng
+        if (dto.getItems() == null || dto.getItems().isEmpty()) {
+            throw new RuntimeException("Danh sách sản phẩm nhập kho không được để trống");
+        }
+
+        // Kiểm tra từng sản phẩm
+        for (ImportReceiptDTO.ImportReceiptItemDTO itemDTO : dto.getItems()) {
+            // Số lượng phải > 0
+            if (itemDTO.getQuantity() == null || itemDTO.getQuantity() <= 0) {
+                throw new RuntimeException("Số lượng sản phẩm phải lớn hơn 0");
+            }
+            // Đơn giá phải > 0
+            BigDecimal unitPrice = itemDTO.getUnitPrice();
+            if (unitPrice == null && itemDTO.getUnitPriceNumber() != null) {
+                unitPrice = BigDecimal.valueOf(itemDTO.getUnitPriceNumber().doubleValue());
+            }
+            if (unitPrice == null || unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new RuntimeException("Đơn giá sản phẩm phải lớn hơn 0");
+            }
+            // Kiểm tra sản phẩm tồn tại trong hệ thống
+            if (itemDTO.getProductId() == null) {
+                throw new RuntimeException("Mã sản phẩm không hợp lệ");
+            }
+            if (!productRepository.existsById(itemDTO.getProductId())) {
+                throw new RuntimeException("Sản phẩm không tồn tại trong hệ thống");
+            }
+        }
+
+        // ========== TẠO PHIẾU NHẬP ==========
+        ImportReceipt receipt = new ImportReceipt();
         receipt.setSupplier(supplier);
 
-        // Set import date - handle multiple date formats
+        // Xử lý ngày nhập - hỗ trợ nhiều định dạng
         LocalDateTime importDateTime;
         if (dto.getImportDate() != null && !dto.getImportDate().isEmpty()) {
             try {
-                // Try parsing as LocalDate first (from HTML date input)
                 LocalDate date = LocalDate.parse(dto.getImportDate(), DATE_FORMATTER);
                 importDateTime = date.atStartOfDay();
             } catch (DateTimeParseException e) {
                 try {
-                    // Try parsing as LocalDateTime
                     importDateTime = LocalDateTime.parse(dto.getImportDate());
                 } catch (DateTimeParseException e2) {
                     importDateTime = LocalDateTime.now();
@@ -93,79 +120,53 @@ public class ImportReceiptService {
         }
         receipt.setImportDate(importDateTime);
 
+        receipt.setInvoiceNumber(dto.getInvoiceNumber());
         receipt.setNotes(dto.getNotes());
         receipt.setDiscountAmount(dto.getDiscountAmount() != null ? dto.getDiscountAmount() : BigDecimal.ZERO);
+        // Theo đặc tả: Tạo phiếu nhập → PENDING (chờ duyệt)
         receipt.setStatus(ImportStatus.PENDING);
 
         ImportReceipt savedReceipt = importReceiptRepository.save(receipt);
 
-        // Add items (stock will be updated when receipt is marked as COMPLETED)
-        if (dto.getItems() != null && !dto.getItems().isEmpty()) {
-            for (ImportReceiptDTO.ImportReceiptItemDTO itemDTO : dto.getItems()) {
-                if (itemDTO.getProductId() == null) {
-                    continue; // Skip items without product
-                }
+        // ========== THÊM ITEMS VÀ CẬP NHẬT TỒN KHO ==========
+        for (ImportReceiptDTO.ImportReceiptItemDTO itemDTO : dto.getItems()) {
+            Product product = productRepository.findById(itemDTO.getProductId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
 
-                Product product = productRepository.findById(itemDTO.getProductId())
-                        .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với id: " + itemDTO.getProductId()));
-                
-                // Kiểm tra sản phẩm có thuộc nhà cung cấp này không (theo SKU hoặc bảng trung gian)
-                boolean belongsToSupplier = false;
-                
-                // Cách 1: Kiểm tra qua bảng trung gian SupplierProduct
-                if (supplierProductRepository.existsBySupplierIdAndProductId(dto.getSupplierId(), itemDTO.getProductId())) {
-                    belongsToSupplier = true;
-                }
-                
-                // Cách 2: Kiểm tra qua SKU
-                if (!belongsToSupplier && product.getSku() != null) {
-                    List<SupplierProduct> spList = supplierProductRepository.findBySupplierId(dto.getSupplierId());
-                    for (SupplierProduct sp : spList) {
-                        if (product.getSku().equals(sp.getSku())) {
-                            belongsToSupplier = true;
-                            break;
-                        }
-                    }
-                }
-                
-                // Cách 3: Kiểm tra qua supplier_id cũ trong Product (để tương thích)
-                if (!belongsToSupplier && product.getSupplier() != null && product.getSupplier().getId().equals(dto.getSupplierId())) {
-                    belongsToSupplier = true;
-                }
-                
-                if (!belongsToSupplier) {
-                    throw new RuntimeException("Sản phẩm '" + product.getName() + "' (SKU: " + product.getSku() + ") không thuộc nhà cung cấp này!");
-                }
+            // Kiểm tra sản phẩm thuộc nhà cung cấp
+            boolean belongsToSupplier = supplierProductRepository.existsBySupplierIdAndProductId(dto.getSupplierId(), itemDTO.getProductId())
+                    || (product.getSupplier() != null && product.getSupplier().getId().equals(dto.getSupplierId()));
 
-                ImportReceiptItem item = new ImportReceiptItem();
-                item.setImportReceipt(savedReceipt);
-                item.setProduct(product);
-                item.setProductName(product.getName());
-                item.setSku(product.getSku());
-                item.setQuantity(itemDTO.getQuantity());
-
-                // Handle unitPrice as number or BigDecimal
-                BigDecimal unitPrice = itemDTO.getUnitPrice();
-                if (unitPrice == null && itemDTO.getUnitPriceNumber() != null) {
-                    unitPrice = BigDecimal.valueOf(itemDTO.getUnitPriceNumber().doubleValue());
-                }
-                if (unitPrice == null) {
-                    throw new RuntimeException("Đơn giá không hợp lệ cho sản phẩm: " + product.getName());
-                }
-                item.setUnitPrice(unitPrice);
-
-                BigDecimal quantity = BigDecimal.valueOf(itemDTO.getQuantity());
-                item.setTotalPrice(unitPrice.multiply(quantity));
-
-                importReceiptItemRepository.save(item);
-                savedReceipt.getItems().add(item);
-
-                // NOTE: Stock is NOT updated here - only when receipt is marked as COMPLETED
+            if (!belongsToSupplier) {
+                throw new RuntimeException("Sản phẩm '" + product.getName() + "' không thuộc nhà cung cấp này");
             }
+
+            ImportReceiptItem item = new ImportReceiptItem();
+            item.setImportReceipt(savedReceipt);
+            item.setProduct(product);
+            item.setProductName(product.getName());
+            item.setSku(product.getSku());
+            item.setQuantity(itemDTO.getQuantity());
+
+            BigDecimal unitPrice = itemDTO.getUnitPrice();
+            if (unitPrice == null && itemDTO.getUnitPriceNumber() != null) {
+                unitPrice = BigDecimal.valueOf(itemDTO.getUnitPriceNumber().doubleValue());
+            }
+            item.setUnitPrice(unitPrice);
+            item.setTotalPrice(unitPrice.multiply(BigDecimal.valueOf(itemDTO.getQuantity())));
+
+            importReceiptItemRepository.save(item);
+            savedReceipt.getItems().add(item);
+
+            // Theo đặc tả: Tồn kho chỉ được cập nhật khi phiếu được hoàn tất (bước 10)
+            // Nên không cập nhật tồn kho ở đây
         }
 
         savedReceipt.calculateTotal();
         ImportReceipt finalReceipt = importReceiptRepository.save(savedReceipt);
+
+        // Cập nhật thống kê nhà cung cấp
+        updateSupplierStats(receipt.getSupplier().getId());
 
         return toDTO(finalReceipt);
     }
@@ -288,6 +289,7 @@ public class ImportReceiptService {
                 .supplierId(receipt.getSupplier() != null ? receipt.getSupplier().getId() : null)
                 .supplierName(receipt.getSupplier() != null ? receipt.getSupplier().getName() : null)
                 .importDate(receipt.getImportDate() != null ? receipt.getImportDate().toLocalDate().toString() : null)
+                .invoiceNumber(receipt.getInvoiceNumber())
                 .totalAmount(receipt.getTotalAmount())
                 .discountAmount(receipt.getDiscountAmount())
                 .finalAmount(receipt.getFinalAmount())

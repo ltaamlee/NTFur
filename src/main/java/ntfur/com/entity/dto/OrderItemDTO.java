@@ -43,6 +43,8 @@ public class OrderItemDTO {
 
     private String color;
 
+    private String variantInfo;
+
     private String notes;
 
     private String createdAt;

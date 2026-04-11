@@ -82,6 +82,10 @@ public class Product {
     @JsonIgnore
     private List<SupplierProduct> supplierProducts = new ArrayList<>();
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<ProductVariant> variants = new ArrayList<>();
+
     @Column(name = "weight")
     private Double weight;
 

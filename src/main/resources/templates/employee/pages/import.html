@@ -4,84 +4,140 @@
     <!-- Page Header -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div>
-            <h2 class="text-2xl font-display font-bold text-primary-800">Nhập hàng</h2>
-            <p class="text-primary-500 mt-1">Tạo và quản lý phiếu nhập hàng</p>
+            <h2 class="text-2xl font-display font-bold text-primary-800">Quản lý nhập hàng</h2>
+            <p class="text-primary-500 mt-1">Tạo và theo dõi phiếu nhập kho</p>
+        </div>
+        <button onclick="openCreateModal()" class="mt-4 md:mt-0 px-6 py-2.5 btn-primary text-white rounded-lg font-medium flex items-center shadow-md hover:shadow-lg">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Tạo phiếu nhập
+        </button>
+    </div>
+
+    <!-- Create Import Receipt Modal -->
+    <div id="createModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="modal-backdrop absolute inset-0 bg-black/50" onclick="closeCreateModal()"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="modal-content relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="sticky top-0 bg-white border-b border-primary-100 px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
+                    <h3 class="text-xl font-display font-semibold text-primary-800">Tạo phiếu nhập hàng</h3>
+                    <button onclick="closeCreateModal()" class="p-2 text-primary-400 hover:text-primary-600 rounded-lg hover:bg-primary-50">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <!-- Supplier and Date Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Nhà cung cấp <span class="text-red-500">*</span></label>
+                            <select id="modalSupplier" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" onchange="onModalSupplierChange()">
+                                <option value="">-- Chọn nhà cung cấp --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary-700 mb-2">Ngày nhập <span class="text-red-500">*</span></label>
+                            <input type="date" id="modalImportDate" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500">
+                        </div>
+                    </div>
+
+                    <!-- Số hóa đơn -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-primary-700 mb-2">Số hóa đơn / Chứng từ</label>
+                        <input type="text" id="modalInvoiceNumber" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="VD: HD-2024-001">
+                    </div>
+
+                    <!-- Products Table -->
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="text-sm font-medium text-primary-700">Chi tiết sản phẩm nhập <span class="text-red-500">*</span></label>
+                            <button type="button" onclick="addImportRow()" class="px-3 py-1.5 text-sm bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                Thêm sản phẩm
+                            </button>
+                        </div>
+                        <div class="border border-primary-200 rounded-lg overflow-hidden">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="bg-primary-50">
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-primary-700 uppercase">Sản phẩm</th>
+                                        <th class="px-3 py-3 text-center text-xs font-semibold text-primary-700 uppercase w-24">Số lượng</th>
+                                        <th class="px-3 py-3 text-right text-xs font-semibold text-primary-700 uppercase w-36">Đơn giá (VNĐ)</th>
+                                        <th class="px-3 py-3 text-right text-xs font-semibold text-primary-700 uppercase w-32">Thành tiền</th>
+                                        <th class="px-3 py-3 w-12"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modalImportItemsTable">
+                                    <!-- Dynamic rows will be added here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="bg-primary-50 rounded-xl p-4 mb-6">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-primary-600">Tổng tiền hàng:</span>
+                            <span class="font-semibold text-primary-800" id="modalSubtotal">0 ₫</span>
+                        </div>
+                        <div class="flex justify-between mb-2 items-center">
+                            <span class="text-primary-600">Giảm giá:</span>
+                            <input type="number" id="modalDiscount" class="w-40 px-3 py-1.5 border border-primary-200 rounded-lg text-right text-sm" placeholder="0" min="0" onchange="updateModalTotal()">
+                        </div>
+                        <div class="flex justify-between text-lg font-bold border-t border-primary-200 pt-3 mt-3">
+                            <span class="text-primary-800">Thành tiền:</span>
+                            <span class="text-primary-900" id="modalTotal">0 ₫</span>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-primary-700 mb-2">Ghi chú</label>
+                        <textarea id="modalNotes" rows="2" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="Ghi chú (tùy chọn)"></textarea>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeCreateModal()" class="px-6 py-2 border border-primary-300 text-primary-700 rounded-lg hover:bg-primary-50 font-medium transition-colors">Hủy bỏ</button>
+                        <button type="button" onclick="saveImportReceipt()" class="px-6 py-2 btn-primary text-white rounded-lg font-medium">Lưu phiếu nhập</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Import Form - New Flow: Select Product First -->
-    <div class="bg-white rounded-2xl card-shadow border border-primary-100 p-6 mb-6">
-        <h3 class="font-display font-semibold text-primary-800 mb-4">Tạo phiếu nhập hàng mới</h3>
-
-        <!-- Step 1: Select Product -->
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-primary-700 mb-2">Bước 1: Chọn sản phẩm cần nhập <span class="text-red-500">*</span></label>
-            <select id="importProductSelect" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" onchange="onProductChangeForImport()">
-                <option value="">-- Chọn sản phẩm --</option>
-            </select>
-        </div>
-
-        <!-- Step 2: Select Supplier (filtered by product) -->
-        <div id="supplierSelectionSection" class="mb-4 hidden">
-            <label class="block text-sm font-medium text-primary-700 mb-2">Bước 2: Chọn nhà cung cấp có sản phẩm này <span class="text-red-500">*</span></label>
-            <select id="importSupplier" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" onchange="onSupplierChangeForImport()">
-                <option value="">-- Chọn nhà cung cấp --</option>
-            </select>
-            <p id="noSupplierHint" class="text-sm text-yellow-600 mt-2 hidden">Không có nhà cung cấp nào cung cấp sản phẩm này. Vui lòng chọn sản phẩm khác.</p>
-        </div>
-
-        <!-- Import Details (shown after selecting product and supplier) -->
-        <div id="importDetailsSection" class="hidden">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 mt-4 pt-4 border-t border-primary-200">
-                <div>
-                    <label class="block text-sm font-medium text-primary-700 mb-2">Ngày nhập</label>
-                    <input type="date" id="importDate" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500">
+    <!-- View Receipt Modal -->
+    <div id="viewModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop absolute inset-0 bg-black/50" onclick="closeViewModal()"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="modal-content relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto my-auto">
+                <div class="sticky top-0 bg-white border-b border-primary-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+                    <h3 class="text-xl font-display font-semibold text-primary-800">Chi tiết phiếu nhập</h3>
+                    <button onclick="closeViewModal()" class="p-2 text-primary-400 hover:text-primary-600 rounded-lg hover:bg-primary-50">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-primary-700 mb-2">Ghi chú</label>
-                    <input type="text" id="importNote" class="w-full px-4 py-2 border border-primary-200 rounded-lg focus:border-primary-500" placeholder="Ghi chú (tùy chọn)">
-                </div>
-            </div>
-
-            <!-- Products List -->
-            <div class="mb-4">
-                <div class="flex items-center justify-between mb-2">
-                    <label class="text-sm font-medium text-primary-700">Chi tiết sản phẩm nhập</label>
-                </div>
-                <table class="w-full">
-                    <thead>
-                        <tr class="table-header">
-                            <th class="px-3 py-2 text-left text-xs font-semibold text-primary-700 uppercase">Sản phẩm</th>
-                            <th class="px-3 py-2 text-center text-xs font-semibold text-primary-700 uppercase w-24">Số lượng</th>
-                            <th class="px-3 py-2 text-right text-xs font-semibold text-primary-700 uppercase w-32">Đơn giá</th>
-                            <th class="px-3 py-2 text-right text-xs font-semibold text-primary-700 uppercase w-32">Thành tiền</th>
-                            <th class="px-3 py-2 w-12"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="importItemsTable">
-                    </tbody>
-                    <tfoot>
-                        <tr class="bg-primary-50">
-                            <td colspan="3" class="px-3 py-3 text-right font-bold text-primary-800">Tổng cộng:</td>
-                            <td class="px-3 py-3 text-right font-bold text-xl text-primary-900" id="importTotal">0 ₫</td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            <!-- Total and Submit -->
-            <div class="flex justify-end space-x-3">
-                <button type="button" onclick="resetImportForm()" class="px-4 py-2 border border-primary-300 text-primary-700 rounded-lg hover:bg-primary-50 font-medium transition-colors">Làm mới</button>
-                <button type="button" onclick="saveImportReceipt()" class="px-6 py-3 btn-primary text-white rounded-lg font-medium">Lưu phiếu nhập</button>
+                <div class="p-6" id="viewModalContent"></div>
             </div>
         </div>
     </div>
 
     <!-- Import History -->
     <div class="bg-white rounded-2xl card-shadow border border-primary-100 overflow-hidden">
-        <div class="px-6 py-4 border-b border-primary-100">
+        <div class="px-6 py-4 border-b border-primary-100 flex items-center justify-between">
             <h3 class="font-display font-semibold text-primary-800">Danh sách phiếu nhập hàng</h3>
+            <button onclick="loadImportHistory()" class="px-3 py-1.5 text-sm text-primary-600 hover:bg-primary-50 rounded-lg flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Làm mới
+            </button>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full" id="importHistoryTable">
@@ -109,211 +165,131 @@
         let suppliers = [];
         let importProducts = [];
         let importHistory = [];
-        let selectedImportProductId = null;
+        let modalProducts = []; // Products for the modal dropdown
 
+        // Load suppliers
         async function loadSuppliers() {
             try {
-                const response = await apiCall('/api/admin/suppliers');
+                const response = await apiCall('/api/employee/suppliers');
                 if (response.success) {
                     suppliers = response.data || [];
+                    populateModalSupplierSelect();
                 }
             } catch (error) {
                 console.error('Error loading suppliers:', error);
             }
         }
 
+        // Load products
         async function loadProducts() {
             try {
-                const response = await apiCall('/api/admin/products');
+                const response = await apiCall('/api/employee/products');
                 if (response.success) {
                     importProducts = response.data || [];
-                    populateImportProductSelect();
+                    modalProducts = [...importProducts];
                 }
             } catch (error) {
                 console.error('Error loading products:', error);
             }
         }
 
-        function populateImportProductSelect() {
-            const select = document.getElementById('importProductSelect');
-            select.innerHTML = '<option value="">-- Chọn sản phẩm --</option>' +
-                importProducts.map(p => `<option value="${p.id}">${p.name} (${p.sku || 'Không có SKU'})</option>`).join('');
+        // Populate supplier dropdown in modal
+        function populateModalSupplierSelect() {
+            const select = document.getElementById('modalSupplier');
+            const activeSuppliers = suppliers.filter(s => s.status === 'ACTIVE');
+            select.innerHTML = '<option value="">-- Chọn nhà cung cấp --</option>' +
+                activeSuppliers.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         }
 
-        function resetImportForm() {
-            selectedImportProductId = null;
-            document.getElementById('importProductSelect').value = '';
-            document.getElementById('supplierSelectionSection').classList.add('hidden');
-            document.getElementById('importDetailsSection').classList.add('hidden');
-            document.getElementById('importItemsTable').innerHTML = '';
-            document.getElementById('importTotal').textContent = '0 ₫';
-            document.getElementById('importSupplier').innerHTML = '<option value="">-- Chọn nhà cung cấp --</option>';
-            document.getElementById('noSupplierHint').classList.add('hidden');
-        }
-
-        function onProductChangeForImport() {
-            const productId = document.getElementById('importProductSelect').value;
-            selectedImportProductId = productId;
-            const supplierSection = document.getElementById('supplierSelectionSection');
-            const detailsSection = document.getElementById('importDetailsSection');
-            const noSupplierHint = document.getElementById('noSupplierHint');
-            const supplierSelect = document.getElementById('importSupplier');
-
-            if (!productId) {
-                supplierSection.classList.add('hidden');
-                detailsSection.classList.add('hidden');
-                return;
-            }
-
-            // Find suppliers that have this product
-            const suppliersWithProduct = suppliers.filter(s => {
-                return s.status === 'ACTIVE' && s.products && s.products.some(p => {
-                    const pid = typeof p.id === 'string' ? p.id : String(p.id);
-                    return pid === productId || pid === parseInt(productId);
+        // Filter products by selected supplier
+        function onModalSupplierChange() {
+            const supplierId = document.getElementById('modalSupplier').value;
+            const select = document.createElement('select');
+            select.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
+            
+            if (supplierId) {
+                const supplier = suppliers.find(s => s.id == supplierId);
+                if (supplier && supplier.products) {
+                    supplier.products.forEach(p => {
+                        const product = importProducts.find(prod => prod.id == p.id || prod.id == p);
+                        if (product) {
+                            const opt = document.createElement('option');
+                            opt.value = product.id;
+                            opt.textContent = `${product.name} (${product.sku || 'Không có SKU'})`;
+                            select.appendChild(opt);
+                        }
+                    });
+                }
+                // If no supplier products, show all products
+                if (select.options.length === 1) {
+                    importProducts.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.id;
+                        opt.textContent = `${p.name} (${p.sku || 'Không có SKU'})`;
+                        select.appendChild(opt);
+                    });
+                }
+            } else {
+                importProducts.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = `${p.name} (${p.sku || 'Không có SKU'})`;
+                    select.appendChild(opt);
                 });
-            });
-
-            if (suppliersWithProduct.length === 0) {
-                noSupplierHint.classList.remove('hidden');
-                supplierSelect.innerHTML = '<option value="">-- Không có nhà cung cấp --</option>';
-            } else {
-                noSupplierHint.classList.add('hidden');
-                supplierSelect.innerHTML = '<option value="">-- Chọn nhà cung cấp --</option>' +
-                    suppliersWithProduct.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
             }
-
-            supplierSection.classList.remove('hidden');
-            detailsSection.classList.add('hidden');
-        }
-
-        function onSupplierChangeForImport() {
-            const supplierId = document.getElementById('importSupplier').value;
-            const detailsSection = document.getElementById('importDetailsSection');
-            const productId = selectedImportProductId;
-
-            if (!supplierId) {
-                detailsSection.classList.add('hidden');
-                return;
-            }
-
-            // Show details section
-            detailsSection.classList.remove('hidden');
-
-            // Add the selected product as the first row
-            const tbody = document.getElementById('importItemsTable');
-            tbody.innerHTML = '';
-
-            const product = importProducts.find(p => p.id === parseInt(productId) || String(p.id) === productId);
-            if (product) {
-                addImportRow(product);
-            }
-        }
-
-        function loadImportHistory() {
-            apiCall('/api/admin/import-receipts').then(response => {
-                if (response.success) {
-                    importHistory = response.data || [];
-                    renderImportHistory();
-                }
-            }).catch(console.error);
-        }
-
-        function renderImportHistory() {
-            const tbody = document.getElementById('importHistory');
-
-            if (importHistory.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-primary-500">Chưa có phiếu nhập nào</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = importHistory.map(receipt => `
-                <tr class="border-b border-primary-100 hover:bg-primary-50/50">
-                    <td class="px-6 py-3 text-sm font-medium text-primary-700">${receipt.receiptCode || '-'}</td>
-                    <td class="px-6 py-3 text-sm text-primary-800">${receipt.supplierName || '-'}</td>
-                    <td class="px-6 py-3 text-center text-sm">${receipt.itemCount || 0}</td>
-                    <td class="px-6 py-3 text-right font-semibold text-primary-800">${formatCurrency(receipt.finalAmount || 0)}</td>
-                    <td class="px-6 py-3 text-center">${getImportStatusBadge(receipt.status)}</td>
-                    <td class="px-6 py-3 text-center text-sm text-primary-500">${receipt.importDate ? new Date(receipt.importDate).toLocaleDateString('vi-VN') : '-'}</td>
-                    <td class="px-6 py-3 text-center">
-                        ${getImportActionButtons(receipt)}
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function getImportStatusBadge(status) {
-            const statusMap = {
-                'PENDING': '<span class="status-badge bg-yellow-100 text-yellow-700">Chờ xử lý</span>',
-                'COMPLETED': '<span class="status-badge bg-green-100 text-green-700">Hoàn tất</span>',
-                'CANCELLED': '<span class="status-badge bg-red-100 text-red-700">Đã hủy</span>'
-            };
-            return statusMap[status] || `<span class="status-badge bg-gray-100 text-gray-600">${status}</span>`;
-        }
-
-        function getImportActionButtons(receipt) {
-            if (receipt.status === 'PENDING') {
-                return `
-                    <button onclick="completeReceipt(${receipt.id})" class="px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 text-xs font-medium mr-1">
-                        Hoàn tất
-                    </button>
-                    <button onclick="cancelReceipt(${receipt.id})" class="px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-xs font-medium">
-                        Hủy
-                    </button>
-                `;
-            } else if (receipt.status === 'COMPLETED') {
-                return `<span class="text-xs text-green-600 font-medium">Đã hoàn tất</span>`;
-            } else {
-                return `<span class="text-xs text-red-600 font-medium">Đã hủy</span>`;
-            }
-        }
-
-        async function completeReceipt(id) {
-            try {
-                const response = await apiCall(`/api/admin/import-receipts/${id}/complete`, 'POST');
-                if (response.success) {
-                    showToast('Phiếu nhập đã được hoàn tất! Tồn kho đã được cập nhật.');
-                    loadImportHistory();
-                }
-            } catch (error) {
-                console.error('Error completing receipt:', error);
-            }
-        }
-
-        async function cancelReceipt(id) {
-            showDeleteModal('Bạn có chắc chắn muốn hủy phiếu nhập này?', async () => {
-                try {
-                    const response = await apiCall(`/api/admin/import-receipts/${id}/cancel`, 'POST');
-                    if (response.success) {
-                        showToast('Phiếu nhập đã bị hủy');
-                        loadImportHistory();
-                    }
-                } catch (error) {
-                    console.error('Error cancelling receipt:', error);
-                }
+            
+            // Update all existing rows
+            document.querySelectorAll('#modalImportItemsTable .import-product-select').forEach(s => {
+                const currentVal = s.value;
+                s.innerHTML = select.innerHTML;
+                s.value = currentVal;
             });
         }
 
-        function addImportRow(preSelectedProduct = null) {
-            const tbody = document.getElementById('importItemsTable');
+        // Open create modal
+        function openCreateModal() {
+            document.getElementById('createModal').classList.remove('hidden');
+            document.getElementById('modalImportDate').valueAsDate = new Date();
+            document.getElementById('modalInvoiceNumber').value = '';
+            document.getElementById('modalDiscount').value = '';
+            document.getElementById('modalNotes').value = '';
+            document.getElementById('modalSupplier').value = '';
+            document.getElementById('modalImportItemsTable').innerHTML = '';
+            document.getElementById('modalSubtotal').textContent = '0 ₫';
+            document.getElementById('modalTotal').textContent = '0 ₫';
+            
+            // Add first row
+            addImportRow();
+        }
 
+        // Close create modal
+        function closeCreateModal() {
+            document.getElementById('createModal').classList.add('hidden');
+        }
+
+        // Add new import row
+        function addImportRow() {
+            const tbody = document.getElementById('modalImportItemsTable');
+            const rowNum = tbody.children.length + 1;
+            
             const row = document.createElement('tr');
             row.className = 'border-b border-primary-100 import-item-row';
             row.innerHTML = `
-                <td class="px-3 py-2">
-                    <select class="import-product w-full px-3 py-2 border border-primary-200 rounded-lg text-sm" onchange="updateImportTotal()">
+                <td class="px-4 py-3">
+                    <select class="import-product-select w-full px-3 py-2 border border-primary-200 rounded-lg text-sm" onchange="updateModalTotal()">
                         <option value="">-- Chọn sản phẩm --</option>
-                        ${importProducts.map(p => `<option value="${p.id}" ${preSelectedProduct && p.id === preSelectedProduct.id ? 'selected' : ''}>${p.name} (${p.sku || 'Không có SKU'})</option>`).join('')}
+                        ${importProducts.map(p => `<option value="${p.id}">${p.name} (${p.sku || 'Không có SKU'})</option>`).join('')}
                     </select>
                 </td>
-                <td class="px-3 py-2">
-                    <input type="number" class="import-quantity w-full px-3 py-2 border border-primary-200 rounded-lg text-sm text-center" value="1" min="1" onchange="updateImportTotal()">
+                <td class="px-3 py-3">
+                    <input type="number" class="import-quantity w-full px-3 py-2 border border-primary-200 rounded-lg text-sm text-center" value="1" min="1" onchange="updateModalTotal()">
                 </td>
-                <td class="px-3 py-2">
-                    <input type="number" class="import-price w-full px-3 py-2 border border-primary-200 rounded-lg text-sm text-right" placeholder="0" onchange="updateImportTotal()">
+                <td class="px-3 py-3">
+                    <input type="number" class="import-price w-full px-3 py-2 border border-primary-200 rounded-lg text-sm text-right" placeholder="0" min="0" onchange="updateModalTotal()">
                 </td>
-                <td class="px-3 py-2 text-right font-semibold text-primary-800 import-subtotal">0 ₫</td>
-                <td class="px-3 py-2 text-center">
-                    <button type="button" onclick="removeThisImportRow(this)" class="text-red-500 hover:text-red-700 p-1">
+                <td class="px-3 py-3 text-right font-semibold text-primary-800 import-subtotal">0 ₫</td>
+                <td class="px-3 py-3 text-center">
+                    <button type="button" onclick="removeImportRow(this)" class="text-red-500 hover:text-red-700 p-1">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
@@ -321,46 +297,60 @@
                 </td>
             `;
             tbody.appendChild(row);
-            updateImportTotal();
+            updateModalTotal();
         }
 
-        function removeThisImportRow(btn) {
+        // Remove import row
+        function removeImportRow(btn) {
             const row = btn.closest('tr');
-            const tbody = document.getElementById('importItemsTable');
+            const tbody = document.getElementById('modalImportItemsTable');
             if (tbody.querySelectorAll('tr').length > 1) {
                 row.remove();
+                updateModalTotal();
             } else {
                 showToast('Phải có ít nhất một sản phẩm', 'error');
             }
-            updateImportTotal();
         }
 
-        function updateImportTotal() {
-            let total = 0;
-            document.querySelectorAll('#importItemsTable > tr').forEach(row => {
+        // Update modal total
+        function updateModalTotal() {
+            let subtotal = 0;
+            document.querySelectorAll('#modalImportItemsTable tr').forEach(row => {
                 const quantity = parseInt(row.querySelector('.import-quantity').value) || 0;
                 const price = parseFloat(row.querySelector('.import-price').value) || 0;
-                const subtotal = quantity * price;
-                row.querySelector('.import-subtotal').textContent = formatCurrency(subtotal);
-                total += subtotal;
+                const itemSubtotal = quantity * price;
+                row.querySelector('.import-subtotal').textContent = formatCurrency(itemSubtotal);
+                subtotal += itemSubtotal;
             });
-            document.getElementById('importTotal').textContent = formatCurrency(total);
+            
+            const discount = parseFloat(document.getElementById('modalDiscount').value) || 0;
+            const total = Math.max(0, subtotal - discount);
+            
+            document.getElementById('modalSubtotal').textContent = formatCurrency(subtotal);
+            document.getElementById('modalTotal').textContent = formatCurrency(total);
         }
 
+        // Save import receipt
         async function saveImportReceipt() {
-            const supplierId = document.getElementById('importSupplier').value;
-            const importDate = document.getElementById('importDate').value;
-            const note = document.getElementById('importNote').value;
+            const supplierId = document.getElementById('modalSupplier').value;
+            const importDate = document.getElementById('modalImportDate').value;
+            const invoiceNumber = document.getElementById('modalInvoiceNumber').value;
+            const discount = document.getElementById('modalDiscount').value;
+            const notes = document.getElementById('modalNotes').value;
 
             if (!supplierId) {
                 showToast('Vui lòng chọn nhà cung cấp', 'error');
                 return;
             }
+            if (!importDate) {
+                showToast('Vui lòng chọn ngày nhập', 'error');
+                return;
+            }
 
             const items = [];
             let hasValidItem = false;
-            document.querySelectorAll('#importItemsTable > tr').forEach(row => {
-                const productId = row.querySelector('.import-product').value;
+            document.querySelectorAll('#modalImportItemsTable tr').forEach(row => {
+                const productId = row.querySelector('.import-product-select').value;
                 const quantity = parseInt(row.querySelector('.import-quantity').value) || 0;
                 const price = parseFloat(row.querySelector('.import-price').value) || 0;
 
@@ -371,26 +361,35 @@
                         quantity: quantity,
                         unitPriceNumber: price
                     });
+                } else if (productId) {
+                    if (quantity <= 0) {
+                        row.querySelector('.import-quantity').classList.add('border-red-500');
+                    }
+                    if (price <= 0) {
+                        row.querySelector('.import-price').classList.add('border-red-500');
+                    }
                 }
             });
 
             if (!hasValidItem) {
-                showToast('Vui lòng thêm ít nhất một sản phẩm với số lượng và đơn giá', 'error');
+                showToast('Vui lòng nhập số lượng và đơn giá lớn hơn 0 cho ít nhất một sản phẩm', 'error');
                 return;
             }
 
             const data = {
                 supplierId: parseInt(supplierId),
                 importDate: importDate,
-                note: note,
+                invoiceNumber: invoiceNumber,
+                discountAmount: discount ? parseFloat(discount) : 0,
+                notes: notes,
                 items: items
             };
 
             try {
-                const response = await apiCall('/api/admin/import-receipts', 'POST', data);
+                const response = await apiCall('/api/employee/import-receipts', 'POST', data);
                 if (response.success) {
-                    showToast('Lưu phiếu nhập hàng thành công! Phiếu đang ở trạng thái chờ xử lý.');
-                    resetImportForm();
+                    showToast(response.message || 'Nhập kho thành công!');
+                    closeCreateModal();
                     loadImportHistory();
                 } else {
                     showToast(response.message || 'Có lỗi xảy ra', 'error');
@@ -401,37 +400,185 @@
             }
         }
 
-        // Listen for product selection change
-        document.getElementById('importProductSelect')?.addEventListener('change', function() {
-            const productId = this.value;
-            if (productId) {
-                // Update supplier dropdown with filtered suppliers
-                const suppliersWithProduct = suppliers.filter(s => {
-                    return s.status === 'ACTIVE' && s.products && s.products.some(p => {
-                        const pid = typeof p.id === 'string' ? p.id : String(p.id);
-                        return pid === productId || pid === parseInt(productId);
-                    });
-                });
-
-                const supplierSelect = document.getElementById('importSupplier');
-                if (suppliersWithProduct.length === 0) {
-                    document.getElementById('noSupplierHint').classList.remove('hidden');
-                    supplierSelect.innerHTML = '<option value="">-- Không có nhà cung cấp --</option>';
-                } else {
-                    document.getElementById('noSupplierHint').classList.add('hidden');
-                    supplierSelect.innerHTML = '<option value="">-- Chọn nhà cung cấp --</option>' +
-                        suppliersWithProduct.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        // Load import history
+        function loadImportHistory() {
+            apiCall('/api/employee/import-receipts').then(response => {
+                if (response.success) {
+                    importHistory = response.data || [];
+                    renderImportHistory();
                 }
-            }
-        });
+            }).catch(console.error);
+        }
 
-        // Set default date
+        // Render import history
+        function renderImportHistory() {
+            const tbody = document.getElementById('importHistory');
+
+            if (importHistory.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-primary-500">Chưa có phiếu nhập nào</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = importHistory.map(receipt => `
+                <tr class="border-b border-primary-100 hover:bg-primary-50/50">
+                    <td class="px-6 py-4 text-sm font-medium text-primary-700 cursor-pointer" onclick="viewReceipt(${receipt.id})">${receipt.receiptCode || '-'}</td>
+                    <td class="px-6 py-4 text-sm text-primary-800">${receipt.supplierName || '-'}</td>
+                    <td class="px-6 py-4 text-center text-sm font-semibold">${receipt.itemCount || receipt.items?.length || 0}</td>
+                    <td class="px-6 py-4 text-right font-semibold text-primary-800">${formatCurrency(receipt.finalAmount || 0)}</td>
+                    <td class="px-6 py-4 text-center">${getImportStatusBadge(receipt.status)}</td>
+                    <td class="px-6 py-4 text-center text-sm text-primary-500">${receipt.importDate ? new Date(receipt.importDate).toLocaleDateString('vi-VN') : '-'}</td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center space-x-2">
+                            <button onclick="viewReceipt(${receipt.id})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Xem chi tiết">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                            ${receipt.status === 'PENDING' ? `
+                                <button onclick="completeReceipt(${receipt.id})" class="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Hoàn tất">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </button>
+                                <button onclick="cancelReceipt(${receipt.id})" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Hủy">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Get status badge
+        function getImportStatusBadge(status) {
+            const statusMap = {
+                'PENDING': '<span class="status-badge bg-yellow-100 text-yellow-700">Chờ xử lý</span>',
+                'COMPLETED': '<span class="status-badge bg-green-100 text-green-700">Hoàn tất</span>',
+                'CANCELLED': '<span class="status-badge bg-red-100 text-red-700">Đã hủy</span>'
+            };
+            return statusMap[status] || `<span class="status-badge bg-gray-100 text-gray-600">${status}</span>`;
+        }
+
+        // View receipt details
+        async function viewReceipt(id) {
+            try {
+                const response = await apiCall(`/api/employee/import-receipts/${id}`);
+                if (!response.success) {
+                    showToast(response.message || 'Không thể tải chi tiết phiếu', 'error');
+                    return;
+                }
+                
+                const receipt = response.data;
+                
+                const itemsHtml = receipt.items && receipt.items.length > 0
+                    ? receipt.items.map(item => `
+                        <tr class="border-b border-primary-100">
+                            <td class="px-4 py-3 text-sm">${item.productName || '-'}</td>
+                            <td class="px-4 py-3 text-center text-sm">${item.sku || '-'}</td>
+                            <td class="px-4 py-3 text-center text-sm">${item.quantity}</td>
+                            <td class="px-4 py-3 text-right text-sm">${formatCurrency(item.unitPrice)}</td>
+                            <td class="px-4 py-3 text-right text-sm font-semibold">${formatCurrency(item.totalPrice || (item.quantity * item.unitPrice))}</td>
+                        </tr>
+                    `).join('')
+                    : '<tr><td colspan="5" class="px-4 py-8 text-center text-primary-500">Không có sản phẩm</td></tr>';
+
+                const content = `
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <h4 class="font-semibold text-primary-800 mb-2">Thông tin phiếu nhập</h4>
+                            <div class="space-y-2 text-sm">
+                                <p><span class="text-primary-500">Mã phiếu:</span> <span class="font-semibold">${receipt.receiptCode || '-'}</span></p>
+                                <p><span class="text-primary-500">Ngày nhập:</span> ${receipt.importDate ? new Date(receipt.importDate).toLocaleDateString('vi-VN') : '-'}</p>
+                                <p><span class="text-primary-500">Số hóa đơn:</span> ${receipt.invoiceNumber || '-'}</p>
+                                <p><span class="text-primary-500">Trạng thái:</span> ${getImportStatusBadge(receipt.status)}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-primary-800 mb-2">Nhà cung cấp</h4>
+                            <div class="space-y-2 text-sm">
+                                <p class="font-semibold text-primary-800">${receipt.supplierName || '-'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <h4 class="font-semibold text-primary-800 mb-3">Chi tiết sản phẩm</h4>
+                        <table class="w-full border border-primary-200 rounded-lg overflow-hidden">
+                            <thead>
+                                <tr class="bg-primary-50">
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-primary-700">Sản phẩm</th>
+                                    <th class="px-4 py-2 text-center text-xs font-semibold text-primary-700">SKU</th>
+                                    <th class="px-4 py-2 text-center text-xs font-semibold text-primary-700">SL</th>
+                                    <th class="px-4 py-2 text-right text-xs font-semibold text-primary-700">Đơn giá</th>
+                                    <th class="px-4 py-2 text-right text-xs font-semibold text-primary-700">Tổng</th>
+                                </tr>
+                            </thead>
+                            <tbody>${itemsHtml}</tbody>
+                        </table>
+                    </div>
+                    <div class="border-t border-primary-200 pt-4">
+                        <div class="flex justify-between mb-2"><span class="text-primary-500">Tổng tiền hàng:</span><span>${formatCurrency(receipt.totalAmount || 0)}</span></div>
+                        <div class="flex justify-between mb-2"><span class="text-primary-500">Giảm giá:</span><span class="text-green-600">-${formatCurrency(receipt.discountAmount || 0)}</span></div>
+                        <div class="flex justify-between text-lg font-bold"><span>Thành tiền:</span><span class="text-primary-800">${formatCurrency(receipt.finalAmount || 0)}</span></div>
+                    </div>
+                    ${receipt.notes ? `<div class="mt-4 p-3 bg-primary-50 rounded-lg"><p class="text-sm"><span class="font-semibold">Ghi chú:</span> ${receipt.notes}</p></div>` : ''}
+                `;
+
+                document.getElementById('viewModalContent').innerHTML = content;
+                document.getElementById('viewModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading receipt details:', error);
+                showToast('Không thể tải chi tiết phiếu nhập', 'error');
+            }
+        }
+
+        // Close view modal
+        function closeViewModal() {
+            document.getElementById('viewModal').classList.add('hidden');
+        }
+
+        // Complete receipt
+        async function completeReceipt(id) {
+            showDeleteModal('Xác nhận hoàn tất phiếu nhập hàng? Tồn kho sẽ được cập nhật.', async () => {
+                try {
+                    const response = await apiCall(`/api/employee/import-receipts/${id}/complete`, 'POST');
+                    if (response.success) {
+                        showToast('Phiếu nhập đã được hoàn tất!');
+                        loadImportHistory();
+                    }
+                } catch (error) {
+                    console.error('Error completing receipt:', error);
+                }
+            });
+        }
+
+        // Cancel receipt
+        async function cancelReceipt(id) {
+            showDeleteModal('Bạn có chắc chắn muốn hủy phiếu nhập này?', async () => {
+                try {
+                    const response = await apiCall(`/api/employee/import-receipts/${id}/cancel`, 'POST');
+                    if (response.success) {
+                        showToast('Phiếu nhập đã bị hủy');
+                        loadImportHistory();
+                    }
+                } catch (error) {
+                    console.error('Error cancelling receipt:', error);
+                }
+            });
+        }
+
+        // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('importDate').valueAsDate = new Date();
             loadSuppliers();
             loadProducts();
             loadImportHistory();
             initTableSort('importHistoryTable');
+            
+            // Add event listener for discount input
+            document.getElementById('modalDiscount')?.addEventListener('input', updateModalTotal);
         });
     </script>
     </th:block>

@@ -60,6 +60,12 @@ public class Order {
     @Column(name = "payment_method")
     private PaymentMethod paymentMethod;
 
+    @Column(name = "payos_order_code")
+    private Long payosOrderCode;
+
+    @Column(name = "payos_checkout_url", length = 500)
+    private String payosCheckoutUrl;
+
     @Column(name = "subtotal", precision = 18, scale = 2)
     private BigDecimal subtotal = BigDecimal.ZERO;
 
@@ -144,7 +150,7 @@ public class Order {
     }
 
     public enum PaymentMethod {
-        COD, BANK_TRANSFER, CREDIT_CARD, MOMO, ZALOPAY, VNPAY
+        COD, BANK_TRANSFER, CREDIT_CARD, MOMO, ZALOPAY, VNPAY, PAYTOS
     }
 
     @PrePersist
@@ -175,16 +181,24 @@ public class Order {
         return id != null && id.equals(other.id);
     }
 
+    /**
+     * Tạo mã đơn hàng theo format: NTF-YYYYMMDD-XXXXXX
+     * - NTF: Prefix cố định của NTFurniture
+     * - YYYY: Năm 4 chữ số
+     * - MM: Tháng (01-12)
+     * - DD: Ngày (01-31)
+     * - XXXXXX: Số ngẫu nhiên 6 chữ số để đảm bảo tính duy nhất
+     */
     private String generateOrderNumber() {
         LocalDateTime now = LocalDateTime.now();
-        return String.format("NTF-%s%s%s-%s%s%s",
-                now.getYear() % 100,
-                String.format("%02d", now.getMonthValue()),
-                String.format("%02d", now.getDayOfMonth()),
-                String.format("%02d", now.getHour()),
-                String.format("%02d", now.getMinute()),
-                String.format("%02d", now.getSecond())
-        );
+        // Format ngày tháng: NTF-20260410-123456
+        String datePart = String.format("%04d%02d%02d",
+                now.getYear(),
+                now.getMonthValue(),
+                now.getDayOfMonth());
+        // Số ngẫu nhiên 6 chữ số để tránh trùng lặp
+        int randomPart = (int) (Math.random() * 900000) + 100000;
+        return String.format("NTF-%s-%d", datePart, randomPart);
     }
 
     public void calculateTotal() {

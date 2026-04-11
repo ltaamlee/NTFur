@@ -33,4 +33,13 @@ public class CustomerViewController {
         model.addAttribute("content", "customer/pages/checkout");
         return "customer/layout";
     }
+
+    @GetMapping("/orders")
+    public String ordersPage(Model model) {
+        model.addAttribute("title", "Đơn hàng của tôi");
+        model.addAttribute("pageTitle", "Đơn hàng");
+        model.addAttribute("activePage", "orders");
+        model.addAttribute("content", "customer/pages/orders");
+        return "customer/layout";
+    }
 }

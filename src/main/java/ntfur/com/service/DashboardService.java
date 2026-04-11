@@ -1,27 +1,21 @@
 package ntfur.com.service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import ntfur.com.entity.Order;
-import ntfur.com.entity.OrderItem;
 import ntfur.com.entity.Product;
-import ntfur.com.entity.Shipping;
-import ntfur.com.entity.Shipping.ShippingMethod;
-import ntfur.com.entity.Shipping.ShippingStatus;
 import ntfur.com.entity.dto.DashboardDTO;
 import ntfur.com.entity.dto.OrderDTO;
 import ntfur.com.entity.dto.RevenueDataPoint;
+import ntfur.com.entity.dto.RevenueStatsDTO;
 import ntfur.com.entity.dto.category.CategoryStatsDTO;
 import ntfur.com.entity.dto.customer.CustomerDTO;
 import ntfur.com.entity.dto.product.TopProductDTO;
@@ -47,9 +41,11 @@ public class DashboardService {
         long totalOrders = orderRepository.count();
 
         long pendingOrders = orderRepository.countByStatus(Order.OrderStatus.PENDING);
+        long confirmedOrders = orderRepository.countByStatus(Order.OrderStatus.CONFIRMED);
         long processingOrders = orderRepository.countByStatus(Order.OrderStatus.PROCESSING);
         long shippedOrders = orderRepository.countByStatus(Order.OrderStatus.SHIPPED);
         long deliveredOrders = orderRepository.countByStatus(Order.OrderStatus.DELIVERED);
+        long returnedOrders = orderRepository.countByStatus(Order.OrderStatus.RETURNED);
         long cancelledOrders = orderRepository.countByStatus(Order.OrderStatus.CANCELLED);
 
         BigDecimal totalRevenue = getRevenueOrZero(orderRepository.getTotalRevenueByPaymentStatus(Order.PaymentStatus.PAID));
@@ -73,9 +69,11 @@ public class DashboardService {
                 .totalCustomers(totalCustomers)
                 .totalOrders(totalOrders)
                 .pendingOrders(pendingOrders)
+                .confirmedOrders(confirmedOrders)
                 .processingOrders(processingOrders)
                 .shippedOrders(shippedOrders)
                 .deliveredOrders(deliveredOrders)
+                .returnedOrders(returnedOrders)
                 .cancelledOrders(cancelledOrders)
                 .totalRevenue(totalRevenue)
                 .todayRevenue(todayRevenue)
@@ -210,5 +208,252 @@ public class DashboardService {
 
     private BigDecimal getRevenueOrZero(BigDecimal revenue) {
         return revenue != null ? revenue : BigDecimal.ZERO;
+    }
+
+    /**
+     * Lấy thống kê doanh thu theo kỳ (ngày, tuần, tháng, năm hoặc tùy chỉnh)
+     * @param period Loại kỳ: DAY, WEEK, MONTH, YEAR, CUSTOM
+     * @param startDate Ngày bắt đầu (cho CUSTOM)
+     * @param endDate Ngày kết thúc (cho CUSTOM)
+     * @return RevenueStatsDTO chứa thông tin thống kê chi tiết
+     */
+    public RevenueStatsDTO getRevenueStats(String period, LocalDateTime startDate, LocalDateTime endDate) {
+        // Xác định khoảng thời gian dựa trên loại kỳ
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime rangeStart;
+        LocalDateTime rangeEnd = now;
+        List<RevenueDataPoint> chartData;
+        double growthRate = 0.0;
+
+        switch (period.toUpperCase()) {
+            case "DAY":
+                // Hôm nay
+                rangeStart = now.with(LocalTime.MIN);
+                chartData = getRevenueChartForDay();
+                // So sánh với hôm qua
+                LocalDateTime yesterdayStart = now.minusDays(1).with(LocalTime.MIN);
+                LocalDateTime yesterdayEnd = now.minusDays(1).with(LocalTime.MAX);
+                BigDecimal todayRevenue = getRevenueInRange(rangeStart, now);
+                BigDecimal yesterdayRevenue = getRevenueInRange(yesterdayStart, yesterdayEnd);
+                growthRate = calculateGrowthRate(todayRevenue, yesterdayRevenue);
+                break;
+
+            case "WEEK":
+                // 7 ngày qua
+                rangeStart = now.minusDays(7).with(LocalTime.MIN);
+                chartData = getRevenueChartForWeek();
+                // So sánh với tuần trước
+                BigDecimal thisWeekRevenue = getRevenueInRange(rangeStart, now);
+                BigDecimal lastWeekRevenue = getRevenueInRange(now.minusDays(14).with(LocalTime.MIN), now.minusDays(7).with(LocalTime.MAX));
+                growthRate = calculateGrowthRate(thisWeekRevenue, lastWeekRevenue);
+                break;
+
+            case "MONTH":
+                // 30 ngày qua
+                rangeStart = now.minusDays(30).with(LocalTime.MIN);
+                chartData = getRevenueChartForMonth();
+                // So sánh với tháng trước
+                BigDecimal thisMonthRevenue = getRevenueInRange(rangeStart, now);
+                BigDecimal lastMonthRevenue = getRevenueInRange(now.minusMonths(1).withDayOfMonth(1).with(LocalTime.MIN),
+                        now.minusMonths(1).withDayOfMonth(now.getDayOfMonth()).with(LocalTime.MAX));
+                growthRate = calculateGrowthRate(thisMonthRevenue, lastMonthRevenue);
+                break;
+
+            case "YEAR":
+                // 12 tháng qua
+                rangeStart = now.minusYears(1).withDayOfYear(1).with(LocalTime.MIN);
+                chartData = getRevenueChartForYear();
+                // So sánh với năm trước
+                BigDecimal thisYearRevenue = getRevenueInRange(rangeStart, now);
+                BigDecimal lastYearRevenue = getRevenueInRange(now.minusYears(1).withDayOfYear(1).with(LocalTime.MIN),
+                        now.minusYears(1).withDayOfYear(now.getDayOfYear()).with(LocalTime.MAX));
+                growthRate = calculateGrowthRate(thisYearRevenue, lastYearRevenue);
+                break;
+
+            case "CUSTOM":
+            default:
+                // Tùy chỉnh - dùng startDate và endDate
+                if (startDate == null || endDate == null) {
+                    throw new RuntimeException("Vui lòng chọn ngày bắt đầu và ngày kết thúc");
+                }
+                rangeStart = startDate.with(LocalTime.MIN);
+                rangeEnd = endDate.with(LocalTime.MAX);
+                chartData = getRevenueChartForCustom(rangeStart, rangeEnd);
+
+                // Tính độ dài kỳ để so sánh với kỳ trước
+                long daysDiff = java.time.Duration.between(rangeStart, rangeEnd).toDays();
+                LocalDateTime prevStart = rangeStart.minusDays(daysDiff);
+                LocalDateTime prevEnd = rangeStart.minusDays(1).with(LocalTime.MAX);
+                BigDecimal thisPeriodRevenue = getRevenueInRange(rangeStart, rangeEnd);
+                BigDecimal lastPeriodRevenue = getRevenueInRange(prevStart, prevEnd);
+                growthRate = calculateGrowthRate(thisPeriodRevenue, lastPeriodRevenue);
+                break;
+        }
+
+        // Lấy danh sách đơn hàng trong kỳ để tính toán
+        List<Order> ordersInRange = orderRepository.findByCreatedAtBetween(rangeStart, rangeEnd);
+
+        // Tính tổng doanh thu (chỉ đơn đã thanh toán)
+        BigDecimal totalRevenue = ordersInRange.stream()
+                .filter(o -> o.getPaymentStatus() == Order.PaymentStatus.PAID)
+                .map(Order::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Đếm đơn hàng
+        long totalOrders = ordersInRange.size();
+        long paidOrders = ordersInRange.stream()
+                .filter(o -> o.getPaymentStatus() == Order.PaymentStatus.PAID)
+                .count();
+        long unpaidOrders = totalOrders - paidOrders;
+
+        // Tính giá trị trung bình mỗi đơn
+        BigDecimal averageOrderValue = totalOrders > 0
+                ? totalRevenue.divide(BigDecimal.valueOf(paidOrders > 0 ? paidOrders : 1), 2, java.math.RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        return RevenueStatsDTO.builder()
+                .period(period.toUpperCase())
+                .startDate(rangeStart)
+                .endDate(rangeEnd)
+                .totalRevenue(totalRevenue)
+                .totalOrders(totalOrders)
+                .averageOrderValue(averageOrderValue)
+                .paidOrders(paidOrders)
+                .unpaidOrders(unpaidOrders)
+                .growthRate(Math.round(growthRate * 10.0) / 10.0)
+                .chartData(chartData)
+                .build();
+    }
+
+    /**
+     * Lấy biểu đồ doanh thu theo ngày (cho period=DAY)
+     */
+    private List<RevenueDataPoint> getRevenueChartForDay() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Order> todayOrders = orderRepository.findByCreatedAtBetween(now.with(LocalTime.MIN), now);
+
+        List<RevenueDataPoint> dataPoints = new ArrayList<>();
+        // Giả sử lấy 24 giờ trong ngày
+        for (int hour = 0; hour <= now.getHour(); hour++) {
+            LocalDateTime hourStart = now.withHour(hour).withMinute(0).withSecond(0);
+            LocalDateTime hourEnd = hourStart.plusHours(1);
+
+            BigDecimal hourRevenue = todayOrders.stream()
+                    .filter(o -> o.getPaymentStatus() == Order.PaymentStatus.PAID)
+                    .filter(o -> o.getCreatedAt() != null)
+                    .filter(o -> {
+                        LocalDateTime created = o.getCreatedAt();
+                        return !created.isBefore(hourStart) && created.isBefore(hourEnd);
+                    })
+                    .map(Order::getTotalAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            dataPoints.add(RevenueDataPoint.builder()
+                    .date(String.format("%02d:00", hour))
+                    .revenue(hourRevenue)
+                    .orderCount((int) todayOrders.stream()
+                            .filter(o -> o.getCreatedAt() != null)
+                            .filter(o -> {
+                                LocalDateTime created = o.getCreatedAt();
+                                return !created.isBefore(hourStart) && created.isBefore(hourEnd);
+                            })
+                            .count())
+                    .build());
+        }
+        return dataPoints;
+    }
+
+    /**
+     * Lấy biểu đồ doanh thu theo tuần (7 ngày)
+     */
+    private List<RevenueDataPoint> getRevenueChartForWeek() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime weekStart = now.minusDays(7).with(LocalTime.MIN);
+
+        List<Object[]> results = orderRepository.getDailyRevenue(weekStart);
+        List<RevenueDataPoint> dataPoints = new ArrayList<>();
+
+        for (Object[] result : results) {
+            String date = result[0] != null ? result[0].toString() : "";
+            BigDecimal revenue = result[1] != null ? (BigDecimal) result[1] : BigDecimal.ZERO;
+            dataPoints.add(RevenueDataPoint.builder()
+                    .date(date)
+                    .revenue(revenue)
+                    .orderCount(1)
+                    .build());
+        }
+        return dataPoints;
+    }
+
+    /**
+     * Lấy biểu đồ doanh thu theo tháng (30 ngày)
+     */
+    private List<RevenueDataPoint> getRevenueChartForMonth() {
+        return getRevenueChart(30);
+    }
+
+    /**
+     * Lấy biểu đồ doanh thu theo năm (12 tháng)
+     */
+    private List<RevenueDataPoint> getRevenueChartForYear() {
+        List<Object[]> results = orderRepository.getMonthlyRevenue(LocalDateTime.now().getYear());
+        List<RevenueDataPoint> dataPoints = new ArrayList<>();
+
+        for (Object[] result : results) {
+            Integer month = result[0] != null ? (Integer) result[0] : 0;
+            BigDecimal revenue = result[2] != null ? (BigDecimal) result[2] : BigDecimal.ZERO;
+            dataPoints.add(RevenueDataPoint.builder()
+                    .date(String.format("Tháng %02d", month))
+                    .revenue(revenue)
+                    .orderCount(0)
+                    .build());
+        }
+        return dataPoints;
+    }
+
+    /**
+     * Lấy biểu đồ doanh thu cho kỳ tùy chỉnh
+     */
+    private List<RevenueDataPoint> getRevenueChartForCustom(LocalDateTime startDate, LocalDateTime endDate) {
+        List<Order> orders = orderRepository.findByCreatedAtBetween(startDate, endDate);
+
+        // Nhóm theo ngày
+        return orders.stream()
+                .filter(o -> o.getPaymentStatus() == Order.PaymentStatus.PAID)
+                .collect(Collectors.groupingBy(o -> o.getCreatedAt().toLocalDate()))
+                .entrySet().stream()
+                .sorted(java.util.Map.Entry.comparingByKey())
+                .map(entry -> RevenueDataPoint.builder()
+                        .date(entry.getKey().toString())
+                        .revenue(entry.getValue().stream()
+                                .map(Order::getTotalAmount)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add))
+                        .orderCount(entry.getValue().size())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Lấy doanh thu trong một khoảng thời gian
+     */
+    private BigDecimal getRevenueInRange(LocalDateTime startDate, LocalDateTime endDate) {
+        List<Order> orders = orderRepository.findByCreatedAtBetween(startDate, endDate);
+        return orders.stream()
+                .filter(o -> o.getPaymentStatus() == Order.PaymentStatus.PAID)
+                .map(Order::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Tính tỷ lệ tăng trưởng (%)
+     */
+    private double calculateGrowthRate(BigDecimal current, BigDecimal previous) {
+        if (previous == null || previous.compareTo(BigDecimal.ZERO) == 0) {
+            return current.compareTo(BigDecimal.ZERO) > 0 ? 100.0 : 0.0;
+        }
+        return current.subtract(previous)
+                .divide(previous, 4, java.math.RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100))
+                .doubleValue();
     }
 }

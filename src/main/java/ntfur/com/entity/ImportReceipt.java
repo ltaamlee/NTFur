@@ -39,6 +39,9 @@ public class ImportReceipt {
     @Column(name = "receipt_code", unique = true, columnDefinition = "nvarchar(50)")
     private String receiptCode;
 
+    @Column(name = "invoice_number", columnDefinition = "nvarchar(100)")
+    private String invoiceNumber;  // Số hóa đơn / chứng từ từ nhà cung cấp
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supplier_id", nullable = false)
     private Supplier supplier;

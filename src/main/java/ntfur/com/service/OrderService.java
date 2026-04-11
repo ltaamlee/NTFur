@@ -194,6 +194,7 @@ public class OrderService {
                               order.getShippingFullName();
         String customerPhone = order.getCustomer() != null ? order.getCustomer().getPhone() : 
                                order.getShippingPhone();
+        String customerEmail = order.getCustomer() != null ? order.getCustomer().getUser().getEmail() : null;
 
         return OrderDTO.builder()
                 .id(order.getId())
@@ -202,6 +203,7 @@ public class OrderService {
                 .customerId(order.getCustomer() != null ? order.getCustomer().getId() : null)
                 .customerName(customerName)
                 .customerPhone(customerPhone)
+                .customerEmail(customerEmail)
                 .status(order.getStatus() != null ? order.getStatus().name() : null)
                 .paymentStatus(order.getPaymentStatus() != null ? order.getPaymentStatus().name() : null)
                 .paymentMethod(order.getPaymentMethod() != null ? order.getPaymentMethod().name() : null)
@@ -228,12 +230,29 @@ public class OrderService {
                 .deliveredAt(order.getDeliveredAt())
                 .cancelledAt(order.getCancelledAt())
                 .cancellationReason(order.getCancellationReason())
+                .payosOrderCode(order.getPayosOrderCode())
+                .payosCheckoutUrl(order.getPayosCheckoutUrl())
+                .paymentDeadline(order.getPaymentDeadline())
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .build();
     }
 
     private OrderItemDTO toOrderItemDTO(OrderItem item) {
+        // Build variant info from color and dimensions
+        String variantInfo = null;
+        if (item.getColor() != null || item.getDimensions() != null) {
+            StringBuilder sb = new StringBuilder();
+            if (item.getColor() != null && !item.getColor().isEmpty()) {
+                sb.append("Màu: ").append(item.getColor());
+            }
+            if (item.getDimensions() != null && !item.getDimensions().isEmpty()) {
+                if (sb.length() > 0) sb.append(" | ");
+                sb.append("Kích thước: ").append(item.getDimensions());
+            }
+            variantInfo = sb.toString();
+        }
+
         return OrderItemDTO.builder()
                 .id(item.getId())
                 .orderId(item.getOrder() != null ? item.getOrder().getId() : null)
@@ -250,6 +269,7 @@ public class OrderService {
                 .weight(item.getWeight())
                 .dimensions(item.getDimensions())
                 .color(item.getColor())
+                .variantInfo(variantInfo)
                 .notes(item.getNotes())
                 .createdAt(item.getCreatedAt() != null ? item.getCreatedAt().toString() : null)
                 .build();
