@@ -21,6 +21,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import ntfur.com.entity.Warehouse;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -45,6 +46,10 @@ public class ImportReceipt {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supplier_id", nullable = false)
     private Supplier supplier;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "warehouse_id")
+    private Warehouse warehouse;
 
     @Column(name = "import_date", nullable = false)
     private LocalDateTime importDate;

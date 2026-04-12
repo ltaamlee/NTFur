@@ -80,8 +80,22 @@ public class SupplierService {
 
         Supplier saved = supplierRepository.save(supplier);
         
-        // Xử lý sản phẩm
-        addProductsToSupplier(saved, dto.getProductNames(), dto.getProductIds());
+        // Xử lý sản phẩm - chỉ gán productIds đã chọn
+        if (dto.getProductIds() != null && !dto.getProductIds().isEmpty()) {
+            for (Long productId : dto.getProductIds()) {
+                if (productId != null && !isTempId(productId)) {
+                    Product product = productRepository.findById(productId).orElse(null);
+                    if (product != null) {
+                        SupplierProduct sp = new SupplierProduct();
+                        sp.setSupplier(saved);
+                        sp.setProduct(product);
+                        sp.setSku(product.getSku());
+                        sp.setActive(true);
+                        supplierProductRepository.save(sp);
+                    }
+                }
+            }
+        }
         
         return toDTO(supplierRepository.findById(saved.getId()).orElse(saved));
     }
@@ -111,12 +125,54 @@ public class SupplierService {
 
         Supplier updated = supplierRepository.save(supplier);
         
-        // Xử lý sản phẩm nếu có thay đổi
-        if (dto.getProductNames() != null || dto.getProductIds() != null) {
-            addProductsToSupplier(updated, dto.getProductNames(), dto.getProductIds());
+        // Xử lý sản phẩm - cập nhật toàn bộ danh sách productIds
+        if (dto.getProductIds() != null) {
+            updateSupplierProducts(updated, dto.getProductIds());
         }
         
         return toDTO(supplierRepository.findById(updated.getId()).orElse(updated));
+    }
+
+    @Transactional
+    private void updateSupplierProducts(Supplier supplier, List<Long> newProductIds) {
+        // Lấy danh sách product IDs hiện tại của supplier
+        List<Long> currentProductIds = supplier.getSupplierProducts().stream()
+                .map(sp -> sp.getProduct().getId())
+                .collect(Collectors.toList());
+        
+        // Các sản phẩm cần thêm (có trong newProductIds nhưng không có trong current)
+        List<Long> toAdd = newProductIds.stream()
+                .filter(id -> !currentProductIds.contains(id))
+                .collect(Collectors.toList());
+        
+        // Các sản phẩm cần xóa (có trong current nhưng không có trong newProductIds)
+        List<Long> toRemove = currentProductIds.stream()
+                .filter(id -> !newProductIds.contains(id))
+                .collect(Collectors.toList());
+        
+        // Xóa các sản phẩm không còn trong danh sách mới
+        for (Long productId : toRemove) {
+            supplierProductRepository.findBySupplierIdAndProductId(supplier.getId(), productId)
+                    .ifPresent(sp -> {
+                        sp.setActive(false);
+                        supplierProductRepository.save(sp);
+                    });
+        }
+        
+        // Thêm các sản phẩm mới
+        for (Long productId : toAdd) {
+            if (!isTempId(productId)) {
+                Product product = productRepository.findById(productId).orElse(null);
+                if (product != null) {
+                    SupplierProduct sp = new SupplierProduct();
+                    sp.setSupplier(supplier);
+                    sp.setProduct(product);
+                    sp.setSku(product.getSku());
+                    sp.setActive(true);
+                    supplierProductRepository.save(sp);
+                }
+            }
+        }
     }
 
     private void addProductsToSupplier(Supplier supplier, List<String> productNames, List<Long> productIds) {

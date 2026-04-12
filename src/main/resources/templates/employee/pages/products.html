@@ -7,6 +7,12 @@
             <h2 class="text-2xl font-display font-bold text-primary-800">Danh sách sản phẩm</h2>
             <p class="text-primary-500 mt-1">Xem và tìm kiếm sản phẩm</p>
         </div>
+        <button onclick="syncAllProducts()" class="mt-4 md:mt-0 px-4 py-2 bg-orange-500 text-white rounded-lg font-medium flex items-center hover:bg-orange-600">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Đồng bộ trạng thái
+        </button>
     </div>
 
     <!-- Filters -->
@@ -119,7 +125,14 @@
                     <td class="px-6 py-4 text-center text-sm text-primary-600">${product.categoryName || '-'}</td>
                     <td class="px-6 py-4 text-right text-sm font-semibold text-primary-800">${formatCurrency(product.price)}</td>
                     <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 rounded-full text-sm ${product.stock > 10 ? 'bg-green-100 text-green-700' : product.stock > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}">${product.stock || 0}</span>
+                        ${(() => {
+                            const stock = product.stock || 0;
+                            const status = product.status;
+                            const isOutOfStock = stock <= 0 || status === 'OUT_OF_STOCK';
+                            const isLowStock = stock > 0 && stock <= 10;
+                            const badgeClass = isOutOfStock ? 'bg-red-100 text-red-700' : isLowStock ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700';
+                            return `<span class="px-3 py-1 rounded-full text-sm ${badgeClass}">${stock}</span>`;
+                        })()}
                     </td>
                     <td class="px-6 py-4 text-center">${getStatusBadge(product.status)}</td>
                     <td class="px-6 py-4 text-center">
@@ -145,6 +158,20 @@
             if (!product) return;
             
             alert(`Sản phẩm: ${product.name}\nGiá: ${formatCurrency(product.price)}\nTồn kho: ${product.stock}\nDanh mục: ${product.categoryName || '-'}\nMô tả: ${product.description || 'Không có'}`);
+        }
+        
+        async function syncAllProducts() {
+            showConfirmModal('Đồng bộ trạng thái', 'Bạn có muốn đồng bộ trạng thái cho tất cả sản phẩm không?', async () => {
+                try {
+                    const response = await apiCall('/api/admin/products/sync-all-status', 'POST');
+                    if (response.success) {
+                        showToast('Đã đồng bộ ' + response.data + ' sản phẩm');
+                        loadProducts();
+                    }
+                } catch (error) {
+                    console.error('Error syncing products:', error);
+                }
+            });
         }
         
         // Event listeners

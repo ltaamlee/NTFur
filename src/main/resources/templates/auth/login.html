@@ -343,9 +343,16 @@
                     
                     showAlert('success', 'Đăng nhập thành công! Đang chuyển hướng...');
                     
+                    // Chuyển hướng dựa trên role
+                    const userRole = data.data.user?.role;
+                    let redirectUrl = '/';
+                    if (userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'STAFF') {
+                        redirectUrl = '/employee';
+                    }
+                    
                     // Chuyển hướng sau 1 giây
                     setTimeout(() => {
-                        window.location.href = '/';
+                        window.location.href = redirectUrl;
                     }, 1000);
                 } else {
                     showAlert('error', data.message || 'Đăng nhập thất bại!');

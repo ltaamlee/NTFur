@@ -1,0 +1,447 @@
+@startuml NTFurniture_Class_Diagram
+
+' =====================================================
+' NTFURNITURE - CLASS DIAGRAM (DESIGN)
+' =====================================================
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+' -------------------- CONTROLLERS --------------------
+
+package "controller" {
+
+    class CartController {
+        - cartService: CartService
+        + addToCart(productId, quantity)
+        + updateCartItem(itemId, quantity)
+        + removeCartItem(itemId)
+        + getCart()
+        + checkout(shippingInfo): ResponseEntity
+    }
+
+    class OrderController {
+        - orderService: OrderService
+        + createOrder(orderData): ResponseEntity
+        + getOrders(): ResponseEntity
+        + getOrderById(id): ResponseEntity
+        + cancelOrder(id): ResponseEntity
+        + updateOrderStatus(id, status): ResponseEntity
+    }
+
+    class AdminWarehouseController {
+        - warehouseService: WarehouseService
+        + getWarehouses(): ResponseEntity
+        + getWarehouseById(id): ResponseEntity
+        + createWarehouse(warehouse): ResponseEntity
+        + updateWarehouse(id, warehouse): ResponseEntity
+        + deleteWarehouse(id)
+        + importStock(data): ResponseEntity
+        + exportStock(data): ResponseEntity
+        + getWarehouseProducts(warehouseId): ResponseEntity
+        + getWarehouseTransactions(warehouseId): ResponseEntity
+    }
+
+    class AdminImportReceiptController {
+        - importReceiptService: ImportReceiptService
+        + getImportReceipts(): ResponseEntity
+        + getImportReceiptById(id): ResponseEntity
+        + createImportReceipt(data): ResponseEntity
+        + updateImportReceipt(id, data): ResponseEntity
+        + deleteImportReceipt(id)
+        + processImportReceipt(id, warehouseId)
+    }
+
+    class AdminOrderController {
+        - orderService: OrderService
+        + getAllOrders(): ResponseEntity
+        + getOrderDetails(id): ResponseEntity
+        + updateOrderStatus(id, status): ResponseEntity
+        + confirmOrder(id): ResponseEntity
+        + shipOrder(id, shippingData): ResponseEntity
+    }
+
+    class AdminProductController {
+        - productService: ProductService
+        + getProducts(): ResponseEntity
+        + getProductById(id): ResponseEntity
+        + createProduct(product): ResponseEntity
+        + updateProduct(id, product): ResponseEntity
+        + deleteProduct(id)
+        + getProductsByCategory(categoryId): ResponseEntity
+    }
+
+    class AdminCategoryController {
+        - categoryService: CategoryService
+        + getCategories(): ResponseEntity
+        + getCategoryById(id): ResponseEntity
+        + createCategory(category): ResponseEntity
+        + updateCategory(id, category): ResponseEntity
+        + deleteCategory(id)
+    }
+
+    class AdminSupplierController {
+        - supplierService: SupplierService
+        + getSuppliers(): ResponseEntity
+        + getSupplierById(id): ResponseEntity
+        + createSupplier(supplier): ResponseEntity
+        + updateSupplier(id, supplier): ResponseEntity
+        + deleteSupplier(id)
+    }
+
+}
+
+' -------------------- SERVICES --------------------
+
+package "service" {
+
+    interface CartService {
+        + addToCart(userId, productId, quantity)
+        + updateCartItem(userId, productId, quantity)
+        + removeCartItem(userId, productId)
+        + getCart(userId): CartDTO
+        + clearCart(userId)
+        + checkout(userId, checkoutData): OrderDTO
+    }
+
+    class CartServiceImpl {
+        - cartRepository: CartRepository
+        - productService: ProductService
+        - orderService: OrderService
+        + addToCart(userId, productId, quantity)
+        + updateCartItem(userId, productId, quantity)
+        + removeCartItem(userId, productId)
+        + getCart(userId): CartDTO
+        + clearCart(userId)
+        + checkout(userId, checkoutData): OrderDTO
+    }
+
+    interface OrderService {
+        + createOrder(userId, orderData): Order
+        + getOrdersByUser(userId): List<Order>
+        + getOrderById(id): Order
+        + cancelOrder(id): Order
+        + updateOrderStatus(id, status): Order
+        + calculateTotal(orderId): BigDecimal
+    }
+
+    class OrderServiceImpl {
+        - orderRepository: OrderRepository
+        - productService: ProductService
+        - warehouseService: WarehouseService
+        + createOrder(userId, orderData): Order
+        + getOrdersByUser(userId): List<Order>
+        + getOrderById(id): Order
+        + cancelOrder(id): Order
+        + updateOrderStatus(id, status): Order
+        + calculateTotal(orderId): BigDecimal
+    }
+
+    interface WarehouseService {
+        + getAllWarehouses(): List<Warehouse>
+        + getWarehouseById(id): Warehouse
+        + createWarehouse(warehouse): Warehouse
+        + updateWarehouse(id, warehouse): Warehouse
+        + deleteWarehouse(id)
+        + importStock(warehouseId, productId, quantity, price): WarehouseProduct
+        + exportStock(warehouseId, productId, quantity): WarehouseProduct
+        + getWarehouseProducts(warehouseId): List<WarehouseProduct>
+        + getWarehouseTransactions(warehouseId): List<WarehouseTransaction>
+        + getProductStock(productId): Integer
+        + checkStockAvailable(productId, quantity): Boolean
+    }
+
+    class WarehouseServiceImpl {
+        - warehouseRepository: WarehouseRepository
+        - warehouseProductRepository: WarehouseProductRepository
+        - warehouseTransactionRepository: WarehouseTransactionRepository
+        - productRepository: ProductRepository
+        - importReceiptRepository: ImportReceiptRepository
+        + getAllWarehouses(): List<Warehouse>
+        + getWarehouseById(id): Warehouse
+        + createWarehouse(warehouse): Warehouse
+        + updateWarehouse(id, warehouse): Warehouse
+        + deleteWarehouse(id)
+        + importStock(warehouseId, productId, quantity, price): WarehouseProduct
+        + exportStock(warehouseId, productId, quantity): WarehouseProduct
+        + getWarehouseProducts(warehouseId): List<WarehouseProduct>
+        + getWarehouseTransactions(warehouseId): List<WarehouseTransaction>
+        + getProductStock(productId): Integer
+        + checkStockAvailable(productId, quantity): Boolean
+        + processImportReceipt(importReceiptId, warehouseId)
+    }
+
+    interface ProductService {
+        + getAllProducts(): List<Product>
+        + getProductById(id): Product
+        + getProductsByCategory(categoryId): List<Product>
+        + createProduct(product): Product
+        + updateProduct(id, product): Product
+        + deleteProduct(id)
+        + searchProducts(keyword): List<Product>
+        + updateStock(productId, quantity)
+    }
+
+    class ProductServiceImpl {
+        - productRepository: ProductRepository
+        + getAllProducts(): List<Product>
+        + getProductById(id): Product
+        + getProductsByCategory(categoryId): List<Product>
+        + createProduct(product): Product
+        + updateProduct(id, product): Product
+        + deleteProduct(id)
+        + searchProducts(keyword): List<Product>
+        + updateStock(productId, quantity)
+    }
+
+    interface ImportReceiptService {
+        + getAllImportReceipts(): List<ImportReceipt>
+        + getImportReceiptById(id): ImportReceipt
+        + createImportReceipt(data): ImportReceipt
+        + updateImportReceipt(id, data): ImportReceipt
+        + deleteImportReceipt(id)
+        + processImportReceipt(id, warehouseId)
+    }
+
+    class ImportReceiptServiceImpl {
+        - importReceiptRepository: ImportReceiptRepository
+        - supplierService: SupplierService
+        - warehouseService: WarehouseService
+        + getAllImportReceipts(): List<ImportReceipt>
+        + getImportReceiptById(id): ImportReceipt
+        + createImportReceipt(data): ImportReceipt
+        + updateImportReceipt(id, data): ImportReceipt
+        + deleteImportReceipt(id)
+        + processImportReceipt(id, warehouseId)
+    }
+
+}
+
+' -------------------- REPOSITORIES --------------------
+
+package "repository" {
+
+    interface WarehouseRepository {
+        + findAll(): List<Warehouse>
+        + findById(id): Optional<Warehouse>
+        + findByWarehouseCode(code): Optional<Warehouse>
+        + findByStatus(status): List<Warehouse>
+        + save(warehouse): Warehouse
+        + deleteById(id)
+    }
+
+    interface WarehouseProductRepository {
+        + findByWarehouseId(id): List<WarehouseProduct>
+        + findByProductId(id): List<WarehouseProduct>
+        + findByWarehouseAndProduct(warehouseId, productId): Optional<WarehouseProduct>
+        + save(warehouseProduct): WarehouseProduct
+    }
+
+    interface WarehouseTransactionRepository {
+        + findByWarehouseId(id): List<WarehouseTransaction>
+        + findByTransactionCode(code): Optional<WarehouseTransaction>
+        + save(transaction): WarehouseTransaction
+    }
+
+    interface OrderRepository {
+        + findAll(): List<Order>
+        + findById(id): Optional<Order>
+        + findByOrderNumber(number): Optional<Order>
+        + findByUserId(userId): List<Order>
+        + findByStatus(status): List<Order>
+        + save(order): Order
+        + deleteById(id)
+    }
+
+    interface ProductRepository {
+        + findAll(): List<Product>
+        + findById(id): Optional<Product>
+        + findBySku(sku): Optional<Product>
+        + findByCategoryId(categoryId): List<Product>
+        + findByNameContaining(keyword): List<Product>
+        + save(product): Product
+        + deleteById(id)
+    }
+
+    interface ImportReceiptRepository {
+        + findAll(): List<ImportReceipt>
+        + findById(id): Optional<ImportReceipt>
+        + findByReceiptCode(code): Optional<ImportReceipt>
+        + findBySupplierId(supplierId): List<ImportReceipt>
+        + save(importReceipt): ImportReceipt
+        + deleteById(id)
+    }
+
+}
+
+' -------------------- ENTITIES --------------------
+
+package "entity" {
+
+    class Warehouse {
+        - id: Long
+        - warehouseCode: String
+        - name: String
+        - address: String
+        - city: String
+        - phone: String
+        - email: String
+        - status: WarehouseStatus
+        - description: String
+        - warehouseProducts: List<WarehouseProduct>
+        - transactions: List<WarehouseTransaction>
+        - importReceipts: List<ImportReceipt>
+        + getFullAddress(): String
+    }
+
+    class WarehouseProduct {
+        - id: Long
+        - warehouse: Warehouse
+        - product: Product
+        - quantity: Integer
+        - importPrice: BigDecimal
+        + importStock(qty, price)
+        + exportStock(qty)
+    }
+
+    class WarehouseTransaction {
+        - id: Long
+        - transactionCode: String
+        - transactionType: TransactionType
+        - warehouse: Warehouse
+        - product: Product
+        - productName: String
+        - quantity: Integer
+        - unitPrice: BigDecimal
+        - referenceType: ReferenceType
+        - referenceId: Long
+        - notes: String
+        - performedBy: String
+    }
+
+    class Order {
+        - id: Long
+        - orderNumber: String
+        - user: User
+        - customer: Customer
+        - status: OrderStatus
+        - paymentStatus: PaymentStatus
+        - paymentMethod: PaymentMethod
+        - subtotal: BigDecimal
+        - shippingFee: BigDecimal
+        - discountAmount: BigDecimal
+        - totalAmount: BigDecimal
+        - shippingFullName: String
+        - shippingPhone: String
+        - shippingAddress: String
+        - items: List<OrderItem>
+        - shipping: Shipping
+        + calculateTotal()
+        + getShippingFullAddress(): String
+    }
+
+    class OrderItem {
+        - id: Long
+        - order: Order
+        - product: Product
+        - productName: String
+        - productSku: String
+        - price: BigDecimal
+        - quantity: Integer
+        - total: BigDecimal
+        + calculateTotal()
+    }
+
+    class Product {
+        - id: Long
+        - name: String
+        - description: String
+        - price: BigDecimal
+        - stock: Integer
+        - sku: String
+        - status: ProductStatus
+        - category: Category
+        - images: List<ProductImage>
+        - variants: List<ProductVariant>
+        + getMainImage(): String
+    }
+
+    class ImportReceipt {
+        - id: Long
+        - receiptCode: String
+        - supplier: Supplier
+        - warehouse: Warehouse
+        - importDate: LocalDateTime
+        - totalAmount: BigDecimal
+        - discountAmount: BigDecimal
+        - finalAmount: BigDecimal
+        - status: ImportStatus
+        - items: List<ImportReceiptItem>
+        + calculateTotal()
+    }
+
+    class ImportReceiptItem {
+        - id: Long
+        - importReceipt: ImportReceipt
+        - product: Product
+        - productName: String
+        - sku: String
+        - quantity: Integer
+        - unitPrice: BigDecimal
+        - totalPrice: BigDecimal
+    }
+
+}
+
+' -------------------- RELATIONSHIPS --------------------
+
+CartController --> CartService
+CartController --> OrderController
+
+OrderServiceImpl ..|> OrderService
+CartServiceImpl ..|> CartService
+WarehouseServiceImpl ..|> WarehouseService
+ProductServiceImpl ..|> ProductService
+ImportReceiptServiceImpl ..|> ImportReceiptService
+
+WarehouseServiceImpl --> WarehouseRepository
+WarehouseServiceImpl --> WarehouseProductRepository
+WarehouseServiceImpl --> WarehouseTransactionRepository
+WarehouseServiceImpl --> ProductRepository
+WarehouseServiceImpl --> ImportReceiptRepository
+
+OrderServiceImpl --> OrderRepository
+OrderServiceImpl --> WarehouseService
+ProductServiceImpl --> ProductRepository
+
+ImportReceiptServiceImpl --> ImportReceiptRepository
+ImportReceiptServiceImpl --> WarehouseService
+
+AdminWarehouseController --> WarehouseService
+AdminImportReceiptController --> ImportReceiptService
+AdminOrderController --> OrderService
+AdminProductController --> ProductService
+
+Warehouse "1" --> "*" WarehouseProduct
+Warehouse "1" --> "*" WarehouseTransaction
+Warehouse "1" --> "*" ImportReceipt
+WarehouseProduct "N" --> "1" Product
+WarehouseTransaction "N" --> "1" Warehouse
+WarehouseTransaction "N" --> "1" Product
+
+Order "1" --> "*" OrderItem
+Order "1" --> "1" Shipping
+OrderItem "N" --> "1" Product
+
+Product "1" --> "1" Category
+Product "1" --> "*" ProductImage
+Product "1" --> "*" ProductVariant
+
+ImportReceipt "1" --> "*" ImportReceiptItem
+ImportReceiptItem "N" --> "1" Product
+ImportReceipt "N" --> "1" Supplier
+ImportReceipt "N" --> "1" Warehouse
+
+@enduml

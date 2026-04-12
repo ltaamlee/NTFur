@@ -318,6 +318,19 @@
                             </select>
                         </div>
                     </div>
+
+                    <!-- Phần chọn sản phẩm cung cấp -->
+                    <div class="mt-6 border-t border-primary-200 pt-6">
+                        <h4 class="font-semibold text-primary-800 mb-4">Sản phẩm cung cấp</h4>
+                        <p class="text-sm text-primary-500 mb-3">Chọn các sản phẩm mà nhà cung cấp này cung cấp:</p>
+                        <div class="max-h-48 overflow-y-auto border border-primary-200 rounded-lg p-3 bg-primary-50" id="productSelectionContainer">
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-2" id="productCheckboxList">
+                                <!-- Product checkboxes will be loaded here -->
+                            </div>
+                            <p id="noProductsMessage" class="text-sm text-primary-400 text-center py-4 hidden">Chưa có sản phẩm nào</p>
+                        </div>
+                        <p class="text-xs text-primary-400 mt-2">Đã chọn: <span id="selectedProductCount">0</span> sản phẩm</p>
+                    </div>
                     <div class="mt-6 flex justify-end space-x-3">
                         <button type="button" onclick="closeFormModal()" class="px-6 py-2 border border-primary-300 text-primary-700 rounded-lg hover:bg-primary-50 font-medium transition-colors">Hủy bỏ</button>
                         <button type="submit" class="px-6 py-2 btn-primary text-white rounded-lg font-medium">Lưu</button>
@@ -561,6 +574,7 @@
             document.getElementById('supplierForm').reset();
             document.getElementById('supplierId').value = '';
             document.getElementById('formModal').classList.remove('hidden');
+            loadProductSelection(null);
         }
 
         function editSupplier(id) {
@@ -581,6 +595,41 @@
             document.getElementById('supplierStatus').value = supplier.status || 'ACTIVE';
 
             document.getElementById('formModal').classList.remove('hidden');
+            loadProductSelection(supplier.products || []);
+        }
+
+        function loadProductSelection(selectedProducts) {
+            const container = document.getElementById('productCheckboxList');
+            const noProductsMsg = document.getElementById('noProductsMessage');
+            
+            if (!allProducts || allProducts.length === 0) {
+                container.innerHTML = '';
+                noProductsMsg.classList.remove('hidden');
+                return;
+            }
+
+            noProductsMsg.classList.add('hidden');
+            const selectedIds = selectedProducts ? selectedProducts.map(p => p.id || p) : [];
+            
+            container.innerHTML = allProducts.map(p => `
+                <label class="flex items-center p-2 hover:bg-white rounded cursor-pointer border border-transparent hover:border-primary-200 transition-colors">
+                    <input type="checkbox" class="product-checkbox w-4 h-4 text-primary-600 rounded mr-2" value="${p.id}" 
+                        ${selectedIds.includes(p.id) ? 'checked' : ''}>
+                    <span class="text-sm text-primary-700 truncate" title="${p.name}">${p.name}</span>
+                </label>
+            `).join('');
+
+            updateSelectedProductCount();
+            
+            // Add event listeners for checkboxes
+            container.querySelectorAll('.product-checkbox').forEach(cb => {
+                cb.addEventListener('change', updateSelectedProductCount);
+            });
+        }
+
+        function updateSelectedProductCount() {
+            const count = document.querySelectorAll('.product-checkbox:checked').length;
+            document.getElementById('selectedProductCount').textContent = count;
         }
 
         function closeFormModal() {
@@ -590,6 +639,10 @@
         document.getElementById('supplierForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const id = document.getElementById('supplierId').value;
+
+            // Lấy danh sách sản phẩm đã chọn
+            const selectedProductIds = Array.from(document.querySelectorAll('.product-checkbox:checked'))
+                .map(cb => parseInt(cb.value));
 
             const data = {
                 name: document.getElementById('supplierName').value,
@@ -601,7 +654,8 @@
                 contactPerson: document.getElementById('supplierContactPerson').value,
                 contactPhone: document.getElementById('supplierContactPhone').value,
                 description: document.getElementById('supplierDescription').value,
-                status: document.getElementById('supplierStatus').value
+                status: document.getElementById('supplierStatus').value,
+                productIds: selectedProductIds
             };
 
             try {
@@ -714,7 +768,7 @@
                                 </svg>
                             </button>
                             ${r.status === 'PENDING' ? `
-                                <button onclick="completeReceipt(${r.id})" class="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Hoàn tất">
+                                <button onclick="completeReceipt(${r.id})" class="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Xác nhận">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
@@ -998,12 +1052,29 @@
             document.getElementById('receiptDetailModal').classList.add('hidden');
         }
 
-        async function completeReceipt(id) {
-            showDeleteModal('Xác nhận hoàn tất phiếu nhập? Hàng sẽ được cập nhật vào kho.', async () => {
+        async function acceptReceipt(id) {
+            showConfirmModal('Xác nhận phiếu nhập', 'Bạn có chắc chắn muốn xác nhận phiếu nhập hàng? Tồn kho sẽ được cập nhật.', async () => {
                 try {
                     const response = await apiCall(`/api/admin/import-receipts/${id}/complete`, 'POST');
                     if (response.success) {
-                        showToast('Phiếu nhập đã được hoàn tất!');
+                        showToast('Phiếu nhập đã được xác nhận!');
+                        loadReceipts();
+                    } else {
+                        showToast(response.message || 'Có lỗi xảy ra', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error accepting receipt:', error);
+                    showToast('Có lỗi xảy ra', 'error');
+                }
+            });
+        }
+
+        async function completeReceipt(id) {
+            showConfirmModal('Xác nhận phiếu nhập', 'Bạn có chắc chắn muốn xác nhận phiếu nhập hàng? Tồn kho sẽ được cập nhật.', async () => {
+                try {
+                    const response = await apiCall(`/api/admin/import-receipts/${id}/complete`, 'POST');
+                    if (response.success) {
+                        showToast('Phiếu nhập đã được xác nhận!');
                         loadReceipts();
                     } else {
                         showToast(response.message || 'Có lỗi xảy ra', 'error');

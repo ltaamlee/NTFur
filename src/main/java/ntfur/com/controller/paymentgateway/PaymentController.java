@@ -1,4 +1,4 @@
-package ntfur.com.controller;
+package ntfur.com.controller.paymentgateway;
 
 import java.security.Principal;
 import java.util.Map;
@@ -109,7 +109,7 @@ public class PaymentController {
             
             // Cập nhật checkoutUrl vào đơn hàng
             order.setPayosCheckoutUrl(linkResult.checkoutUrl());
-            order.setPayosOrderCode(linkResult.orderCode());
+            order.setPayosOrderCode(Long.valueOf(linkResult.orderCode()));
             order.setPaymentMethod(ntfur.com.entity.Order.PaymentMethod.PAYTOS);
             orderRepository.save(order);
 

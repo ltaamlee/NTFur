@@ -1,0 +1,138 @@
+@startuml NTFurniture_Sequence_NhapKho
+
+' =====================================================
+' SSD - NHẬP KHO THÀNH CÔNG
+' =====================================================
+
+skinparam sequenceMessageAlign left
+skinparam shadowing false
+
+actor ":Nhân viên:" as Employee
+participant ":Giao diện\nQuản lý kho" as WarehouseUI
+participant ":Controller\nWarehouseController" as WarehouseCtrl
+participant ":Service\nWarehouseService" as WarehouseSvc
+participant ":Service\nImportReceiptService" as ImportSvc
+participant ":Repository\nWarehouseRepository" as WarehouseRepo
+participant ":Repository\nImportReceiptRepository" as ImportRepo
+participant ":Repository\nProductRepository" as ProductRepo
+participant ":Entity\nWarehouse" as Warehouse
+participant ":Entity\nWarehouseProduct" as WarehouseProduct
+participant ":Entity\nWarehouseTransaction" as WarehouseTransaction
+participant ":Entity\nImportReceipt" as ImportReceipt
+participant ":Entity\nImportReceiptItem" as ImportReceiptItem
+participant ":Entity\nProduct" as Product
+participant ":Database" as DB
+
+== Hiển thị danh sách phiếu nhập ==
+
+Employee -> WarehouseUI : Truy cập "Quản lý kho"
+activate WarehouseUI
+
+WarehouseUI -> WarehouseCtrl : GET /admin/warehouse
+activate WarehouseCtrl
+
+WarehouseCtrl -> WarehouseRepo : findAll()
+activate WarehouseRepo
+WarehouseRepo -> DB : SELECT warehouses
+WarehouseRepo --> WarehouseCtrl : Danh sách kho
+
+WarehouseCtrl -> ImportRepo : findAll()
+activate ImportRepo
+ImportRepo -> DB : SELECT import_receipts
+ImportRepo --> WarehouseCtrl : Danh sách phiếu nhập
+
+WarehouseCtrl --> WarehouseUI : Giao diện quản lý kho
+WarehouseUI --> Employee : Hiển thị danh sách
+
+deactivate WarehouseUI
+deactivate WarehouseCtrl
+deactivate WarehouseRepo
+deactivate ImportRepo
+
+== Tạo phiếu nhập mới ==
+
+Employee -> WarehouseUI : Nhấn "Tạo phiếu nhập mới"
+activate WarehouseUI
+
+WarehouseUI -> WarehouseCtrl : GET /admin/warehouse/import/new
+WarehouseCtrl --> WarehouseUI : Form tạo phiếu nhập
+WarehouseUI --> Employee : Form với danh sách kho, nhà cung cấp
+
+Employee -> WarehouseUI : Điền thông tin phiếu nhập
+WarehouseUI --> Employee : Form đã điền
+
+Employee -> WarehouseUI : Thêm sản phẩm vào danh sách
+WarehouseUI --> Employee : Danh sách sản phẩm đã thêm
+
+Employee -> WarehouseUI : Nhấn "Lưu"
+activate WarehouseUI
+
+WarehouseUI -> WarehouseCtrl : POST /admin/warehouse/import
+activate WarehouseCtrl
+
+WarehouseCtrl -> ImportSvc : createImportReceipt(data)
+activate ImportSvc
+
+ImportSvc -> ImportReceipt : create()
+activate ImportReceipt
+ImportSvc -> ImportReceiptItem : create() x n
+activate ImportReceiptItem
+deactivate ImportReceiptItem
+deactivate ImportReceipt
+
+ImportSvc -> ImportRepo : save(importReceipt)
+activate ImportRepo
+ImportRepo -> DB : INSERT import_receipts
+loop Mỗi Item
+    ImportRepo -> DB : INSERT import_receipt_items
+end
+ImportRepo --> ImportSvc : ImportReceipt saved
+deactivate ImportRepo
+
+ImportSvc -> WarehouseSvc : processImportReceipt(importReceiptId, warehouseId)
+activate WarehouseSvc
+
+loop Mỗi sản phẩm trong phiếu nhập
+    WarehouseSvc -> WarehouseRepo : findWarehouseProduct(warehouseId, productId)
+    activate WarehouseRepo
+    
+    alt Sản phẩm đã có trong kho
+        WarehouseRepo --> WarehouseSvc : WarehouseProduct
+    else Sản phẩm chưa có trong kho
+        WarehouseSvc -> Warehouse : createWarehouseProduct()
+        activate Warehouse
+        WarehouseSvc -> WarehouseProduct : setQuantity(0)
+        deactivate Warehouse
+    end
+    
+    WarehouseSvc -> WarehouseProduct : importStock(quantity, unitPrice)
+    activate WarehouseProduct
+    WarehouseProduct -> WarehouseProduct : quantity += qty
+    WarehouseProduct -> Product : updateStock()
+    activate Product
+    Product -> ProductRepo : save()
+    ProductRepo -> DB : UPDATE products
+    deactivate Product
+    deactivate WarehouseProduct
+    
+    WarehouseSvc -> WarehouseTransaction : create()
+    activate WarehouseTransaction
+    WarehouseRepo -> DB : INSERT warehouse_transactions
+    deactivate WarehouseTransaction
+    deactivate WarehouseRepo
+end
+
+WarehouseSvc --> ImportSvc : Import processed
+deactivate WarehouseSvc
+
+ImportSvc --> WarehouseCtrl : ImportReceipt với status = COMPLETED
+deactivate ImportSvc
+
+WarehouseCtrl --> WarehouseUI : Thông báo "Nhập kho thành công! Mã PN: xxx"
+
+WarehouseUI --> Employee : "Nhập kho thành công! Mã phiếu: PN-xxx"
+
+deactivate WarehouseUI
+deactivate WarehouseCtrl
+
+@enduml

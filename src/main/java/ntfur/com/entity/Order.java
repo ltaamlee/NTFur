@@ -141,6 +141,9 @@ public class Order {
     @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
+
     public enum OrderStatus {
         PENDING, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED, RETURNED
     }

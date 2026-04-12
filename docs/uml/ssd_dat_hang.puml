@@ -1,0 +1,119 @@
+@startuml NTFurniture_Sequence_DatHang
+
+' =====================================================
+' SSD - ĐẶT HÀNG THÀNH CÔNG
+' =====================================================
+
+skinparam sequenceMessageAlign left
+skinparam shadowing false
+
+actor ":Khách hàng:" as Customer
+participant ":Giao diện\nGiỏ hàng" as CartUI
+participant ":Controller\nCartController" as CartCtrl
+participant ":Service\nCartService" as CartSvc
+participant ":Service\nProductService" as ProductSvc
+participant ":Service\nOrderService" as OrderSvc
+participant ":Repository\nProductRepository" as ProductRepo
+participant ":Repository\nOrderRepository" as OrderRepo
+participant ":Entity\nOrder" as Order
+participant ":Entity\nOrderItem" as OrderItem
+participant ":Entity\nProduct" as Product
+participant ":Database" as DB
+
+== Hiển thị giỏ hàng ==
+
+Customer -> CartUI : Nhấn "Giỏ hàng"
+activate CartUI
+
+CartUI -> CartCtrl : GET /cart
+activate CartCtrl
+
+CartCtrl -> CartSvc : getCart(userId)
+activate CartSvc
+
+CartSvc -> ProductRepo : findCartItems(userId)
+activate ProductRepo
+
+ProductRepo -> DB : SELECT cart_items
+ProductRepo --> CartSvc : Danh sách sản phẩm
+
+CartSvc -> ProductSvc : checkStock(productIds)
+activate ProductSvc
+
+ProductSvc -> ProductRepo : getStock(productId)
+ProductRepo --> ProductSvc : Số lượng tồn
+ProductSvc --> CartSvc : Trạng thái tồn kho
+
+CartSvc --> CartCtrl : Giỏ hàng + trạng thái
+CartCtrl --> CartUI : Hiển thị giỏ hàng
+CartUI --> Customer : Giao diện giỏ hàng
+
+deactivate CartUI
+deactivate CartCtrl
+deactivate CartSvc
+deactivate ProductSvc
+deactivate ProductRepo
+
+== Thực hiện đặt hàng ==
+
+Customer -> CartUI : Chọn sản phẩm, nhấn "Đặt hàng"
+activate CartUI
+
+CartUI -> CartCtrl : POST /cart/checkout
+activate CartCtrl
+
+CartCtrl -> CartSvc : processCheckout(cartData, shippingInfo)
+activate CartSvc
+
+CartSvc -> ProductSvc : validateStock(cartItems)
+activate ProductSvc
+
+loop Kiểm tra từng sản phẩm
+    ProductSvc -> ProductRepo : findById(productId)
+    ProductRepo -> DB : SELECT product WHERE id = ?
+    ProductRepo --> ProductSvc : Product
+    alt Sản phẩm hết hàng
+        ProductSvc --> CartSvc : OUT_OF_STOCK
+        CartSvc --> CartCtrl : Error: Sản phẩm hết hàng
+        CartCtrl --> CartUI : Thông báo lỗi
+    end
+end
+
+ProductSvc --> CartSvc : Stock validated
+deactivate ProductSvc
+
+CartSvc -> OrderSvc : createOrder(userId, items, shippingInfo)
+activate OrderSvc
+
+OrderSvc -> Order : create()
+activate Order
+OrderSvc -> OrderItem : create(item)
+activate OrderItem
+OrderSvc -> Product : reserveStock(quantity)
+activate Product
+deactivate Product
+deactivate OrderItem
+deactivate Order
+
+OrderSvc -> OrderRepo : save(order)
+activate OrderRepo
+OrderRepo -> DB : INSERT orders
+loop Mỗi OrderItem
+    OrderRepo -> DB : INSERT order_items
+end
+OrderRepo --> OrderSvc : Order saved
+deactivate OrderRepo
+
+OrderSvc --> CartSvc : Order created
+deactivate OrderSvc
+
+CartSvc --> CartCtrl : Order number
+CartCtrl --> CartUI : Thông báo thành công + mã đơn
+
+CartUI --> Customer : "Đặt hàng thành công! Mã đơn: NTF-xxx"
+
+deactivate CartUI
+deactivate CartCtrl
+deactivate CartSvc
+
+@enduml

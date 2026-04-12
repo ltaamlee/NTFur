@@ -1,4 +1,4 @@
-package ntfur.com.controller.admin;
+package ntfur.com.controller.employee;
 
 import java.util.List;
 
@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import ntfur.com.entity.dto.ApiResponse;
 import ntfur.com.entity.dto.product.CreateProductRequest;
@@ -22,12 +21,12 @@ import ntfur.com.entity.dto.product.UpdateProductRequest;
 import ntfur.com.service.ProductService;
 
 @RestController
-@RequestMapping("/api/admin/products")
+@RequestMapping("/api/employee/products")
 @RequiredArgsConstructor
-public class AdminProductController {
+public class EmployeeProductController {
 
     private final ProductService productService;
-    
+
     @GetMapping
     public ResponseEntity<ApiResponse<List<ProductDTO>>> getAllProducts() {
         List<ProductDTO> products = productService.getAllProducts();
@@ -56,12 +55,6 @@ public class AdminProductController {
         return ResponseEntity.ok(ApiResponse.success(products));
     }
 
-    @GetMapping("/featured")
-    public ResponseEntity<ApiResponse<List<ProductDTO>>> getFeaturedProducts() {
-        List<ProductDTO> products = productService.getFeaturedProducts();
-        return ResponseEntity.ok(ApiResponse.success(products));
-    }
-
     @GetMapping("/low-stock")
     public ResponseEntity<ApiResponse<List<ProductDTO>>> getLowStockProducts() {
         List<ProductDTO> products = productService.getLowStockProducts();
@@ -69,17 +62,17 @@ public class AdminProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ProductDTO>> createProduct(@Valid @RequestBody CreateProductRequest request) {
+    public ResponseEntity<ApiResponse<ProductDTO>> createProduct(@RequestBody CreateProductRequest request) {
         try {
             ProductDTO product = productService.createProduct(request);
-            return ResponseEntity.ok(ApiResponse.success("Tạo sản phẩm thành công", product));
+            return ResponseEntity.ok(ApiResponse.success("Thêm sản phẩm thành công", product));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProductDTO>> updateProduct(@PathVariable Long id, @Valid @RequestBody UpdateProductRequest request) {
+    public ResponseEntity<ApiResponse<ProductDTO>> updateProduct(@PathVariable Long id, @RequestBody UpdateProductRequest request) {
         try {
             ProductDTO product = productService.updateProduct(id, request);
             return ResponseEntity.ok(ApiResponse.success("Cập nhật sản phẩm thành công", product));
@@ -98,44 +91,15 @@ public class AdminProductController {
         }
     }
 
+    @PostMapping("/sync-stock")
+    public ResponseEntity<ApiResponse<Integer>> syncStock() {
+        int count = productService.syncAllProductStatus();
+        return ResponseEntity.ok(ApiResponse.success("Đã đồng bộ " + count + " sản phẩm", count));
+    }
+
     @GetMapping("/count")
     public ResponseEntity<ApiResponse<Long>> countProducts() {
         long count = productService.countProducts();
         return ResponseEntity.ok(ApiResponse.success(count));
-    }
-
-    @PostMapping("/{id}/sync-status")
-    public ResponseEntity<ApiResponse<ProductDTO>> syncProductStatus(@PathVariable Long id) {
-        try {
-            productService.syncProductStatus(id);
-            ProductDTO product = productService.getProductById(id);
-            return ResponseEntity.ok(ApiResponse.success("Đồng bộ trạng thái thành công", product));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/sync-all-status")
-    public ResponseEntity<ApiResponse<Integer>> syncAllProductStatus() {
-        try {
-            int count = productService.syncAllProductStatus();
-            return ResponseEntity.ok(ApiResponse.success("Đã đồng bộ " + count + " sản phẩm", count));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
-    }
-
-    @PutMapping("/{id}/reduce-stock")
-    public ResponseEntity<ApiResponse<Boolean>> reduceStock(@PathVariable Long id, @RequestParam int quantity) {
-        try {
-            boolean success = productService.reduceStock(id, quantity);
-            if (success) {
-                return ResponseEntity.ok(ApiResponse.success("Giảm tồn kho thành công", true));
-            } else {
-                return ResponseEntity.badRequest().body(ApiResponse.error("Không đủ tồn kho"));
-            }
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
     }
 }

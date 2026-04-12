@@ -1,0 +1,133 @@
+@startuml NTFurniture_Use_Case
+
+' =====================================================
+' NTFURNITURE - USE CASE DIAGRAM
+' =====================================================
+
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam shadowing false
+
+left to right direction
+
+' -------------------- ACTORS --------------------
+
+actor ":Khách hàng:" as Customer
+actor ":Nhân viên:" as Employee
+actor ":Quản trị viên:" as Admin
+actor ":Hệ thống:" as System
+
+' -------------------- PACKAGES --------------------
+
+package "Quản lý tài khoản" {
+    usecase "UC01. Đăng nhập" as UC01
+    usecase "UC02. Đăng ký" as UC02
+    usecase "UC03. Đăng xuất" as UC03
+    usecase "UC04. Quản lý thông tin cá nhân" as UC04
+}
+
+package "Quản lý sản phẩm" {
+    usecase "UC05. Xem danh sách sản phẩm" as UC05
+    usecase "UC06. Tìm kiếm sản phẩm" as UC06
+    usecase "UC07. Xem chi tiết sản phẩm" as UC07
+    usecase "UC08. Quản lý sản phẩm" as UC08
+    usecase "UC09. Quản lý danh mục" as UC09
+}
+
+package "Quản lý giỏ hàng" {
+    usecase "UC10. Thêm vào giỏ hàng" as UC10
+    usecase "UC11. Xem giỏ hàng" as UC11
+    usecase "UC12. Cập nhật số lượng" as UC12
+    usecase "UC13. Xóa sản phẩm" as UC13
+}
+
+package "Quản lý đặt hàng" {
+    usecase "UC14. Đặt hàng" as UC14
+    usecase "UC15. Xem danh sách đơn hàng" as UC15
+    usecase "UC16. Xem chi tiết đơn hàng" as UC16
+    usecase "UC17. Hủy đơn hàng" as UC17
+    usecase "UC18. Xác nhận đơn hàng" as UC18
+    usecase "UC19. Cập nhật trạng thái đơn hàng" as UC19
+}
+
+package "Quản lý thanh toán" {
+    usecase "UC20. Thanh toán COD" as UC20
+    usecase "UC21. Thanh toán online" as UC21
+}
+
+package "Quản lý vận chuyển" {
+    usecase "UC22. Tạo thông tin vận chuyển" as UC22
+    usecase "UC23. Cập nhật trạng thái giao hàng" as UC23
+    usecase "UC24. Theo dõi đơn hàng" as UC24
+}
+
+package "Quản lý kho" {
+    usecase "UC25. Nhập kho" as UC25
+    usecase "UC26. Xuất kho" as UC26
+    usecase "UC27. Xem tồn kho" as UC27
+    usecase "UC28. Quản lý kho" as UC28
+}
+
+package "Quản lý nhà cung cấp" {
+    usecase "UC29. Quản lý nhà cung cấp" as UC29
+}
+
+package "Quản lý thống kê" {
+    usecase "UC30. Xem thống kê dashboard" as UC30
+    usecase "UC31. Xuất báo cáo" as UC31
+}
+
+' -------------------- ACTOR RELATIONSHIPS --------------------
+
+Customer --> UC01
+Customer --> UC02
+Customer --> UC03
+Customer --> UC04
+Customer --> UC05
+Customer --> UC06
+Customer --> UC07
+Customer --> UC10
+Customer --> UC11
+Customer --> UC12
+Customer --> UC13
+Customer --> UC14
+Customer --> UC15
+Customer --> UC16
+Customer --> UC17
+Customer --> UC20
+Customer --> UC21
+Customer --> UC24
+
+Employee --> UC03
+Employee --> UC18
+Employee --> UC19
+Employee --> UC22
+Employee --> UC23
+Employee --> UC25
+Employee --> UC26
+Employee --> UC27
+
+Admin --> UC03
+Admin --> UC08
+Admin --> UC09
+Admin --> UC19
+Admin --> UC23
+Admin --> UC28
+Admin --> UC29
+Admin --> UC30
+Admin --> UC31
+
+System --> UC14 : kiểm tra tồn kho
+System --> UC19 : thông báo
+
+' -------------------- INCLUDE/EXTEND --------------------
+
+UC14 ..> UC12 : <<include>>
+UC14 ..> UC20 : <<extend>>
+UC14 ..> UC21 : <<extend>>
+
+UC19 ..> UC23 : <<include>>
+
+UC25 ..> UC27 : <<include>>
+
+@enduml

@@ -20,6 +20,8 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
 
     Optional<Order> findByOrderNumber(String orderNumber);
 
+    Optional<Order> findByPayosOrderCode(Long payosOrderCode);
+
     List<Order> findByUserId(Long userId);
 
     List<Order> findByCustomerId(Long customerId);

@@ -1,8 +1,5 @@
 package ntfur.com.service;
 
-import java.math.BigDecimal;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -103,7 +100,7 @@ public class PaymentService {
 
             // Lưu checkoutUrl và orderCode vào đơn hàng
             order.setPayosCheckoutUrl(linkResult.checkoutUrl());
-            order.setPayosOrderCode(linkResult.orderCode());
+            order.setPayosOrderCode(Long.valueOf(linkResult.orderCode()));
             orderRepository.save(order);
 
             // Tính thời gian hết hạn để hiển thị cho user

@@ -1,0 +1,193 @@
+<th:block th:fragment="content">
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl shadow-sm border border-primary-100 p-6 md:p-8">
+        <h2 class="text-xl font-display font-bold text-primary-900 mb-2">Giỏ hàng</h2>
+        <p class="text-sm text-primary-600 mb-6">Kiểm tra tồn kho tự động trước khi thanh toán.</p>
+
+        <div id="toastContainer" class="fixed top-20 right-4 z-50 space-y-2"></div>
+
+        <div id="cartList" class="space-y-4"></div>
+        <div id="cartEmpty" class="hidden text-center py-12 text-primary-500 border border-dashed border-primary-200 rounded-xl">
+            <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <p>Giỏ hàng trống</p>
+            <a href="/products" class="text-primary-600 hover:underline mt-2 inline-block">Tiếp tục mua sắm</a>
+        </div>
+
+        <div id="selectAllRow" class="hidden mt-4 flex items-center gap-2 py-3 border-t border-primary-100">
+            <input type="checkbox" id="selectAll" class="w-5 h-5 accent-secondary-700" checked>
+            <label for="selectAll" class="text-sm font-medium text-primary-700">Chọn tất cả</label>
+            <span id="selectedCount" class="text-xs text-primary-500">(0 sản phẩm)</span>
+        </div>
+
+        <div class="border-t border-primary-100 mt-6 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <p class="text-lg">Tổng cộng: <strong id="total" class="text-secondary-800">0đ</strong></p>
+                <p id="selectedTotal" class="text-sm text-primary-500">Đã chọn: 0đ</p>
+            </div>
+            <button id="btnCheckout" class="inline-flex justify-center px-8 py-3 rounded-xl bg-gradient-to-r from-secondary-700 to-primary-800 text-white font-semibold text-sm hover:opacity-95 active:scale-[0.98] transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                Đặt hàng ngay
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var toastId = 0;
+    function token() { return localStorage.getItem('accessToken'); }
+
+    function showToast(message, type) {
+        var colors = {
+            'error': 'bg-red-50 border-red-200 text-red-700',
+            'warning': 'bg-yellow-50 border-yellow-200 text-yellow-700',
+            'success': 'bg-green-50 border-green-200 text-green-700'
+        };
+        var icons = { 'error': '✕', 'warning': '⚠', 'success': '✓' };
+        var toast = document.createElement('div');
+        toast.id = 'toast_' + toastId++;
+        toast.className = colors[type] + ' border px-4 py-3 rounded-xl shadow-lg max-w-sm text-sm flex items-center gap-2 transform translate-x-full transition-transform duration-300';
+        toast.innerHTML = '<span class="font-bold">' + icons[type] + '</span><span>' + message + '</span>';
+        var container = document.getElementById('toastContainer');
+        if (container) {
+            container.appendChild(toast);
+            requestAnimationFrame(function() { toast.classList.remove('translate-x-full'); });
+            setTimeout(function() {
+                toast.classList.add('translate-x-full');
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 4000);
+        }
+    }
+
+    function formatVnd(v) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v || 0); }
+    function loadCart() { try { return JSON.parse(localStorage.getItem('cart') || '[]'); } catch (e) { return []; } }
+    function saveCart(c) { localStorage.setItem('cart', JSON.stringify(c)); }
+
+    async function loadProducts() {
+        try {
+            var res = await fetch('/api/products');
+            var data = await res.json();
+            return data.success && data.data ? data.data : [];
+        } catch (e) { return []; }
+    }
+
+    async function render() {
+        var products = await loadProducts();
+        var byId = {};
+        products.forEach(function(p) { byId[p.id] = p; });
+
+        var cart = loadCart();
+        var listEl = document.getElementById('cartList');
+        var emptyEl = document.getElementById('cartEmpty');
+        var selectAllRow = document.getElementById('selectAllRow');
+
+        cart = cart.filter(function(item) {
+            var p = byId[item.id];
+            if (!p) { showToast('Đã xóa sản phẩm không tồn tại', 'warning'); return false; }
+            if (p.stock <= 0) { showToast('Đã xóa sản phẩm hết hàng: ' + p.name, 'warning'); return false; }
+            return true;
+        });
+        saveCart(cart);
+
+        if (!cart.length) {
+            listEl.innerHTML = '';
+            emptyEl.classList.remove('hidden');
+            selectAllRow.classList.add('hidden');
+            document.getElementById('total').textContent = formatVnd(0);
+            document.getElementById('selectedTotal').textContent = 'Đã chọn: 0đ';
+            document.getElementById('btnCheckout').disabled = true;
+            return;
+        }
+
+        emptyEl.classList.add('hidden');
+        selectAllRow.classList.remove('hidden');
+
+        var total = 0, selectedTotal = 0, selectedCount = 0;
+
+        listEl.innerHTML = cart.map(function(item, idx) {
+            var p = byId[item.id];
+            var price = p ? Number(p.price) : Number(item.price);
+            var img = p && p.mainImage ? p.mainImage : (item.image || '');
+            var isSelected = item.selected !== false;
+            var qty = item.quantity;
+
+            if (isSelected) { selectedTotal += price * qty; selectedCount++; }
+            total += price * qty;
+
+            return '<div class="flex gap-4 items-center border border-primary-100 rounded-xl p-4">' +
+                '<input type="checkbox" class="item-select w-5 h-5 accent-secondary-700 shrink-0" ' + (isSelected ? 'checked' : '') + ' data-idx="' + idx + '">' +
+                (img ? '<img src="' + img + '" alt="" class="w-20 h-20 rounded-lg object-cover shrink-0">' : '<div class="w-20 h-20 rounded-lg bg-primary-100 shrink-0 flex items-center justify-center"><svg class="w-8 h-8 text-primary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>') +
+                '<div class="flex-1 min-w-0">' +
+                    '<p class="font-medium text-primary-900 truncate">' + (p ? p.name : item.name) + '</p>' +
+                    '<p class="text-sm text-primary-600">' + formatVnd(price) + '</p>' +
+                    '<p class="text-xs ' + (p && p.stock > 0 ? 'text-green-600' : 'text-red-600') + '">' +
+                        (p && p.stock > 0 ? 'Còn hàng' : 'Hết hàng') + '</p>' +
+                '</div>' +
+                '<div class="flex flex-col items-end gap-2">' +
+                    '<p class="font-semibold text-primary-800">' + formatVnd(price * qty) + '</p>' +
+                    '<div class="flex items-center gap-2">' +
+                        '<input type="number" min="1" max="' + (p ? p.stock : 1) + '" value="' + qty + '" data-idx="' + idx + '" class="cart-qty w-16 border border-primary-200 rounded-lg px-2 py-1 text-sm text-center">' +
+                        '<button type="button" data-idx="' + idx + '" class="cart-remove text-red-600 text-sm px-2 py-1 hover:bg-red-50 rounded-lg">Xóa</button>' +
+                    '</div>' +
+                '</div></div>';
+        }).join('');
+
+        document.getElementById('total').textContent = formatVnd(total);
+        document.getElementById('selectedTotal').textContent = 'Đã chọn: ' + formatVnd(selectedTotal);
+        document.getElementById('selectedCount').textContent = '(' + selectedCount + ' sản phẩm)';
+        document.getElementById('btnCheckout').disabled = selectedCount === 0;
+
+        listEl.querySelectorAll('.item-select').forEach(function(cb) {
+            cb.addEventListener('change', function() {
+                var i = parseInt(cb.dataset.idx);
+                var c = loadCart();
+                c[i].selected = cb.checked;
+                saveCart(c);
+                render();
+            });
+        });
+
+        listEl.querySelectorAll('.cart-qty').forEach(function(inp) {
+            inp.addEventListener('change', function() {
+                var i = parseInt(inp.dataset.idx);
+                var c = loadCart();
+                c[i].quantity = Math.max(1, parseInt(inp.value) || 1);
+                saveCart(c);
+                render();
+            });
+        });
+
+        listEl.querySelectorAll('.cart-remove').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var i = parseInt(btn.dataset.idx);
+                var c = loadCart();
+                c.splice(i, 1);
+                saveCart(c);
+                showToast('Đã xóa sản phẩm', 'success');
+                render();
+            });
+        });
+
+        document.getElementById('selectAll').checked = cart.length > 0 && cart.every(function(i) { return i.selected !== false; });
+    }
+
+    document.getElementById('selectAll').addEventListener('change', function() {
+        var c = loadCart();
+        c.forEach(function(item) { item.selected = this.checked; }, this);
+        saveCart(c);
+        render();
+    });
+
+    document.getElementById('btnCheckout').addEventListener('click', function() {
+        if (!token()) {
+            window.location.href = '/login?redirect=/cart';
+            return;
+        }
+        window.location.href = '/checkout';
+    });
+
+    render();
+})();
+</script>
+</th:block>

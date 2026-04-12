@@ -33,6 +33,7 @@ public class ImportReceiptService {
     private final SupplierRepository supplierRepository;
     private final ProductRepository productRepository;
     private final SupplierProductRepository supplierProductRepository;
+    private final ProductService productService;
     
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -152,6 +153,9 @@ public class ImportReceiptService {
             if (unitPrice == null && itemDTO.getUnitPriceNumber() != null) {
                 unitPrice = BigDecimal.valueOf(itemDTO.getUnitPriceNumber().doubleValue());
             }
+            if (unitPrice == null) {
+                unitPrice = BigDecimal.ZERO;
+            }
             item.setUnitPrice(unitPrice);
             item.setTotalPrice(unitPrice.multiply(BigDecimal.valueOf(itemDTO.getQuantity())));
 
@@ -193,10 +197,9 @@ public class ImportReceiptService {
             throw new RuntimeException("Phiếu nhập đã được hoàn tất trước đó");
         }
         if (receipt.getStatus() == ImportStatus.CANCELLED) {
-            throw new RuntimeException("Không thể hoàn tất phiếu nhập đã bị hủy");
+            throw new RuntimeException("Không thể hoàn thành phiếu nhập đã bị hủy");
         }
 
-        // Update product stock for each item
         for (ImportReceiptItem item : receipt.getItems()) {
             Product product = item.getProduct();
             product.setStock(product.getStock() + item.getQuantity());
@@ -206,8 +209,11 @@ public class ImportReceiptService {
         receipt.setStatus(ImportStatus.COMPLETED);
         ImportReceipt completed = importReceiptRepository.save(receipt);
 
-        // Update supplier stats
         updateSupplierStats(receipt.getSupplier().getId());
+
+        for (ImportReceiptItem item : receipt.getItems()) {
+            productService.syncProductStatus(item.getProduct().getId());
+        }
 
         return toDTO(completed);
     }
@@ -224,8 +230,11 @@ public class ImportReceiptService {
             // Reverse stock changes if previously completed
             for (ImportReceiptItem item : receipt.getItems()) {
                 Product product = item.getProduct();
-                product.setStock(Math.max(0, product.getStock() - item.getQuantity()));
+                // Giảm tồn kho (không hoàn kho vì đó là hủy phiếu, không phải hoàn trả)
+                int newStock = Math.max(0, product.getStock() - item.getQuantity());
+                product.setStock(newStock);
                 productRepository.save(product);
+                productService.syncProductStatus(product.getId());
             }
         }
 

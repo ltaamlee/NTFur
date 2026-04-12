@@ -436,7 +436,7 @@
                                 </svg>
                             </button>
                             ${receipt.status === 'PENDING' ? `
-                                <button onclick="completeReceipt(${receipt.id})" class="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Hoàn tất">
+                                <button onclick="acceptReceipt(${receipt.id})" class="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Xác nhận">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                     </svg>
@@ -540,17 +540,17 @@
             document.getElementById('viewModal').classList.add('hidden');
         }
 
-        // Complete receipt
-        async function completeReceipt(id) {
-            showDeleteModal('Xác nhận hoàn tất phiếu nhập hàng? Tồn kho sẽ được cập nhật.', async () => {
+        // Accept receipt
+        async function acceptReceipt(id) {
+            showConfirmModal('Xác nhận phiếu nhập', 'Bạn có chắc chắn muốn xác nhận phiếu nhập hàng? Tồn kho sẽ được cập nhật.', async () => {
                 try {
                     const response = await apiCall(`/api/employee/import-receipts/${id}/complete`, 'POST');
                     if (response.success) {
-                        showToast('Phiếu nhập đã được hoàn tất!');
+                        showToast('Phiếu nhập đã được xác nhận!');
                         loadImportHistory();
                     }
                 } catch (error) {
-                    console.error('Error completing receipt:', error);
+                    console.error('Error accepting receipt:', error);
                 }
             });
         }

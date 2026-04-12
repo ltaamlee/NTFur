@@ -258,7 +258,6 @@ public class CustomerPortalController {
             order.setPaymentStatus(Order.PaymentStatus.PENDING);
             order.setPaymentMethod(null);
 
-            // Đặt deadline thanh toán là 7 ngày kể từ khi đặt
             order.setPaymentDeadline(LocalDateTime.now().plusDays(7));
 
             order.setShippingFullName(request.getFullName().trim());
@@ -301,8 +300,7 @@ public class CustomerPortalController {
             customer.setTotalSpent(customer.getTotalSpent().add(saved.getTotalAmount()));
             customerRepository.save(customer);
 
-            // Trả về thông tin đơn hàng - KHÔNG bao gồm thanh toán
-            // Thanh toán sẽ được xử lý riêng qua /api/payment/*
+
             Map<String, Object> responseData = new HashMap<>();
             responseData.put("orderId", saved.getId());
             responseData.put("orderNumber", saved.getOrderNumber());

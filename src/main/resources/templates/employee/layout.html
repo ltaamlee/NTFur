@@ -184,6 +184,26 @@
         </div>
     </div>
 
+    <!-- Confirm Modal (for accept receipt actions) -->
+    <div id="confirmModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop absolute inset-0 bg-black bg-opacity-50"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="modal-content relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                <div class="text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <h3 class="text-xl font-display font-semibold text-primary-800 mb-2" id="confirmTitle">Xác nhận</h3>
+                    <p class="text-primary-600 mb-6" id="confirmMessage">Bạn có chắc chắn?</p>
+                    <div class="flex space-x-3">
+                        <button onclick="closeConfirmModal()" class="flex-1 px-4 py-2 border border-primary-300 text-primary-700 rounded-lg hover:bg-primary-50 font-medium transition-colors">Hủy bỏ</button>
+                        <button onclick="confirmAction()" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors">Xác nhận</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-y-full opacity-0 transition-all duration-300">
         <div class="bg-primary-800 text-white px-6 py-3 rounded-lg shadow-lg flex items-center">
@@ -216,6 +236,23 @@
             if (deleteCallback) { deleteCallback(); }
             closeDeleteModal();
         }
+        let confirmCallback = null;
+        function showConfirmModal(title, message, callback) {
+            const modal = document.getElementById('confirmModal');
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            modal.classList.remove('hidden');
+            confirmCallback = callback;
+        }
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.add('hidden');
+            confirmCallback = null;
+        }
+        function confirmAction() {
+            if (confirmCallback) { confirmCallback(); }
+            closeConfirmModal();
+        }
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toastMessage');
@@ -225,6 +262,8 @@
         }
         async function apiCall(url, method = 'GET', data = null) {
             const options = { method, headers: { 'Content-Type': 'application/json' } };
+            const token = localStorage.getItem('accessToken');
+            if (token) { options.headers['Authorization'] = 'Bearer ' + token; }
             if (data) { options.body = JSON.stringify(data); }
             try {
                 const response = await fetch(url, options);

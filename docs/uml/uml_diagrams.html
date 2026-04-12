@@ -1,0 +1,2343 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NTFURNITURE - Tài liệu UML Chi tiết</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .card h2 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .card h3 {
+            color: #555;
+            margin: 20px 0 10px 0;
+            font-size: 1.2rem;
+        }
+        
+        .card h4 {
+            color: #333;
+            margin: 15px 0 10px 0;
+            font-size: 1.1rem;
+            padding-left: 10px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .table-content {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .table-content ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .table-content li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .table-content li:last-child {
+            border-bottom: none;
+        }
+        
+        .table-content a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .table-content a:hover {
+            text-decoration: underline;
+        }
+        
+        .entity-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .entity-box {
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+        
+        .entity-box h4 {
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            margin: -15px -15px 15px -15px;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .entity-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .entity-box li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+        
+        .entity-box li:last-child {
+            border-bottom: none;
+        }
+        
+        .entity-box .attr {
+            color: #e67e22;
+            font-weight: bold;
+        }
+        
+        .entity-box .method {
+            color: #27ae60;
+            font-style: italic;
+        }
+        
+        .scenario-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .scenario-box h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .scenario-box ol {
+            padding-left: 20px;
+        }
+        
+        .scenario-box li {
+            padding: 5px 0;
+        }
+        
+        .enum-box {
+            background: #fff3e0;
+            border: 2px solid #e67e22;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin: 10px 0;
+        }
+        
+        .enum-box h5 {
+            color: #e67e22;
+            margin-bottom: 5px;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .color-class { background: #a8d5ff; border: 2px solid #2196F3; }
+        .color-enum { background: #ffe0b2; border: 2px solid #FF9800; }
+        .color-relation { background: #c8e6c9; border: 2px solid #4CAF50; }
+        .color-actor { background: #f8bbd0; border: 2px solid #E91E63; }
+        
+        .class-box {
+            border: 2px solid #2196F3;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            background: #f8f9fa;
+        }
+        
+        .class-box h4 {
+            background: #2196F3;
+            color: white;
+            padding: 8px 15px;
+            margin: -15px -15px 15px -15px;
+            border-radius: 6px 6px 0 0;
+            font-size: 1rem;
+        }
+        
+        .class-section {
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+        
+        .class-section:last-child {
+            border-bottom: none;
+        }
+        
+        .class-section-title {
+            color: #2196F3;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .class-section ul {
+            list-style: none;
+            padding-left: 15px;
+        }
+        
+        .class-section li {
+            padding: 3px 0;
+            font-size: 0.9rem;
+        }
+        
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .two-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .comment-box {
+            background: #fff9c4;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .note-box {
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            .card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>NTFURNITURE - Tài liệu UML Chi tiết</h1>
+        <p style="text-align:center; color: white; margin-bottom: 20px;">Đồ án môn học Thiết kế Phần mềm Hướng Đối tượng - Nhóm 16</p>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color color-class"></div>
+                <span>Class (Entity)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color color-enum"></div>
+                <span>Enum</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color color-relation"></div>
+                <span>Relationship</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color color-actor"></div>
+                <span>Actor</span>
+            </div>
+        </div>
+        
+        <!-- MỤC LỤC -->
+        <div class="card">
+            <h2>MỤC LỤC</h2>
+            <div class="table-content">
+                <ul>
+                    <li><a href="#section1">1. Mô hình chức năng</a></li>
+                    <li><a href="#section2">2. Đặc tả chức năng</a></li>
+                    <li><a href="#section3">3. Mô hình lĩnh vực (Domain Model)</a></li>
+                    <li><a href="#section4">4. Lược đồ trình tự hệ thống</a></li>
+                    <li><a href="#section5">5. Lược đồ trình tự (Sequence Diagrams)</a></li>
+                    <li><a href="#section6">6. Lược đồ cộng tác (Collaboration Diagrams)</a></li>
+                    <li><a href="#section7">7. Lược đồ lớp (Class Diagram)</a></li>
+                    <li><a href="#section8">8. Tạo mã nguồn từ thiết kế</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 1. MÔ HÌNH CHỨC NĂNG -->
+        <div class="card" id="section1">
+            <h2>1. Mô hình chức năng</h2>
+            <div class="mermaid">
+flowchart TB
+    subgraph Customer["Nhóm Khách hàng"]
+        UC1["👤 Đăng nhập"]
+        UC2["👤 Đăng ký"]
+        UC3["🛒 Xem sản phẩm"]
+        UC4["🔍 Tìm kiếm sản phẩm"]
+        UC5["📦 Xem chi tiết sản phẩm"]
+        UC6["🛒 Thêm vào giỏ hàng"]
+        UC7["🛒 Xem giỏ hàng"]
+        UC8["📝 Đặt hàng"]
+        UC9["💳 Thanh toán"]
+        UC10["📋 Xem đơn hàng"]
+        UC11["👤 Quản lý tài khoản"]
+    end
+    
+    subgraph Employee["Nhóm Nhân viên"]
+        UC12["📦 Nhập kho"]
+        UC13["📊 Xem tồn kho"]
+        UC14["✅ Xác nhận đơn hàng"]
+        UC15["🚚 Cập nhật giao hàng"]
+        UC16["🏭 Quản lý nhà cung cấp"]
+    end
+    
+    subgraph Admin["Nhóm Quản trị"]
+        UC17["📦 Quản lý sản phẩm"]
+        UC18["📁 Quản lý danh mục"]
+        UC19["🏢 Quản lý kho"]
+        UC20["🏭 Quản lý nhà cung cấp"]
+        UC21["📈 Thống kê báo cáo"]
+        UC22["👥 Quản lý người dùng"]
+    end
+    
+    UC8 --> UC14
+    UC12 --> UC13
+    UC14 --> UC15
+    UC17 --> UC3
+    UC18 --> UC17
+            </div>
+            
+            <div class="scenario-box">
+                <h4>Mô tả các nhóm chức năng chính:</h4>
+                <ul style="padding-left: 20px;">
+                    <li><strong>Nhóm Khách hàng:</strong> Các chức năng dành cho người mua hàng online</li>
+                    <li><strong>Nhóm Nhân viên:</strong> Các chức năng quản lý kho và xử lý đơn hàng</li>
+                    <li><strong>Nhóm Quản trị:</strong> Các chức năng quản lý hệ thống</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 2. ĐẶC TẢ CHỨC NĂNG -->
+        <div class="card" id="section2">
+            <h2>2. Đặc tả chức năng chi tiết</h2>
+            
+            <!-- 2.1 Nhập kho -->
+            <h3>2.1 Đặc tả chức năng Nhập kho</h3>
+            
+            <div class="scenario-box">
+                <h4>Mô tả:</h4>
+                <p>Chức năng này cho phép Nhân viên cập nhật số lượng và giá nhập kho của sản phẩm vào hệ thống khi có hàng mới từ nhà cung cấp thông qua Phiếu nhập kho.</p>
+                <p><strong>Actor:</strong> Nhân viên</p>
+            </div>
+            
+            <div class="scenario-box">
+                <h4>Điều kiện trước:</h4>
+                <ul>
+                    <li>Nhân viên đã đăng nhập vào hệ thống với quyền hạn tương ứng</li>
+                    <li>Hệ thống đã có danh mục Nhà cung cấp và Danh mục sản phẩm</li>
+                </ul>
+            </div>
+            
+            <div class="scenario-box">
+                <h4>Tình huống chính - Nhập kho thành công:</h4>
+                <ol>
+                    <li>Nhân viên truy cập vào chức năng Quản lý kho</li>
+                    <li>Hệ thống hiển thị danh sách các phiếu nhập kho hiện có</li>
+                    <li>Nhân viên chọn chức năng Tạo phiếu nhập mới</li>
+                    <li>Hệ thống hiển thị biểu mẫu nhập thông tin phiếu nhập</li>
+                    <li>Nhân viên điền thông tin: Nhà cung cấp, Ngày nhập, Danh sách sản phẩm (mã, tên, số lượng, đơn giá), Ghi chú</li>
+                    <li>Hệ thống tự động tính toán tổng giá trị phiếu nhập</li>
+                    <li>Nhân viên kiểm tra và nhấn nút Xác nhận/Lưu</li>
+                    <li>Hệ thống kiểm tra tính hợp lệ của dữ liệu</li>
+                    <li>Hệ thống ghi nhận thông tin vào cơ sở dữ liệu</li>
+                    <li>Hệ thống cập nhật số lượng tồn kho</li>
+                    <li>Hệ thống hiển thị thông báo thành công</li>
+                </ol>
+            </div>
+            
+            <div class="two-columns">
+                <div class="scenario-box">
+                    <h4>Tình huống thay thế a - Dữ liệu không hợp lệ:</h4>
+                    <ol>
+                        <li>Hệ thống phát hiện Số lượng ≤ 0 hoặc Đơn giá ≤ 0</li>
+                        <li>Hệ thống hiển thị thông báo lỗi tại các ô tương ứng</li>
+                        <li> Quay lại bước 5</li>
+                    </ol>
+                </div>
+                <div class="scenario-box">
+                    <h4>Tình huống thay thế b - Hủy nhập kho:</h4>
+                    <ol>
+                        <li>Nhân viên chọn chức năng Hủy</li>
+                        <li>Hệ thống cảnh báo dữ liệu chưa được lưu</li>
+                        <li>Nhân viên xác nhận hủy</li>
+                        <li>Hệ thống quay về giao diện danh sách phiếu nhập</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <!-- 2.2 Sửa sản phẩm -->
+            <h3>2.2 Đặc tả chức năng Sửa sản phẩm</h3>
+            
+            <div class="scenario-box">
+                <h4>Mô tả:</h4>
+                <p>Chức năng cho phép Admin cập nhật thông tin sản phẩm: tên, loại, giá bán, số lượng, chất liệu, kích thước, hình ảnh và mô tả.</p>
+                <p><strong>Actor:</strong> Admin</p>
+            </div>
+            
+            <div class="scenario-box">
+                <h4>Điều kiện trước:</h4>
+                <ul>
+                    <li>Người dùng có quyền chỉnh sửa sản phẩm</li>
+                    <li>Sản phẩm cần sửa tồn tại trên hệ thống</li>
+                </ul>
+            </div>
+            
+            <div class="scenario-box">
+                <h4>Tình huống chính - Sửa sản phẩm thành công:</h4>
+                <ol>
+                    <li>Admin truy cập vào chức năng Quản lý sản phẩm</li>
+                    <li>Hệ thống hiển thị danh sách các sản phẩm</li>
+                    <li>Admin nhấn nút Chỉnh sửa sản phẩm</li>
+                    <li>Hệ thống hiển thị thông tin chi tiết cần chỉnh sửa</li>
+                    <li>Admin nhập các thông tin cần chỉnh sửa</li>
+                    <li>Hệ thống kiểm tra tính hợp lệ của dữ liệu</li>
+                    <li>Admin nhấn nút Lưu</li>
+                    <li>Hệ thống hiển thị thông báo thành công và lưu vào database</li>
+                </ol>
+            </div>
+            
+            <!-- 2.3 Đặt hàng -->
+            <h3>2.3 Đặc tả chức năng Đặt hàng</h3>
+            
+            <div class="scenario-box">
+                <h4>Mô tả:</h4>
+                <p>Chức năng cho phép Khách hàng tạo đơn hàng từ các sản phẩm đã chọn trong giỏ hàng.</p>
+                <p><strong>Actor:</strong> Khách hàng</p>
+            </div>
+            
+            <div class="scenario-box">
+                <h4>Điều kiện trước:</h4>
+                <ul>
+                    <li>Khách hàng đã đăng nhập thành công</li>
+                    <li>Giỏ hàng có ít nhất 1 sản phẩm hợp lệ</li>
+                </ul>
+            </div>
+            
+            <div class="scenario-box">
+                <h4>Tình huống chính - Đặt hàng thành công:</h4>
+                <ol>
+                    <li>Hệ thống hiển thị giao diện giỏ hàng</li>
+                    <li>Hệ thống tự động kiểm tra tồn kho cho tất cả sản phẩm</li>
+                    <li>Khách hàng chọn các sản phẩm cần mua và nhấn Đặt hàng</li>
+                    <li>Hệ thống hiển thị form nhập thông tin giao hàng</li>
+                    <li>Khách hàng nhập/xác nhận thông tin giao hàng</li>
+                    <li>Hệ thống tính toán phí vận chuyển</li>
+                    <li>Hệ thống hiển thị bảng tóm tắt đơn hàng</li>
+                    <li>Khách hàng kiểm tra và nhấn Xác nhận đặt hàng</li>
+                    <li>Hệ thống ghi nhận đơn hàng và cập nhật tồn kho</li>
+                    <li>Hệ thống hiển thị thông báo thành công kèm mã đơn</li>
+                </ol>
+            </div>
+            
+            <!-- 2.4 Thanh toán đơn hàng -->
+            <h3>2.4 Đặc tả chức năng Thanh toán đơn hàng</h3>
+            
+            <div class="scenario-box">
+                <h4>Mô tả:</h4>
+                <p>Chức năng cho phép Khách hàng thực hiện thanh toán đơn hàng qua nhiều phương thức (QR PayOS, COD).</p>
+                <p><strong>Actor:</strong> Khách hàng</p>
+            </div>
+            
+            <div class="scenario-box">
+                <h4>Điều kiện trước:</h4>
+                <ul>
+                    <li>Khách hàng đã đăng nhập</li>
+                    <li>Đơn hàng đã được tạo</li>
+                    <li>Hệ thống thanh toán hoạt động bình thường</li>
+                </ul>
+            </div>
+            
+            <div class="scenario-box">
+                <h4>Tình huống chính - Thanh toán QR thành công:</h4>
+                <ol>
+                    <li>Khách hàng nhấn nút Thanh toán ở đơn hàng</li>
+                    <li>Hệ thống hiển thị thông tin đơn hàng và phương thức</li>
+                    <li>Khách hàng chọn phương thức QR PayOS</li>
+                    <li>Khách hàng xác nhận thông tin và nhấn Xác nhận</li>
+                    <li>Hệ thống tạo mã QR thông qua PayOS</li>
+                    <li>Khách hàng quét mã bằng app ngân hàng</li>
+                    <li>Hệ thống kiểm tra và xác nhận giao dịch</li>
+                    <li>Hệ thống chuyển trạng thái thành "Đã thanh toán"</li>
+                </ol>
+            </div>
+            
+            <div class="two-columns">
+                <div class="scenario-box">
+                    <h4>Tình huống thay thế - COD:</h4>
+                    <ol>
+                        <li>Khách hàng chọn COD</li>
+                        <li>Hệ thống ghi nhận COD</li>
+                        <li>Trạng thái chuyển sang "Chờ xác nhận"</li>
+                    </ol>
+                </div>
+                <div class="scenario-box">
+                    <h4>Tình huống thay thế - Hủy thanh toán:</h4>
+                    <ol>
+                        <li>Khách hàng nhấn Hủy</li>
+                        <li>Hệ thống giữ trạng thái "Chưa thanh toán"</li>
+                        <li>Quay về màn hình chính</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 3. MÔ HÌNH LĨNH VỰC -->
+        <div class="card" id="section3">
+            <h2>3. Mô hình lĩnh vực (Domain Model)</h2>
+            
+            <div class="note-box">
+                <strong>Ghi chú:</strong> 
+                <ul style="padding-left: 20px; margin-top: 5px;">
+                    <li>Màu xanh dương: Class (Entity)</li>
+                    <li>Màu cam: Attribute (Thuộc tính)</li>
+                    <li>Không có động từ trong domain model</li>
+                </ul>
+            </div>
+            
+            <div class="mermaid">
+classDiagram
+    class Category {
+        <<Entity>>
+        +id: Long
+        +name: String
+        +slug: String
+        +description: String
+        +status: CategoryStatus
+        +createdAt: LocalDateTime
+    }
+    
+    class Product {
+        <<Entity>>
+        +id: Long
+        +name: String
+        +slug: String
+        +description: String
+        +price: BigDecimal
+        +costPrice: BigDecimal
+        +stock: Integer
+        +sku: String
+        +material: String
+        +dimensions: String
+        +status: ProductStatus
+        +createdAt: LocalDateTime
+        +updatedAt: LocalDateTime
+    }
+    
+    class ProductImage {
+        <<Entity>>
+        +id: Long
+        +imageUrl: String
+        +isPrimary: Boolean
+        +displayOrder: Integer
+    }
+    
+    class ProductVariant {
+        <<Entity>>
+        +id: Long
+        +variantName: String
+        +attributeType: AttributeType
+        +attributeValue: String
+        +priceAdjustment: BigDecimal
+        +stock: Integer
+        +sku: String
+    }
+    
+    class Supplier {
+        <<Entity>>
+        +id: Long
+        +name: String
+        +slug: String
+        +code: String
+        +email: String
+        +phone: String
+        +address: String
+        +city: String
+        +status: SupplierStatus
+        +notes: String
+    }
+    
+    class Warehouse {
+        <<Entity>>
+        +id: Long
+        +warehouseCode: String
+        +name: String
+        +address: String
+        +city: String
+        +phone: String
+        +status: WarehouseStatus
+        +capacity: Integer
+    }
+    
+    class WarehouseProduct {
+        <<Entity>>
+        +id: Long
+        +quantity: Integer
+        +importPrice: BigDecimal
+        +lastImportDate: LocalDateTime
+    }
+    
+    class WarehouseTransaction {
+        <<Entity>>
+        +id: Long
+        +transactionCode: String
+        +transactionType: TransactionType
+        +quantity: Integer
+        +unitPrice: BigDecimal
+        +referenceType: ReferenceType
+        +referenceId: Long
+        +notes: String
+        +performedBy: String
+    }
+    
+    class ImportReceipt {
+        <<Entity>>
+        +id: Long
+        +receiptCode: String
+        +importDate: LocalDateTime
+        +invoiceNumber: String
+        +subtotal: BigDecimal
+        +discountAmount: BigDecimal
+        +finalAmount: BigDecimal
+        +status: ImportStatus
+        +notes: String
+    }
+    
+    class ImportReceiptItem {
+        <<Entity>>
+        +id: Long
+        +productName: String
+        +sku: String
+        +quantity: Integer
+        +unitPrice: BigDecimal
+        +totalPrice: BigDecimal
+    }
+    
+    class Order {
+        <<Entity>>
+        +id: Long
+        +orderNumber: String
+        +subtotal: BigDecimal
+        +shippingFee: BigDecimal
+        +discountAmount: BigDecimal
+        +totalAmount: BigDecimal
+        +status: OrderStatus
+        +paymentStatus: PaymentStatus
+        +paymentMethod: PaymentMethod
+        +shippingFullName: String
+        +shippingPhone: String
+        +shippingAddress: String
+        +shippingCity: String
+        +shippingDistrict: String
+        +shippingWard: String
+        +shippingNotes: String
+        +orderDate: LocalDateTime
+        +cancelledAt: LocalDateTime
+        +cancellationReason: String
+    }
+    
+    class OrderItem {
+        <<Entity>>
+        +id: Long
+        +productName: String
+        +productSku: String
+        +price: BigDecimal
+        +quantity: Integer
+        +total: BigDecimal
+    }
+    
+    class Shipping {
+        <<Entity>>
+        +id: Long
+        +trackingNumber: String
+        +carrier: String
+        +shippingFee: BigDecimal
+        +estimatedDelivery: LocalDateTime
+        +actualDelivery: LocalDateTime
+        +status: ShippingStatus
+        +shippingNotes: String
+    }
+    
+    class User {
+        <<Entity>>
+        +id: Long
+        +username: String
+        +password: String
+        +email: String
+        +fullName: String
+        +phone: String
+        +avatar: String
+        +role: UserRole
+        +status: UserStatus
+        +createdAt: LocalDateTime
+    }
+    
+    class Customer {
+        <<Entity>>
+        +id: Long
+        +fullName: String
+        +phone: String
+        +email: String
+        +totalOrders: Integer
+        +totalSpent: BigDecimal
+        +rank: CustomerRank
+    }
+    
+    class CustomerAddress {
+        <<Entity>>
+        +id: Long
+        +addressLine: String
+        +city: String
+        +district: String
+        +ward: String
+        +isDefault: Boolean
+    }
+    
+    class Cart {
+        <<Entity>>
+        +id: Long
+        +createdAt: LocalDateTime
+        +updatedAt: LocalDateTime
+    }
+    
+    class CartItem {
+        <<Entity>>
+        +id: Long
+        +quantity: Integer
+        +addedAt: LocalDateTime
+    }
+    
+    class Payment {
+        <<Entity>>
+        +id: Long
+        +paymentCode: String
+        +amount: BigDecimal
+        +paymentMethod: PaymentMethod
+        +transactionId: String
+        +status: PaymentStatus
+        +paidAt: LocalDateTime
+    }
+    
+    class PayOSPayment {
+        <<Entity>>
+        +id: Long
+        +orderCode: String
+        +checkoutUrl: String
+        +status: PayOSStatus
+        +createdAt: LocalDateTime
+        +expiresAt: LocalDateTime
+    }
+    
+    class Category "1" --> "*" Product : has
+    Product "1" --> "*" ProductImage : has
+    Product "1" --> "*" ProductVariant : has
+    Product "1" --> "*" CartItem : contains
+    Product "1" --> "*" WarehouseProduct : stored in
+    Supplier "1" --> "*" ImportReceipt : supplies
+    Warehouse "1" --> "*" WarehouseProduct : contains
+    Warehouse "1" --> "*" WarehouseTransaction : records
+    Warehouse "1" --> "*" ImportReceipt : receives
+    ImportReceipt "1" --> "*" ImportReceiptItem : contains
+    ImportReceiptItem "*" --> "1" Product : imports
+    Order "1" --> "*" OrderItem : contains
+    Order "1" --> "1" Shipping : ships
+    Order "1" --> "1" Payment : has
+    User "1" --> "1" Customer : is
+    Customer "1" --> "*" CustomerAddress : has
+    Customer "1" --> "*" Order : places
+    Customer "1" --> "1" Cart : owns
+    Cart "1" --> "*" CartItem : contains
+            </div>
+        </div>
+        
+        <!-- 4. LƯỢC ĐỒ TRÌNH TỰ HỆ THỐNG -->
+        <div class="card" id="section4">
+            <h2>4. Lược đồ trình tự hệ thống (System Sequence Diagrams)</h2>
+            
+            <!-- 4.1 Nhập kho - Chính -->
+            <h3>4.1 Chức năng Nhập kho - Tình huống chính</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant NV as Nhân viên
+    participant UI as Giao diện Kho
+    participant Ctrl as WarehouseController
+    participant Svc as ImportReceiptService
+    participant Repo as Repository
+    participant DB as Database
+    
+    NV->>UI: Truy cập "Quản lý kho"
+    UI->>Ctrl: GET /admin/warehouse/import
+    Ctrl->>Repo: findAllImportReceipts()
+    Repo->>DB: SELECT import_receipts
+    DB-->>Repo: List ImportReceipt
+    Repo-->>Ctrl: List ImportReceiptDTO
+    Ctrl-->>UI: Hiển thị danh sách phiếu nhập
+    UI-->>NV: Danh sách phiếu nhập
+    
+    NV->>UI: Nhấn "Tạo phiếu nhập mới"
+    UI->>Ctrl: GET /admin/warehouse/import/new
+    Ctrl-->>UI: Form tạo phiếu nhập + Danh sách NCC + SP
+    UI-->>NV: Form trống
+    
+    NV->>UI: Chọn NCC, nhập thông tin sản phẩm
+    UI->>UI: Kiểm tra sản phẩm tồn tại
+    NV->>UI: Nhấn "Lưu"
+    UI->>Ctrl: POST /admin/warehouse/import/create
+    Ctrl->>Svc: createImportReceipt(data)
+    Svc->>Repo: save(ImportReceipt)
+    Repo->>DB: INSERT import_receipt
+    
+    loop Mỗi sản phẩm
+        Svc->>Repo: updateWarehouseProduct()
+        Repo->>DB: UPDATE warehouse_products
+        Svc->>Repo: createTransaction()
+        Repo->>DB: INSERT warehouse_transaction
+    end
+    
+    Repo-->>Svc: ImportReceipt saved
+    Svc-->>Ctrl: ImportReceiptDTO
+    Ctrl-->>UI: "Nhập kho thành công!" + mã phiếu
+    UI-->>NV: Thông báo thành công
+            </div>
+            
+            <!-- 4.1 Nhập kho - Hủy -->
+            <h3>4.2 Chức năng Nhập kho - Tình huống thay thế (Hủy nhập kho)</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant NV as Nhân viên
+    participant UI as Giao diện Kho
+    participant Ctrl as WarehouseController
+    
+    NV->>UI: Truy cập "Quản lý kho"
+    UI->>Ctrl: GET /admin/warehouse/import
+    Ctrl-->>UI: Danh sách phiếu nhập
+    UI-->>NV: Hiển thị danh sách
+    
+    NV->>UI: Nhấn "Tạo phiếu nhập mới"
+    UI->>Ctrl: GET /admin/warehouse/import/new
+    Ctrl-->>UI: Form trống
+    UI-->>NV: Form tạo phiếu nhập
+    
+    NV->>UI: Nhấn "Hủy"
+    UI-->>NV: Xác nhận hủy?
+    NV->>UI: Xác nhận hủy
+    UI-->>NV: Quay về danh sách
+            </div>
+            
+            <!-- 4.3 Sửa sản phẩm - Chính -->
+            <h3>4.3 Chức năng Sửa sản phẩm - Tình huống chính</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant Admin as Admin
+    participant UI as Giao diện SP
+    participant Ctrl as ProductController
+    participant Svc as ProductService
+    participant Repo as Repository
+    participant DB as Database
+    
+    Admin->>UI: Truy cập "Quản lý sản phẩm"
+    UI->>Ctrl: GET /admin/products
+    Ctrl->>Repo: findAll()
+    Repo->>DB: SELECT products
+    DB-->>Repo: List Product
+    Repo-->>Ctrl: List ProductDTO
+    Ctrl-->>UI: Danh sách sản phẩm
+    UI-->>Admin: Hiển thị danh sách
+    
+    Admin->>UI: Nhấn "Chỉnh sửa" sản phẩm X
+    UI->>Ctrl: GET /admin/products/{id}/edit
+    Ctrl->>Repo: findById(id)
+    Repo->>DB: SELECT product WHERE id = X
+    DB-->>Repo: Product X
+    Repo-->>Ctrl: ProductDTO
+    Ctrl-->>UI: Form chỉnh sửa + thông tin X
+    UI-->>Admin: Form chỉnh sửa
+    
+    Admin->>UI: Nhập thông tin mới (tên, giá, mô tả...)
+    UI->>UI: Kiểm tra dữ liệu (giá ≥ 0, bắt buộc)
+    
+    Admin->>UI: Nhấn "Lưu"
+    UI->>Ctrl: POST /admin/products/{id}/update
+    Ctrl->>Svc: updateProduct(id, data)
+    Svc->>Repo: findById(id)
+    Repo->>DB: SELECT product X
+    Svc->>Repo: save(product)
+    Repo->>DB: UPDATE products SET ... WHERE id = X
+    Repo-->>Svc: Product updated
+    Svc-->>Ctrl: ProductDTO
+    Ctrl-->>UI: "Cập nhật thành công!"
+    UI-->>Admin: Thông báo thành công
+            </div>
+            
+            <!-- 4.4 Sửa sản phẩm - Hủy -->
+            <h3>4.4 Chức năng Sửa sản phẩm - Tình huống thay thế (Hủy chỉnh sửa)</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant Admin as Admin
+    participant UI as Giao diện SP
+    
+    Admin->>UI: Truy cập "Quản lý sản phẩm"
+    UI-->>Admin: Danh sách sản phẩm
+    
+    Admin->>UI: Nhấn "Chỉnh sửa" sản phẩm
+    UI-->>Admin: Form chỉnh sửa
+    
+    Admin->>UI: Nhấn "Hủy"
+    UI-->>Admin: Quay về danh sách sản phẩm
+    Note over UI: Không lưu thay đổi
+            </div>
+            
+            <!-- 4.5 Đặt hàng - Chính -->
+            <h3>4.5 Chức năng Đặt hàng - Tình huống chính</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant KH as Khách hàng
+    participant UI as Giao diện Giỏ hàng
+    participant Ctrl as CartController
+    participant Svc as CartService
+    participant OrdSvc as OrderService
+    participant WH as WarehouseService
+    participant Repo as Repository
+    participant DB as Database
+    
+    KH->>UI: Truy cập "Giỏ hàng"
+    UI->>Ctrl: GET /cart
+    Ctrl->>Svc: getCartItems(userId)
+    Svc->>Repo: findCartItems()
+    Repo->>DB: SELECT cart_items
+    DB-->>Repo: List CartItem
+    Repo-->>Svc: Items
+    Svc-->>Ctrl: CartDTO
+    Ctrl-->>UI: CartView
+    UI-->>KH: Hiển thị giỏ hàng + trạng thái tồn kho
+    
+    loop Mỗi sản phẩm
+        UI->>WH: checkStock(productId, qty)
+        WH->>Repo: getStock(productId)
+        Repo->>DB: SELECT stock
+        DB-->>Repo: stock
+        Repo-->>WH: Available/OutOfStock
+        WH-->>UI: Stock status
+    end
+    
+    KH->>UI: Chọn SP, nhấn "Đặt hàng"
+    UI->>Ctrl: POST /cart/checkout
+    Ctrl->>Svc: processCheckout(cartData, shippingInfo)
+    
+    Svc->>WH: checkAllStock()
+    WH-->>Svc: Stock OK
+    
+    Svc->>OrdSvc: createOrder(userId, items, shipping)
+    OrdSvc->>Repo: save(Order)
+    Repo->>DB: INSERT orders
+    
+    loop Mỗi sản phẩm
+        OrdSvc->>WH: reduceStock(productId, qty)
+        WH->>Repo: updateStock()
+        Repo->>DB: UPDATE products SET stock = stock - qty
+    end
+    
+    loop Mỗi OrderItem
+        OrdSvc->>Repo: save(OrderItem)
+        Repo->>DB: INSERT order_items
+    end
+    
+    Repo-->>OrdSvc: Order created
+    Svc-->>Ctrl: OrderDTO
+    Ctrl-->>UI: "Đặt hàng thành công!" + mã đơn
+    UI-->>KH: Thông báo thành công
+            </div>
+            
+            <!-- 4.6 Đặt hàng - Hết hàng -->
+            <h3>4.6 Chức năng Đặt hàng - Tình huống thay thế (Sản phẩm hết hàng)</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant KH as Khách hàng
+    participant UI as Giao diện Giỏ hàng
+    participant Ctrl as CartController
+    participant Svc as CartService
+    participant WH as WarehouseService
+    
+    KH->>UI: Truy cập "Giỏ hàng"
+    UI-->>KH: Hiển thị giỏ hàng
+    
+    KH->>UI: Nhấn "Đặt hàng"
+    UI->>Svc: processCheckout()
+    Svc->>WH: checkAllStock()
+    
+    WH-->>Svc: Sản phẩm X hết hàng!
+    Svc-->>Ctrl: Error: OutOfStock
+    Ctrl-->>UI: "Rất tiếc, sản phẩm X vừa hết hàng"
+    UI-->>KH: Thông báo lỗi + Quay về giỏ hàng
+            </div>
+            
+            <!-- 4.7 Thanh toán - Chính -->
+            <h3>4.7 Chức năng Thanh toán đơn hàng - Tình huống chính (QR PayOS)</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant KH as Khách hàng
+    participant UI as Giao diện Thanh toán
+    participant Ctrl as PaymentController
+    participant Svc as PaymentService
+    participant PayOS as PayOS Service
+    participant Repo as Repository
+    participant DB as Database
+    
+    KH->>UI: Nhấn "Thanh toán" đơn hàng
+    UI->>Ctrl: GET /payment/{orderId}
+    Ctrl->>Repo: findById(orderId)
+    Repo->>DB: SELECT order
+    DB-->>Repo: Order
+    Repo-->>Ctrl: OrderDTO
+    Ctrl-->>UI: Thông tin đơn hàng + phương thức
+    UI-->>KH: Hiển thị thông tin + chọn PM
+    
+    KH->>UI: Chọn QR PayOS, nhấn "Xác nhận"
+    UI->>Ctrl: POST /payment/initiate/{orderId}
+    Ctrl->>Svc: initiateQrPayment(orderId)
+    Svc->>PayOS: createPaymentLink(orderId, amount)
+    PayOS-->>Svc: PaymentLink (checkoutUrl, orderCode)
+    Svc->>Repo: save(payosInfo)
+    Repo->>DB: UPDATE orders SET payos_checkout_url, payos_order_code
+    Svc-->>Ctrl: PaymentLink
+    Ctrl-->>UI: Mã QR + checkoutUrl
+    UI-->>KH: Hiển thị mã QR
+    
+    Note over KH: Quét mã bằng app ngân hàng
+    PayOS-->>Svc: Payment Callback (success)
+    Svc->>Repo: updatePaymentStatus(PAID)
+    Repo->>DB: UPDATE orders SET payment_status = 'PAID'
+    Svc-->>Ctrl: Payment confirmed
+    Ctrl-->>UI: "Thanh toán thành công!"
+    UI-->>KH: Thông báo + cập nhật trạng thái
+            </div>
+            
+            <!-- 4.8 Thanh toán - COD -->
+            <h3>4.8 Chức năng Thanh toán - Tình huống thay thế (COD)</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant KH as Khách hàng
+    participant UI as Giao diện Thanh toán
+    participant Ctrl as PaymentController
+    participant Svc as PaymentService
+    participant Repo as Repository
+    participant DB as Database
+    
+    KH->>UI: Chọn COD, nhấn "Xác nhận"
+    UI->>Ctrl: POST /payment/confirm/{orderId}
+    Ctrl->>Svc: confirmCodPayment(orderId)
+    Svc->>Repo: findById(orderId)
+    Repo->>DB: SELECT order
+    Svc->>Repo: update(order, COD)
+    Repo->>DB: UPDATE orders SET payment_method = 'COD', payment_status = 'PENDING'
+    Svc-->>Ctrl: COD confirmed
+    Ctrl-->>UI: "Đã xác nhận COD"
+    UI-->>KH: Thông báo: "Thanh toán khi nhận hàng"
+            </div>
+            
+            <!-- 4.9 Thanh toán - Hủy -->
+            <h3>4.9 Chức năng Thanh toán - Tình huống thay thế (Hủy thanh toán)</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant KH as Khách hàng
+    participant UI as Giao diện Thanh toán
+    
+    KH->>UI: Nhấn "Hủy thanh toán"
+    UI-->>KH: Quay về trang đơn hàng
+    Note over UI: Giữ nguyên payment_status = 'PENDING'
+            </div>
+        </div>
+        
+        <!-- 5. LƯỢC ĐỒ TRÌNH TỰ -->
+        <div class="card page-break" id="section5">
+            <h2>5. Lược đồ trình tự (Sequence Diagrams) - Chi tiết phương thức</h2>
+            
+            <!-- 5.1 Đặt hàng -->
+            <h3>5.1 Chức năng Đặt hàng - Phương thức xacNhanDatHang()</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant :Customer as :KhachHang
+    participant :CartUI as :GioHangUI
+    participant :CartCtrl as :CartController
+    participant :CartSvc as :CartService
+    participant :OrdSvc as :OrderService
+    participant :WHSvc as :WarehouseService
+    participant :Repo as :Repository
+    participant :DB as :Database
+    
+    Note over :Customer,:DB: UC: Đặt hàng
+    
+    1. :Customer->>:CartUI: Xem giỏ hàng
+    2. :CartUI->>:CartCtrl: getCart()
+    3. :CartCtrl->>:CartSvc: getCartItems(userId)
+    4. :CartSvc->>:Repo: findCartItemsByUser(userId)
+    5. :Repo-->>:DB: SELECT * FROM cart_items WHERE user_id = ?
+    6. :DB-->>:Repo: List CartItem
+    7. :Repo-->>:CartSvc: List CartItem
+    8. :CartSvc-->>:CartCtrl: List CartItemDTO
+    9. :CartCtrl-->>:CartUI: CartView
+    10. :CartUI-->>:Customer: Hiển thị giỏ hàng
+    
+    11. :Customer->>:CartUI: Chọn SP, nhấn "Đặt hàng"
+    12. :CartUI->>:CartCtrl: checkout(shippingInfo)
+    13. :CartCtrl->>:CartSvc: xacNhanDatHang(userId, shippingInfo)
+    14. :CartSvc->>:WHSvc: kiemTraTonKho(cartItems)
+    15. :WHSvc->>:Repo: getStock(productId)
+    16. :Repo-->>:WHSvc: stock
+    17. :WHSvc-->>:CartSvc: StockDTO
+    18. alt stock OK
+        19. :CartSvc->>:OrdSvc: taoDonHang(userId, items, shipping)
+        20. :OrdSvc->>:DB: INSERT orders
+        21. :DB-->>:OrdSvc: Order created
+        22. :OrdSvc->>:WHSvc: truTonKho(items)
+        23. :WHSvc->>:DB: UPDATE products SET stock = stock - qty
+        24. :OrdSvc-->>:CartSvc: OrderDTO
+        25. :CartSvc->>:Repo: xoaGioHang(userId)
+        26. :Repo-->>:CartSvc: Cart cleared
+        27. :CartSvc-->>:CartCtrl: OrderDTO
+        28. :CartCtrl-->>:CartUI: "Đặt hàng thành công!"
+        29. :CartUI-->>:Customer: Mã đơn hàng
+    else stock = 0
+        19. :CartSvc-->>:CartCtrl: Error: "Sản phẩm hết hàng"
+        20. :CartCtrl-->>:CartUI: Thông báo lỗi
+        21. :CartUI-->>:Customer: Quay về giỏ hàng
+    end
+            </div>
+            
+            <!-- 5.2 Hủy đặt hàng -->
+            <h3>5.2 Chức năng Đặt hàng - Phương thức huyDatHang()</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant :Customer as :KhachHang
+    participant :OrderUI as :OrderUI
+    participant :OrderCtrl as :OrderController
+    participant :OrdSvc as :OrderService
+    
+    Note over :Customer,:OrdSvc: UC: Hủy đặt hàng
+    
+    1. :Customer->>:OrderUI: Xem đơn hàng
+    2. :OrderUI-->>:Customer: Hiển thị đơn hàng
+    
+    3. alt Khách hàng hủy trước xác nhận
+        4. :Customer->>:OrderUI: Nhấn "Hủy đặt hàng"
+        5. :OrderUI-->>:Customer: Xác nhận hủy?
+        6. :Customer->>:OrderUI: Xác nhận
+        7. :OrderUI->>:OrderCtrl: huyDatHang(orderId, reason)
+        8. :OrderCtrl->>:OrdSvc: huyDonHang(orderId)
+        9. :OrdSvc-->>:OrderCtrl: "Đã hủy thành công"
+        10. :OrderCtrl-->>:OrderUI: Thông báo
+        11. :OrderUI-->>:Customer: Quay về danh sách
+    else Khách hàng đóng trình duyệt
+        Note over :OrderUI: Không lưu, không trừ tồn kho
+    end
+            </div>
+            
+            <!-- 5.3 Sửa sản phẩm -->
+            <h3>5.3 Chức năng Sửa sản phẩm - Phương thức capNhatSanPham()</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant :Admin as :Admin
+    participant :ProdUI as :ProductUI
+    participant :ProdCtrl as :ProductController
+    participant :ProdSvc as :ProductService
+    participant :Repo as :Repository
+    participant :DB as :Database
+    
+    Note over :Admin,:DB: UC: Sửa sản phẩm
+    
+    1. :Admin->>:ProdUI: Truy cập danh sách sản phẩm
+    2. :ProdUI->>:ProdCtrl: getAllProducts()
+    3. :ProdCtrl->>:Repo: findAll()
+    4. :Repo-->>:DB: SELECT * FROM products
+    5. :DB-->>:Repo: List Product
+    6. :Repo-->>:ProdCtrl: List Product
+    7. :ProdCtrl-->>:ProdUI: ProductListView
+    8. :ProdUI-->>:Admin: Danh sách sản phẩm
+    
+    9. :Admin->>:ProdUI: Chọn sản phẩm, nhấn "Sửa"
+    10. :ProdUI->>:ProdCtrl: getProduct(id)
+    11. :ProdCtrl->>:Repo: findById(id)
+    12. :Repo-->>:ProdCtrl: Product
+    13. :ProdCtrl-->>:ProdUI: ProductEditForm
+    14. :ProdUI-->>:Admin: Form chỉnh sửa
+    
+    15. :Admin->>:ProdUI: Nhập thông tin mới
+    16. :ProdUI->>:ProdUI: KiemTraDuLieu()
+    17. :Admin->>:ProdUI: Nhấn "Lưu"
+    18. :ProdUI->>:ProdCtrl: updateProduct(id, data)
+    19. :ProdCtrl->>:ProdSvc: capNhatSanPham(id, data)
+    20. :ProdSvc->>:Repo: findById(id)
+    21. :Repo-->>:ProdSvc: Product
+    22. :ProdSvc->>:ProdSvc: setAttributes(data)
+    23. :ProdSvc->>:Repo: save(product)
+    24. :Repo-->>:DB: UPDATE products SET ... WHERE id = ?
+    25. :DB-->>:Repo: Success
+    26. :Repo-->>:ProdSvc: Product updated
+    27. :ProdSvc-->>:ProdCtrl: ProductDTO
+    28. :ProdCtrl-->>:ProdUI: Success
+    29. :ProdUI-->>:Admin: "Cập nhật thành công!"
+            </div>
+            
+            <!-- 5.4 Lưu sản phẩm -->
+            <h3>5.4 Chức năng Sửa sản phẩm - Phương thức luuSanPham()</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant :Admin as :Admin
+    participant :ProdUI as :ProductUI
+    participant :ProdCtrl as :ProductController
+    participant :ProdSvc as :ProductService
+    participant :Repo as :Repository
+    participant :DB as :Database
+    
+    1. :Admin->>:ProdUI: Nhấn "Lưu"
+    2. :ProdUI->>:ProdCtrl: saveProduct(productDTO)
+    3. :ProdCtrl->>:ProdSvc: luuSanPham(productDTO)
+    
+    4. alt Du lieu hop le
+        5. :ProdSvc->>:Repo: save(product)
+        6. :Repo-->>:DB: INSERT/UPDATE products
+        7. :DB-->>:Repo: Success
+        8. :Repo-->>:ProdSvc: Product
+        9. :ProdSvc-->>:ProdCtrl: ProductDTO
+        10. :ProdCtrl-->>:ProdUI: ProductDTO
+        11. :ProdUI-->>:Admin: "Lưu thành công"
+    else Du lieu khong hop le
+        5. :ProdSvc-->>:ProdCtrl: Validation Error
+        6. :ProdCtrl-->>:ProdUI: Error
+        7. :ProdUI-->>:Admin: "Dữ liệu không hợp lệ"
+    end
+            </div>
+            
+            <!-- 5.5 Hủy cập nhật -->
+            <h3>5.5 Chức năng Sửa sản phẩm - Phương thức huyCapNhat()</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant :Admin as :Admin
+    participant :ProdUI as :ProductUI
+    
+    1. :Admin->>:ProdUI: Nhấn "Hủy"
+    2. :ProdUI-->>:Admin: Xác nhận hủy?
+    3. :Admin->>:ProdUI: Xác nhận
+    4. :ProdUI-->>:Admin: Quay về danh sách
+    Note over :ProdUI: Không lưu các thay đổi
+            </div>
+        </div>
+        
+        <!-- 6. LƯỢC ĐỒ CỘNG TÁC -->
+        <div class="card" id="section6">
+            <h2>6. Lược đồ cộng tác (Collaboration Diagrams)</h2>
+            
+            <!-- 6.1 Nhập kho - Tạo phiếu nhập -->
+            <h3>6.1 Chức năng Nhập kho - Phương thức taoPhieuNhap()</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant NV as :NhanVien
+    participant UI as :WarehouseUI
+    participant Ctrl as :ImportController
+    participant Svc as :ImportService
+    participant Repo as :ImportReceiptRepo
+    
+    1. NV->>UI: Nhấn "Tạo phiếu nhập"
+    2. UI->>Ctrl: showCreateForm()
+    3. Ctrl-->>UI: Form trống + NCC + SP
+    4. UI-->>NV: Hiển thị form
+    
+    5. NV->>UI: Chọn NCC, nhập SP
+    6. UI->>Ctrl: createImportReceipt(data)
+    7. Ctrl->>Svc: taoPhieuNhap(data)
+    8. Svc->>Repo: save(receipt)
+    9. Repo-->>Svc: ImportReceipt
+    10. Svc-->>Ctrl: ImportReceiptDTO
+    11. Ctrl-->>UI: Success
+    12. UI-->>NV: "Tạo thành công!"
+            </div>
+            
+            <!-- 6.2 Nhập kho - Lưu phiếu nhập -->
+            <h3>6.2 Chức năng Nhập kho - Phương thức luuPhieuNhap()</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant NV as :NhanVien
+    participant UI as :WarehouseUI
+    participant Ctrl as :ImportController
+    participant Svc as :ImportService
+    participant WHSvc as :WarehouseService
+    participant Repo as :Repository
+    
+    1. NV->>UI: Nhấn "Lưu"
+    2. UI->>Ctrl: saveImportReceipt(receiptDTO)
+    3. Ctrl->>Svc: luuPhieuNhap(receiptDTO)
+    
+    4. Svc->>Repo: save(receipt)
+    
+    loop Mỗi sản phẩm trong phiếu
+        5. Svc->>WHSvc: capNhatTonKho(productId, qty, price)
+        6. WHSvc->>Repo: updateWarehouseProduct()
+        7. Repo->>WHSvc: Updated
+        8. WHSvc->>Svc: Done
+    end
+    
+    9. Svc-->>Ctrl: ImportReceiptDTO
+    10. Ctrl-->>UI: Success
+    11. UI-->>NV: "Nhập kho thành công!"
+            </div>
+            
+            <!-- 6.3 Nhập kho - Hủy -->
+            <h3>6.3 Chức năng Nhập kho - Phương thức huyNhapKho()</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant NV as :NhanVien
+    participant UI as :WarehouseUI
+    
+    1. NV->>UI: Nhấn "Hủy"
+    2. UI-->>NV: Xác nhận hủy?
+    3. NV->>UI: OK
+    4. UI-->>NV: Quay về danh sách
+    Note over UI: Không lưu dữ liệu
+            </div>
+            
+            <!-- 6.4 Thanh toán - Thanh toán đơn hàng -->
+            <h3>6.4 Chức năng Thanh toán - Phương thức thanhToanDonHang()</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant KH as :KhachHang
+    participant UI as :PaymentUI
+    participant Ctrl as :PaymentController
+    participant Svc as :PaymentService
+    participant PayOS as :PayOSService
+    participant Repo as :OrderRepository
+    
+    1. KH->>UI: Nhấn "Thanh toán"
+    2. UI->>Ctrl: showPaymentPage(orderId)
+    3. Ctrl->>Repo: findById(orderId)
+    4. Repo-->>Ctrl: Order
+    5. Ctrl-->>UI: PaymentView
+    6. UI-->>KH: Hiển thị thông tin
+    
+    7. KH->>UI: Chọn QR, nhấn "Xác nhận"
+    8. UI->>Ctrl: initiatePayment(orderId, method)
+    9. Ctrl->>Svc: thanhToanDonHang(orderId, method)
+    
+    10. alt PayOS QR
+        11. Svc->>PayOS: createPaymentLink(orderId, amount)
+        12. PayOS-->>Svc: PaymentLink
+        13. Svc->>Repo: savePaymentInfo()
+        14. Svc-->>Ctrl: CheckoutUrl
+        15. Ctrl-->>UI: QR Code + Url
+        16. UI-->>KH: Hiển thị mã QR
+        17. Note over PayOS,KH: Khách quét và thanh toán
+        18. PayOS-->>Svc: Callback success
+        19. Svc->>Repo: updatePaymentStatus(PAID)
+    else COD
+        11. Svc->>Repo: updatePaymentMethod(COD)
+        12. Svc-->>Ctrl: COD confirmed
+        13. Ctrl-->>UI: Success
+        14. UI-->>KH: "Thanh toán khi nhận hàng"
+    end
+            </div>
+            
+            <!-- 6.5 Thanh toán - Hủy -->
+            <h3>6.5 Chức năng Thanh toán - Phương thức huyThanhToanDonHang()</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant KH as :KhachHang
+    participant UI as :PaymentUI
+    
+    1. KH->>UI: Nhấn "Hủy thanh toán"
+    2. UI-->>KH: Quay về trang đơn hàng
+    Note over UI: payment_status = PENDING
+            </div>
+        </div>
+        
+        <!-- 7. LƯỢC ĐỒ LỚP -->
+        <div class="card page-break" id="section7">
+            <h2>7. Lược đồ lớp (Class Diagram)</h2>
+            
+            <div class="note-box">
+                <strong>Nhận xét về lược đồ lớp:</strong>
+                <ul style="padding-left: 20px; margin-top: 5px;">
+                    <li>Tập hợp từ Domain Model (Phần 3)</li>
+                    <li>Bổ sung các phương thức từ Sequence Diagrams (Phần 5)</li>
+                    <li>Màu xanh dương: Class name</li>
+                    <li>Màu cam: Attribute</li>
+                    <li>Màu xanh lá: Method</li>
+                </ul>
+            </div>
+            
+            <!-- 7.1 Order Controller & Service -->
+            <h3>7.1 Lớp OrderController & OrderService</h3>
+            <div class="two-columns">
+                <div class="class-box">
+                    <h4>OrderController</h4>
+                    <div class="class-section">
+                        <div class="class-section-title">Attributes</div>
+                        <ul>
+                            <li>-orderService: OrderService</li>
+                            <li>-userService: UserService</li>
+                        </ul>
+                    </div>
+                    <div class="class-section">
+                        <div class="class-section-title">Methods</div>
+                        <ul>
+                            <li class="method">+getOrders(): String</li>
+                            <li class="method">+getOrderDetail(id): String</li>
+                            <li class="method">+cancelOrder(id): ResponseEntity</li>
+                            <li class="method">+updateOrderStatus(id, status): ResponseEntity</li>
+                            <li class="method">+getOrderHistory(): String</li>
+                        </ul>
+                    </div>
+                    <div class="class-section">
+                        <div class="class-section-title">Ghi chú</div>
+                        <ul>
+                            <li>Tham khảo Hình 6.1</li>
+                            <li>M1: xacNhanDatHang()</li>
+                            <li>M2: huyDatHang()</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="class-box">
+                    <h4>OrderService</h4>
+                    <div class="class-section">
+                        <div class="class-section-title">Attributes</div>
+                        <ul>
+                            <li>-orderRepository: OrderRepository</li>
+                            <li>-orderItemRepository: OrderItemRepository</li>
+                            <li>-warehouseService: WarehouseService</li>
+                            <li>-cartService: CartService</li>
+                        </ul>
+                    </div>
+                    <div class="class-section">
+                        <div class="class-section-title">Methods</div>
+                        <ul>
+                            <li class="method">+createOrder(userId, items, shipping): OrderDTO</li>
+                            <li class="method">+getOrdersByUser(userId): List~OrderDTO~</li>
+                            <li class="method">+getOrderById(id): OrderDTO</li>
+                            <li class="method">+cancelOrder(id, reason): void</li>
+                            <li class="method">+updateOrderStatus(id, status): OrderDTO</li>
+                            <li class="method">+confirmOrder(id): OrderDTO</li>
+                            <li class="method">-calculateTotal(items): BigDecimal</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 7.2 Product Controller & Service -->
+            <h3>7.2 Lớp ProductController & ProductService</h3>
+            <div class="two-columns">
+                <div class="class-box">
+                    <h4>ProductController</h4>
+                    <div class="class-section">
+                        <div class="class-section-title">Attributes</div>
+                        <ul>
+                            <li>-productService: ProductService</li>
+                            <li>-categoryService: CategoryService</li>
+                        </ul>
+                    </div>
+                    <div class="class-section">
+                        <div class="class-section-title">Methods</div>
+                        <ul>
+                            <li class="method">+listProducts(model): String</li>
+                            <li class="method">+createProduct(form): String</li>
+                            <li class="method">+editProduct(id, model): String</li>
+                            <li class="method">+saveProduct(product): String</li>
+                            <li class="method">+updateProduct(id, form): String</li>
+                            <li class="method">+deleteProduct(id): String</li>
+                            <li class="method">+capNhatSanPham(id, data): ProductDTO</li>
+                        </ul>
+                    </div>
+                    <div class="class-section">
+                        <div class="class-section-title">Ghi chú</div>
+                        <ul>
+                            <li>Tham khảo Hình 5.3, 6.3</li>
+                            <li>M1: capNhatSanPham()</li>
+                            <li>M2: luuSanPham()</li>
+                            <li>M3: huyCapNhat()</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="class-box">
+                    <h4>ProductService</h4>
+                    <div class="class-section">
+                        <div class="class-section-title">Attributes</div>
+                        <ul>
+                            <li>-productRepository: ProductRepository</li>
+                            <li>-categoryRepository: CategoryRepository</li>
+                            <li>-productImageRepository: ProductImageRepository</li>
+                        </ul>
+                    </div>
+                    <div class="class-section">
+                        <div class="class-section-title">Methods</div>
+                        <ul>
+                            <li class="method">+getAllProducts(): List~ProductDTO~</li>
+                            <li class="method">+getProductById(id): ProductDTO</li>
+                            <li class="method">+getProductsByCategory(catId): List~ProductDTO~</li>
+                            <li class="method">+searchProducts(keyword): List~ProductDTO~</li>
+                            <li class="method">+createProduct(product): ProductDTO</li>
+                            <li class="method">+updateProduct(id, data): ProductDTO</li>
+                            <li class="method">+deleteProduct(id): void</li>
+                            <li class="method">+capNhatSanPham(id, data): ProductDTO</li>
+                            <li class="method">+luuSanPham(product): ProductDTO</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 7.3 Warehouse/Import Controller & Service -->
+            <h3>7.3 Lớp WarehouseController & ImportReceiptService</h3>
+            <div class="two-columns">
+                <div class="class-box">
+                    <h4>WarehouseController</h4>
+                    <div class="class-section">
+                        <div class="class-section-title">Attributes</div>
+                        <ul>
+                            <li>-warehouseService: WarehouseService</li>
+                            <li>-importReceiptService: ImportReceiptService</li>
+                        </ul>
+                    </div>
+                    <div class="class-section">
+                        <div class="class-section-title">Methods</div>
+                        <ul>
+                            <li class="method">+listWarehouses(): String</li>
+                            <li class="method">+getWarehouseDetail(id): String</li>
+                            <li class="method">+listImportReceipts(): String</li>
+                            <li class="method">+showCreateImportForm(): String</li>
+                            <li class="method">+createImportReceipt(data): String</li>
+                            <li class="method">+taoPhieuNhap(data): ImportReceiptDTO</li>
+                            <li class="method">+luuPhieuNhap(receipt): ImportReceiptDTO</li>
+                        </ul>
+                    </div>
+                    <div class="class-section">
+                        <div class="class-section-title">Ghi chú</div>
+                        <ul>
+                            <li>Tham khảo Hình 5.1, 5.2, 7.1</li>
+                            <li>M1: taoPhieuNhap()</li>
+                            <li>M2: luuPhieuNhap()</li>
+                            <li>M3: huyNhapKho()</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="class-box">
+                    <h4>ImportReceiptService</h4>
+                    <div class="class-section">
+                        <div class="class-section-title">Attributes</div>
+                        <ul>
+                            <li>-importReceiptRepository: ImportReceiptRepository</li>
+                            <li>-supplierRepository: SupplierRepository</li>
+                            <li>-warehouseService: WarehouseService</li>
+                        </ul>
+                    </div>
+                    <div class="class-section">
+                        <div class="class-section-title">Methods</div>
+                        <ul>
+                            <li class="method">+getAllImportReceipts(): List~ImportReceiptDTO~</li>
+                            <li class="method">+getImportReceiptById(id): ImportReceiptDTO</li>
+                            <li class="method">+createImportReceipt(data): ImportReceiptDTO</li>
+                            <li class="method">+updateImportReceipt(id, data): ImportReceiptDTO</li>
+                            <li class="method">+deleteImportReceipt(id): void</li>
+                            <li class="method">+taoPhieuNhap(data): ImportReceipt</li>
+                            <li class="method">+luuPhieuNhap(receipt): ImportReceipt</li>
+                            <li class="method">-updateSupplierStats(supplierId): void</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 7.4 Payment Controller & Service -->
+            <h3>7.4 Lớp PaymentController & PaymentService</h3>
+            <div class="two-columns">
+                <div class="class-box">
+                    <h4>PaymentController</h4>
+                    <div class="class-section">
+                        <div class="class-section-title">Attributes</div>
+                        <ul>
+                            <li>-paymentService: PaymentService</li>
+                            <li>-orderService: OrderService</li>
+                        </ul>
+                    </div>
+                    <div class="class-section">
+                        <div class="class-section-title">Methods</div>
+                        <ul>
+                            <li class="method">+getPaymentPage(orderId): String</li>
+                            <li class="method">+initiatePayment(orderId, method): ResponseEntity</li>
+                            <li class="method">+confirmPayment(orderId, method): ResponseEntity</li>
+                            <li class="method">+cancelPayment(orderId): ResponseEntity</li>
+                            <li class="method">+paymentCallback(): String</li>
+                            <li class="method">+thanhtoanDonHang(orderId, method): Map</li>
+                            <li class="method">+huyThanhToanDonHang(orderId): void</li>
+                        </ul>
+                    </div>
+                    <div class="class-section">
+                        <div class="class-section-title">Ghi chú</div>
+                        <ul>
+                            <li>Tham khảo Hình 5.8, 5.9, 7.4</li>
+                            <li>M1: thanhToanDonHang()</li>
+                            <li>M2: huyThanhToanDonHang()</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="class-box">
+                    <h4>PaymentService</h4>
+                    <div class="class-section">
+                        <div class="class-section-title">Attributes</div>
+                        <ul>
+                            <li>-orderRepository: OrderRepository</li>
+                            <li>-payOSService: PayOSService</li>
+                        </ul>
+                    </div>
+                    <div class="class-section">
+                        <div class="class-section-title">Methods</div>
+                        <ul>
+                            <li class="method">+getPaymentInfo(orderId): Map</li>
+                            <li class="method">+initiatePayment(orderId, method): Map</li>
+                            <li class="method">+initiateQrPayment(order): Map</li>
+                            <li class="method">+initiateCodPayment(order): Map</li>
+                            <li class="method">+confirmPayment(orderId, method): Map</li>
+                            <li class="method">+cancelPayment(orderId): Map</li>
+                            <li class="method">+thanhtoanDonHang(orderId, method): Map</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 7.5 Cart Controller & Service -->
+            <h3>7.5 Lớp CartController & CartService</h3>
+            <div class="two-columns">
+                <div class="class-box">
+                    <h4>CartController</h4>
+                    <div class="class-section">
+                        <div class="class-section-title">Attributes</div>
+                        <ul>
+                            <li>-cartService: CartService</li>
+                            <li>-orderService: OrderService</li>
+                        </ul>
+                    </div>
+                    <div class="class-section">
+                        <div class="class-section-title">Methods</div>
+                        <ul>
+                            <li class="method">+viewCart(model): String</li>
+                            <li class="method">+addToCart(productId, qty): String</li>
+                            <li class="method">+updateCartItem(itemId, qty): String</li>
+                            <li class="method">+removeCartItem(itemId): String</li>
+                            <li class="method">+checkout(shippingInfo): String</li>
+                            <li class="method">+xacNhanDatHang(userId, shipping): OrderDTO</li>
+                            <li class="method">+huyDatHang(orderId): void</li>
+                        </ul>
+                    </div>
+                    <div class="class-section">
+                        <div class="class-section-title">Ghi chú</div>
+                        <ul>
+                            <li>Tham khảo Hình 6.1, 6.2</li>
+                            <li>M1: xacNhanDatHang()</li>
+                            <li>M2: huyDatHang()</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="class-box">
+                    <h4>CartService</h4>
+                    <div class="class-section">
+                        <div class="class-section-title">Attributes</div>
+                        <ul>
+                            <li>-cartRepository: CartRepository</li>
+                            <li>-cartItemRepository: CartItemRepository</li>
+                            <li>-productService: ProductService</li>
+                            <li>-warehouseService: WarehouseService</li>
+                        </ul>
+                    </div>
+                    <div class="class-section">
+                        <div class="class-section-title">Methods</div>
+                        <ul>
+                            <li class="method">+getCart(userId): CartDTO</li>
+                            <li class="method">+getCartItems(userId): List~CartItemDTO~</li>
+                            <li class="method">+addToCart(userId, productId, qty): CartItemDTO</li>
+                            <li class="method">+updateCartItem(itemId, qty): CartItemDTO</li>
+                            <li class="method">+removeCartItem(itemId): void</li>
+                            <li class="method">+clearCart(userId): void</li>
+                            <li class="method">+processCheckout(userId, shippingInfo): OrderDTO</li>
+                            <li class="method">+xacNhanDatHang(userId, shippingInfo): OrderDTO</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 7.6 Warehouse Service -->
+            <h3>7.6 Lớp WarehouseService</h3>
+            <div class="class-box">
+                <h4>WarehouseService</h4>
+                <div class="class-section">
+                    <div class="class-section-title">Attributes</div>
+                    <ul>
+                        <li>-warehouseRepository: WarehouseRepository</li>
+                        <li>-warehouseProductRepository: WarehouseProductRepository</li>
+                        <li>-warehouseTransactionRepository: WarehouseTransactionRepository</li>
+                    </ul>
+                </div>
+                <div class="class-section">
+                    <div class="class-section-title">Methods</div>
+                    <ul>
+                        <li class="method">+getAllWarehouses(): List~WarehouseDTO~</li>
+                        <li class="method">+getWarehouseById(id): WarehouseDTO</li>
+                        <li class="method">+getWarehouseProducts(warehouseId): List~WarehouseProductDTO~</li>
+                        <li class="method">+getStock(productId): Integer</li>
+                        <li class="method">+checkStock(productId, qty): StockStatus</li>
+                        <li class="method">+checkAllStock(cartItems): List~StockStatus~</li>
+                        <li class="method">+importStock(warehouseId, productId, qty, price): void</li>
+                        <li class="method">+exportStock(warehouseId, productId, qty): void</li>
+                        <li class="method">+reduceStock(productId, qty): void</li>
+                        <li class="method">+restoreStock(productId, qty): void</li>
+                        <li class="method">+capNhatTonKho(productId, qty, price): void</li>
+                    </ul>
+                </div>
+                <div class="class-section">
+                    <div class="class-section-title">Ghi chú</div>
+                    <ul>
+                        <li>Tham khảo Hình 5.1, 6.1</li>
+                        <li>M1: kiemTraTonKho()</li>
+                        <li>M2: truTonKho()</li>
+                        <li>M3: capNhatTonKho()</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 7.7 Entity Classes -->
+            <h3>7.7 Các lớp Entity (Domain Model)</h3>
+            <div class="entity-grid">
+                <div class="entity-box">
+                    <h4>Order (Đơn hàng)</h4>
+                    <ul>
+                        <li class="attr">id: Long</li>
+                        <li>orderNumber: String</li>
+                        <li>user: User</li>
+                        <li>customer: Customer</li>
+                        <li class="attr">status: OrderStatus</li>
+                        <li class="attr">paymentStatus: PaymentStatus</li>
+                        <li>paymentMethod: PaymentMethod</li>
+                        <li class="attr">totalAmount: BigDecimal</li>
+                        <li>shippingAddress: String</li>
+                        <li>items: List~OrderItem~</li>
+                        <li>shipping: Shipping</li>
+                    </ul>
+                </div>
+                
+                <div class="entity-box">
+                    <h4>Product (Sản phẩm)</h4>
+                    <ul>
+                        <li class="attr">id: Long</li>
+                        <li>name: String</li>
+                        <li>slug: String</li>
+                        <li>description: String</li>
+                        <li class="attr">price: BigDecimal</li>
+                        <li class="attr">stock: Integer</li>
+                        <li>sku: String</li>
+                        <li>material: String</li>
+                        <li>dimensions: String</li>
+                        <li>status: ProductStatus</li>
+                        <li>category: Category</li>
+                        <li>images: List~ProductImage~</li>
+                    </ul>
+                </div>
+                
+                <div class="entity-box">
+                    <h4>ImportReceipt (Phiếu nhập)</h4>
+                    <ul>
+                        <li class="attr">id: Long</li>
+                        <li>receiptCode: String</li>
+                        <li>supplier: Supplier</li>
+                        <li>warehouse: Warehouse</li>
+                        <li class="attr">importDate: LocalDateTime</li>
+                        <li class="attr">totalAmount: BigDecimal</li>
+                        <li>status: ImportStatus</li>
+                        <li>items: List~ImportReceiptItem~</li>
+                        <li>notes: String</li>
+                    </ul>
+                </div>
+                
+                <div class="entity-box">
+                    <h4>Warehouse (Kho)</h4>
+                    <ul>
+                        <li class="attr">id: Long</li>
+                        <li>warehouseCode: String</li>
+                        <li>name: String</li>
+                        <li>address: String</li>
+                        <li>city: String</li>
+                        <li>status: WarehouseStatus</li>
+                        <li>capacity: Integer</li>
+                        <li>products: List~WarehouseProduct~</li>
+                        <li>transactions: List~WarehouseTransaction~</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 7.8 Enumerations -->
+            <h3>7.8 Các Enumerations</h3>
+            <div class="entity-grid">
+                <div class="enum-box">
+                    <h5>OrderStatus</h5>
+                    <code>PENDING, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED, RETURNED</code>
+                </div>
+                <div class="enum-box">
+                    <h5>PaymentStatus</h5>
+                    <code>PENDING, PAID, PARTIALLY_PAID, REFUNDED, FAILED</code>
+                </div>
+                <div class="enum-box">
+                    <h5>PaymentMethod</h5>
+                    <code>COD, BANK_TRANSFER, CREDIT_CARD, MOMO, ZALOPAY, VNPAY, PAYTOS</code>
+                </div>
+                <div class="enum-box">
+                    <h5>OrderStatus</h5>
+                    <code>PENDING, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED, RETURNED</code>
+                </div>
+                <div class="enum-box">
+                    <h5>ImportStatus</h5>
+                    <code>PENDING, COMPLETED, CANCELLED</code>
+                </div>
+                <div class="enum-box">
+                    <h5>WarehouseStatus</h5>
+                    <code>ACTIVE, INACTIVE, FULL, MAINTENANCE</code>
+                </div>
+                <div class="enum-box">
+                    <h5>TransactionType</h5>
+                    <code>IMPORT, EXPORT, ADJUSTMENT, RETURN</code>
+                </div>
+                <div class="enum-box">
+                    <h5>TransactionStatus</h5>
+                    <code>PENDING, COMPLETED, CANCELLED, FAILED</code>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 8. TẠO MÃ NGUỒN TỪ THIẾT KẾ -->
+        <div class="card page-break" id="section8">
+            <h2>8. Tạo mã nguồn từ thiết kế (Design to Code)</h2>
+            
+            <div class="note-box">
+                <strong>Nguyên tắc Design to Code:</strong>
+                <ul style="padding-left: 20px; margin-top: 5px;">
+                    <li>Biến toàn cục của lớp (class-level variables)</li>
+                    <li>Biến cục bộ của hàm (local variables)</li>
+                    <li>Tham số của hàm (method parameters)</li>
+                    <li>1 lớp trong thiết kế → 1 class trong code</li>
+                </ul>
+            </div>
+            
+            <!-- 8.1 OrderService -->
+            <h3>8.1 Lớp OrderService (Hình 7.1)</h3>
+            <div class="class-box">
+                <h4>Design → Code: OrderService.java</h4>
+                <pre style="background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 0.85rem;">
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class OrderService {
+    
+    // === Biến toàn cục của lớp (Class-level variables) ===
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final WarehouseService warehouseService;
+    private final CartService cartService;
+    
+    // === Các phương thức (Methods) ===
+    
+    // M1: xacNhanDatHang() - Tham khảo Hình 6.1
+    @Transactional
+    public OrderDTO xacNhanDatHang(Long userId, ShippingInfo shippingInfo) {
+        // Biến cục bộ (Local variables)
+        List&lt;CartItemDTO&gt; cartItems = cartService.getCartItems(userId);
+        List&lt;OrderItem&gt; orderItems = new ArrayList&lt;&gt;();
+        BigDecimal subtotal = BigDecimal.ZERO;
+        
+        // Kiểm tra tồn kho
+        for (CartItemDTO item : cartItems) {
+            StockStatus stock = warehouseService.checkStock(
+                item.getProductId(),  // Tham số
+                item.getQuantity()     // Tham số
+            );
+            
+            if (stock.isOutOfStock()) {
+                throw new RuntimeException(
+                    "Sản phẩm " + item.getProductName() + " đã hết hàng"
+                );
+            }
+            
+            // Tạo OrderItem
+            OrderItem orderItem = OrderItem.builder()
+                .productName(item.getProductName())
+                .price(item.getPrice())
+                .quantity(item.getQuantity())
+                .total(item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .build();
+            
+            orderItems.add(orderItem);
+            subtotal = subtotal.add(orderItem.getTotal());
+        }
+        
+        // Tính tổng
+        BigDecimal totalAmount = calculateTotal(subtotal, shippingInfo);
+        
+        // Tạo Order
+        Order order = Order.builder()
+            .orderNumber(generateOrderNumber())
+            .user(userService.getUserById(userId))
+            .subtotal(subtotal)
+            .shippingFee(shippingInfo.getShippingFee())
+            .totalAmount(totalAmount)
+            .status(OrderStatus.PENDING)
+            .paymentStatus(PaymentStatus.PENDING)
+            .shippingAddress(shippingInfo.getFullAddress())
+            .shippingPhone(shippingInfo.getPhone())
+            .build();
+        
+        // Lưu Order
+        order = orderRepository.save(order);
+        
+        // Trừ tồn kho
+        for (OrderItem item : orderItems) {
+            warehouseService.reduceStock(item.getProductId(), item.getQuantity());
+        }
+        
+        // Xóa giỏ hàng
+        cartService.clearCart(userId);
+        
+        return toDTO(order);
+    }
+    
+    // M2: huyDatHang() - Tham khảo Hình 6.2
+    @Transactional
+    public void huyDatHang(Long orderId, String reason) {
+        // Biến cục bộ
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
+        
+        // Kiểm tra có thể hủy không
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new RuntimeException("Không thể hủy đơn hàng đã xác nhận");
+        }
+        
+        // Hoàn lại tồn kho
+        for (OrderItem item : order.getItems()) {
+            warehouseService.restoreStock(
+                item.getProduct().getId(),  // Tham số
+                item.getQuantity()           // Tham số
+            );
+        }
+        
+        // Cập nhật trạng thái
+        order.setStatus(OrderStatus.CANCELLED);
+        order.setCancellationReason(reason);
+        order.setCancelledAt(LocalDateTime.now());
+        
+        orderRepository.save(order);
+    }
+    
+    // Hàm private
+    private BigDecimal calculateTotal(BigDecimal subtotal, ShippingInfo shipping) {
+        return subtotal
+            .add(shipping.getShippingFee() != null ? shipping.getShippingFee() : BigDecimal.ZERO)
+            .subtract(shipping.getDiscountAmount() != null ? shipping.getDiscountAmount() : BigDecimal.ZERO);
+    }
+}
+                </pre>
+            </div>
+            
+            <!-- 8.2 WarehouseService -->
+            <h3>8.2 Lớp WarehouseService (Hình 7.6)</h3>
+            <div class="class-box">
+                <h4>Design → Code: WarehouseService.java</h4>
+                <pre style="background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 0.85rem;">
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class WarehouseService {
+    
+    // === Biến toàn cục của lớp ===
+    private final WarehouseRepository warehouseRepository;
+    private final WarehouseProductRepository warehouseProductRepository;
+    private final WarehouseTransactionRepository transactionRepository;
+    
+    // === Các phương thức (Methods) ===
+    
+    // M1: kiemTraTonKho() - Tham khảo Hình 6.1
+    public StockStatus kiemTraTonKho(Long productId, Integer requestedQty) {
+        // Biến cục bộ
+        Integer availableStock = warehouseProductRepository
+            .getTotalStockByProductId(productId);
+        
+        if (availableStock == null) {
+            availableStock = 0;
+        }
+        
+        if (availableStock >= requestedQty) {
+            return StockStatus.builder()
+                .productId(productId)
+                .available(true)
+                .availableQuantity(availableStock)
+                .requestedQuantity(requestedQty)
+                .build();
+        } else {
+            return StockStatus.builder()
+                .productId(productId)
+                .available(false)
+                .availableQuantity(availableStock)
+                .requestedQuantity(requestedQty)
+                .message("Chỉ còn " + availableStock + " sản phẩm")
+                .build();
+        }
+    }
+    
+    // M2: truTonKho() - Tham khảo Hình 6.1
+    @Transactional
+    public void truTonKho(Long productId, Integer quantity) {
+        // Biến cục bộ
+        List&lt;WarehouseProduct&gt; products = warehouseProductRepository
+            .findByProductIdOrderByImportDateAsc(productId);
+        
+        int remaining = quantity;
+        for (WarehouseProduct wp : products) {
+            if (remaining <= 0) break;
+            
+            int deduct = Math.min(wp.getQuantity(), remaining);
+            wp.setQuantity(wp.getQuantity() - deduct);
+            remaining -= deduct;
+            
+            warehouseProductRepository.save(wp);
+            
+            // Tạo transaction
+            createTransaction(
+                wp.getWarehouse().getId(),  // Tham số
+                productId,                    // Tham số
+                deduct,                       // Tham số
+                wp.getImportPrice()          // Tham số
+            );
+        }
+    }
+    
+    // M3: capNhatTonKho() - Tham khảo Hình 7.2
+    @Transactional
+    public void capNhatTonKho(Long productId, Integer quantity, BigDecimal price) {
+        // Biến cục bộ
+        Warehouse warehouse = warehouseRepository
+            .findFirstByStatus(WarehouseStatus.ACTIVE)
+            .orElseThrow(() -> new RuntimeException("Không có kho hoạt động"));
+        
+        // Tìm hoặc tạo mới
+        WarehouseProduct wp = warehouseProductRepository
+            .findByWarehouseIdAndProductId(warehouse.getId(), productId)
+            .orElse(WarehouseProduct.builder()
+                .warehouse(warehouse)
+                .product(productRepository.findById(productId).get())
+                .quantity(0)
+                .build());
+        
+        // Cập nhật số lượng và giá
+        wp.setQuantity(wp.getQuantity() + quantity);
+        wp.setImportPrice(price);
+        wp.setLastImportDate(LocalDateTime.now());
+        
+        warehouseProductRepository.save(wp);
+        
+        // Tạo transaction ghi nhận nhập kho
+        createTransaction(
+            warehouse.getId(),   // Tham số
+            productId,           // Tham số
+            quantity,            // Tham số
+            price                // Tham số
+        );
+    }
+    
+    // Hàm private
+    private void createTransaction(Long warehouseId, Long productId, 
+                                   Integer quantity, BigDecimal price) {
+        WarehouseTransaction transaction = WarehouseTransaction.builder()
+            .transactionCode("IMP-" + System.currentTimeMillis())
+            .transactionType(TransactionType.IMPORT)
+            .warehouse(warehouseRepository.findById(warehouseId).get())
+            .product(productRepository.findById(productId).get())
+            .quantity(quantity)
+            .unitPrice(price)
+            .status(TransactionStatus.COMPLETED)
+            .build();
+        
+        transactionRepository.save(transaction);
+    }
+}
+                </pre>
+            </div>
+            
+            <!-- 8.3 PaymentService -->
+            <h3>8.3 Lớp PaymentService (Hình 7.4)</h3>
+            <div class="class-box">
+                <h4>Design → Code: PaymentService.java</h4>
+                <pre style="background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 0.85rem;">
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class PaymentService {
+    
+    // === Biến toàn cục của lớp ===
+    private final OrderRepository orderRepository;
+    private final PayOSService payOSService;
+    
+    // === Các phương thức (Methods) ===
+    
+    // M1: thanhToanDonHang() - Tham khảo Hình 7.4
+    @Transactional
+    public Map&lt;String, Object&gt; thanhToanDonHang(Long orderId, String paymentMethod) {
+        // Biến cục bộ
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
+        
+        // Kiểm tra trạng thái
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
+            throw new RuntimeException("Đơn hàng đã được thanh toán");
+        }
+        
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new RuntimeException("Đơn hàng đã bị hủy");
+        }
+        
+        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();
+        result.put("orderId", order.getId());
+        result.put("orderNumber", order.getOrderNumber());
+        
+        // Xử lý theo phương thức
+        if ("PAYTOS".equalsIgnoreCase(paymentMethod) || "QR".equalsIgnoreCase(paymentMethod)) {
+            return initiateQrPayment(order);
+        } else if ("COD".equalsIgnoreCase(paymentMethod)) {
+            return initiateCodPayment(order);
+        } else {
+            throw new RuntimeException("Phương thức thanh toán không hợp lệ");
+        }
+    }
+    
+    // M2: huyThanhToanDonHang() - Tham khảo Hình 7.5
+    @Transactional
+    public void huyThanhToanDonHang(Long orderId) {
+        // Biến cục bộ
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
+        
+        // Chỉ cho phép hủy khi đơn còn PENDING
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new RuntimeException("Chỉ có thể hủy đơn hàng đang chờ xác nhận");
+        }
+        
+        // Xóa thông tin PayOS nếu có
+        if (order.getPayosCheckoutUrl() != null || order.getPayosOrderCode() != null) {
+            order.setPayosCheckoutUrl(null);
+            order.setPayosOrderCode(null);
+            orderRepository.save(order);
+        }
+        
+        // Giữ nguyên payment_status = PENDING
+        log.info("Đã hủy thanh toán cho đơn hàng: " + order.getOrderNumber());
+    }
+    
+    // Hàm private
+    private Map&lt;String, Object&gt; initiateQrPayment(Order order) {
+        order.setPaymentMethod(Order.PaymentMethod.PAYTOS);
+        orderRepository.save(order);
+        
+        try {
+            // Tạo payment link từ PayOS
+            PayOSService.PaymentLinkResult linkResult = payOSService.createPaymentLinkWithId(
+                order.getId(),              // Tham số
+                order.getOrderNumber(),     // Tham số
+                order.getTotalAmount()     // Tham số
+            );
+            
+            // Lưu thông tin
+            order.setPayosCheckoutUrl(linkResult.checkoutUrl());
+            order.setPayosOrderCode(String.valueOf(linkResult.orderCode()));
+            orderRepository.save(order);
+            
+            Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();
+            result.put("checkoutUrl", linkResult.checkoutUrl());
+            result.put("expiresAt", linkResult.expiredAt());
+            result.put("message", "Vui lòng thanh toán trước " + linkResult.expiredAt());
+            
+            return result;
+        } catch (Exception e) {
+            log.error("PayOS error: {}", e.getMessage());
+            throw new RuntimeException("Không thể tạo liên kết thanh toán");
+        }
+    }
+    
+    private Map&lt;String, Object&gt; initiateCodPayment(Order order) {
+        order.setPaymentMethod(Order.PaymentMethod.COD);
+        orderRepository.save(order);
+        
+        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();
+        result.put("message", "Thanh toán khi nhận hàng");
+        result.put("paymentMethod", "COD");
+        
+        return result;
+    }
+}
+                </pre>
+            </div>
+            
+            <!-- Bảng tra cứu -->
+            <h3>8.4 Bảng tra cứu thuật ngữ</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                <thead>
+                    <tr style="background: #667eea; color: white;">
+                        <th style="padding: 10px; border: 1px solid #ddd;">STT</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Tiếng Anh</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Tiếng Việt</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;">1</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Product</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Sản phẩm</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Entity</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;">2</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Customer</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Khách hàng</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Entity</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;">3</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">OrderItem</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Chi tiết đơn hàng</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Entity</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;">4</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Payment</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Thanh toán</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Entity</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;">5</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Warehouse</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Kho</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Entity</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;">6</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">ImportReceipt</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Phiếu nhập kho</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Entity</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;">7</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Supplier</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Nhà cung cấp</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Entity</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;">8</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Shipping</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Vận chuyển</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Entity</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            sequenceDiagram: {
+                messageAlign: 'left'
+            }
+        });
+    </script>
+</body>
+</html>

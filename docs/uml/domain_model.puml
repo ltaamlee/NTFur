@@ -1,0 +1,418 @@
+@startuml NTFurniture_Domain_Model
+
+' =====================================================
+' NTFURNITURE - DOMAIN MODEL
+' =====================================================
+
+' -------------------- STYLES --------------------
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam stereotypeCBackgroundColor #LightBlue
+skinparam shadowing false
+
+' -------------------- ENTITIES --------------------
+
+class Category {
+    - id: Long
+    - name: String
+    - slug: String
+    - description: String
+    - imageUrl: String
+    - status: CategoryStatus
+    - displayOrder: Integer
+    - createdAt: LocalDateTime
+    - updatedAt: LocalDateTime
+}
+
+class Product {
+    - id: Long
+    - name: String
+    - description: String
+    - price: BigDecimal
+    - stock: Integer
+    - sku: String
+    - status: ProductStatus
+    - createdAt: LocalDateTime
+    - updatedAt: LocalDateTime
+}
+
+class ProductImage {
+    - id: Long
+    - imageUrl: String
+    - publicId: String
+    - altText: String
+    - displayOrder: Integer
+    - isPrimary: Boolean
+    - createdAt: LocalDateTime
+}
+
+class ProductVariant {
+    - id: Long
+    - variantName: String
+    - attributeType: AttributeType
+    - attributeValue: String
+    - sku: String
+    - priceAdjustment: BigDecimal
+    - stock: Integer
+    - active: Boolean
+    - imageUrl: String
+    - createdAt: LocalDateTime
+    - updatedAt: LocalDateTime
+}
+
+class Supplier {
+    - id: Long
+    - name: String
+    - slug: String
+    - code: String
+    - description: String
+    - email: String
+    - phone: String
+    - address: String
+    - city: String
+    - status: SupplierStatus
+    - notes: String
+    - createdAt: LocalDateTime
+    - updatedAt: LocalDateTime
+}
+
+class Warehouse {
+    - id: Long
+    - warehouseCode: String
+    - name: String
+    - address: String
+    - city: String
+    - phone: String
+    - email: String
+    - status: WarehouseStatus
+    - description: String
+    - createdAt: LocalDateTime
+    - updatedAt: LocalDateTime
+}
+
+class WarehouseProduct {
+    - id: Long
+    - quantity: Integer
+    - importPrice: BigDecimal
+    - createdAt: LocalDateTime
+    - updatedAt: LocalDateTime
+}
+
+class WarehouseTransaction {
+    - id: Long
+    - transactionCode: String
+    - transactionType: TransactionType
+    - productName: String
+    - quantity: Integer
+    - unitPrice: BigDecimal
+    - referenceType: ReferenceType
+    - referenceId: Long
+    - notes: String
+    - performedBy: String
+    - createdAt: LocalDateTime
+}
+
+class ImportReceipt {
+    - id: Long
+    - receiptCode: String
+    - invoiceNumber: String
+    - importDate: LocalDateTime
+    - totalAmount: BigDecimal
+    - discountAmount: BigDecimal
+    - finalAmount: BigDecimal
+    - status: ImportStatus
+    - notes: String
+    - createdAt: LocalDateTime
+    - updatedAt: LocalDateTime
+}
+
+class ImportReceiptItem {
+    - id: Long
+    - productName: String
+    - sku: String
+    - quantity: Integer
+    - unitPrice: BigDecimal
+    - totalPrice: BigDecimal
+}
+
+class Order {
+    - id: Long
+    - orderNumber: String
+    - status: OrderStatus
+    - paymentStatus: PaymentStatus
+    - paymentMethod: PaymentMethod
+    - subtotal: BigDecimal
+    - shippingFee: BigDecimal
+    - discountAmount: BigDecimal
+    - totalAmount: BigDecimal
+    - shippingFullName: String
+    - shippingPhone: String
+    - shippingAddress: String
+    - shippingCity: String
+    - shippingDistrict: String
+    - shippingWard: String
+    - shippingNotes: String
+    - orderDate: LocalDateTime
+    - cancelledAt: LocalDateTime
+    - cancellationReason: String
+    - createdAt: LocalDateTime
+    - updatedAt: LocalDateTime
+}
+
+class OrderItem {
+    - id: Long
+    - productName: String
+    - productSku: String
+    - productImage: String
+    - price: BigDecimal
+    - quantity: Integer
+    - total: BigDecimal
+    - createdAt: LocalDateTime
+}
+
+class Shipping {
+    - id: Long
+    - trackingNumber: String
+    - carrier: String
+    - shippingMethod: ShippingMethod
+    - shippingFee: BigDecimal
+    - estimatedDays: Integer
+    - status: ShippingStatus
+    - receiverName: String
+    - receiverPhone: String
+    - deliveryAddress: String
+    - createdAt: LocalDateTime
+    - updatedAt: LocalDateTime
+}
+
+class User {
+    - id: Long
+    - username: String
+    - password: String
+    - email: String
+    - phone: String
+    - fullName: String
+    - avatarUrl: String
+    - role: UserRole
+    - status: UserStatus
+    - createdAt: LocalDateTime
+    - updatedAt: LocalDateTime
+}
+
+class Customer {
+    - id: Long
+    - fullName: String
+    - phone: String
+    - address: String
+    - city: String
+    - district: String
+    - ward: String
+    - dateOfBirth: LocalDate
+    - gender: Gender
+    - totalOrders: Integer
+    - totalSpent: BigDecimal
+    - notes: String
+}
+
+class CustomerAddress {
+    - id: Long
+    - addressName: String
+    - recipientName: String
+    - phone: String
+    - addressLine: String
+    - city: String
+    - district: String
+    - ward: String
+    - isDefault: Boolean
+    - addressType: AddressType
+    - notes: String
+    - createdAt: LocalDateTime
+    - updatedAt: LocalDateTime
+}
+
+' -------------------- ENUMS --------------------
+
+enum CategoryStatus {
+    ACTIVE
+    INACTIVE
+}
+
+enum ProductStatus {
+    ACTIVE
+    INACTIVE
+    OUT_OF_STOCK
+    DISCONTINUED
+}
+
+enum AttributeType {
+    SIZE
+    COLOR
+    MATERIAL
+    STYLE
+    OTHER
+}
+
+enum SupplierStatus {
+    ACTIVE
+    INACTIVE
+    PENDING
+    BLOCKED
+}
+
+enum WarehouseStatus {
+    ACTIVE
+    INACTIVE
+    FULL
+    MAINTENANCE
+}
+
+enum TransactionType {
+    IMPORT
+    EXPORT
+    ADJUSTMENT
+    RETURN
+}
+
+enum ReferenceType {
+    IMPORT_RECEIPT
+    ORDER
+    RETURN_ORDER
+    MANUAL
+}
+
+enum ImportStatus {
+    PENDING
+    COMPLETED
+    CANCELLED
+}
+
+enum OrderStatus {
+    PENDING
+    CONFIRMED
+    PROCESSING
+    SHIPPED
+    DELIVERED
+    CANCELLED
+    RETURNED
+}
+
+enum PaymentStatus {
+    PENDING
+    PAID
+    PARTIALLY_PAID
+    REFUNDED
+    FAILED
+}
+
+enum PaymentMethod {
+    COD
+    BANK_TRANSFER
+    CREDIT_CARD
+    MOMO
+    ZALOPAY
+    VNPAY
+    PAYTOS
+}
+
+enum ShippingMethod {
+    STANDARD
+    EXPRESS
+    SAME_DAY
+    SCHEDULED
+    PICKUP
+}
+
+enum ShippingStatus {
+    PENDING
+    PICKED_UP
+    IN_TRANSIT
+    OUT_FOR_DELIVERY
+    DELIVERED
+    FAILED
+    RETURNED
+    CANCELLED
+}
+
+enum UserRole {
+    CUSTOMER
+    ADMIN
+    STAFF
+    MANAGER
+}
+
+enum UserStatus {
+    ACTIVE
+    INACTIVE
+    SUSPENDED
+    PENDING
+}
+
+enum Gender {
+    MALE
+    FEMALE
+    OTHER
+}
+
+enum AddressType {
+    HOME
+    OFFICE
+    OTHER
+}
+
+' -------------------- RELATIONSHIPS --------------------
+
+' Category - Product: 1:N
+Category "1" --> "*" Product : has
+
+' Product - ProductImage: 1:N
+Product "1" --> "*" ProductImage : has
+
+' Product - ProductVariant: 1:N
+Product "1" --> "*" ProductVariant : has
+
+' Product - WarehouseProduct: 1:N
+Product "1" --> "*" WarehouseProduct : stored in
+
+' Product - SupplierProduct: 1:N
+Product "1" --> "*" SupplierProduct : supplied by
+
+' Supplier - ImportReceipt: 1:N
+Supplier "1" --> "*" ImportReceipt : supplies
+
+' Warehouse - WarehouseProduct: 1:N
+Warehouse "1" --> "*" WarehouseProduct : contains
+
+' Warehouse - WarehouseTransaction: 1:N
+Warehouse "1" --> "*" WarehouseTransaction : records
+
+' Warehouse - ImportReceipt: 1:N
+Warehouse "1" --> "*" ImportReceipt : receives
+
+' ImportReceipt - ImportReceiptItem: 1:N
+ImportReceipt "1" --> "*" ImportReceiptItem : contains
+
+' ImportReceiptItem - Product: N:1
+ImportReceiptItem "*" --> "1" Product : imports
+
+' Order - OrderItem: 1:N
+Order "1" --> "*" OrderItem : contains
+
+' OrderItem - Product: N:1
+OrderItem "*" --> "1" Product : orders
+
+' Order - Shipping: 1:1
+Order "1" --> "1" Shipping : ships
+
+' User - Customer: 1:1
+User "1" --> "1" Customer : is
+
+' Customer - CustomerAddress: 1:N
+Customer "1" --> "*" CustomerAddress : has
+
+' Customer - Order: 1:N
+Customer "1" --> "*" Order : places
+
+' User - Order: 1:N
+User "1" --> "*" Order : creates
+
+@enduml

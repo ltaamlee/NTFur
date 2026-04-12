@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -57,6 +58,33 @@ public class HomeController {
     @GetMapping("contact")
     public String contact() {
         return "contact";
+    }
+
+    @GetMapping("product/{id}")
+    public String productDetail(@PathVariable Long id, Model model) {
+        try {
+            ProductDTO product = productService.getProductById(id);
+            List<CategoryDTO> categories = categoryService.getActiveCategoriesWithHierarchy();
+
+            model.addAttribute("product", product);
+            model.addAttribute("categories", categories);
+            model.addAttribute("content", "home/pages/product-detail");
+            model.addAttribute("title", product.getName());
+            return "home/layout";
+        } catch (RuntimeException e) {
+            return "redirect:/products";
+        }
+    }
+
+    @GetMapping("api/product/{id}")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<ProductDTO>> getProduct(@PathVariable Long id) {
+        try {
+            ProductDTO product = productService.getProductById(id);
+            return ResponseEntity.ok(ApiResponse.success(product));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     // API endpoints for frontend
